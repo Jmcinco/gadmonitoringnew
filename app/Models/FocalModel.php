@@ -1,0 +1,121 @@
+<?php
+
+namespace App\Models;
+
+use CodeIgniter\Model;
+
+class FocalModel extends Model
+{
+    protected $table = 'plan';
+    protected $primaryKey = 'plan_id'; // Match database column
+    protected $allowedFields = [
+        'issue_mandate',
+        'cause',
+        'gad_objective',
+        'activity',
+        'indicators',
+        'startDate',
+        'endDate',
+        'authors_division', // Match database column
+        'budget', // Match database column
+        'mfoPapData',
+        'status',
+        'remarks',
+        'approved_by', // From database schema
+        'mfo_id', // From database schema
+        'pap_id' // From database schema
+    ];
+    protected $returnType = 'array';
+    protected $useTimestamps = true;
+    protected $createdField = 'created_at';
+    protected $updatedField = 'updated_at';
+
+    protected $validationRules = [
+        'issue_mandate' => 'required|min_length[10]',
+        'cause' => 'required|min_length[10]',
+        'gad_objective' => 'required|min_length[10]',
+        'activity' => 'required|min_length[10]',
+        'indicators' => 'required|min_length[10]',
+        'startDate' => 'required|valid_date',
+        'endDate' => 'required|valid_date',
+        'authors_division' => 'required',
+        'budget' => 'required|numeric|greater_than[0]',
+        'mfoPapData' => 'permit_empty|valid_json'
+    ];
+
+    protected $validationMessages = [
+        'issue_mandate' => [
+            'required' => 'Gender issue or GAD mandate is required.',
+            'min_length' => 'Gender issue or GAD mandate must be at least 10 characters long.'
+        ],
+        'cause' => [
+            'required' => 'Cause of issue is required.',
+            'min_length' => 'Cause of issue must be at least 10 characters long.'
+        ],
+        'gad_objective' => [
+            'required' => 'GAD objective is required.',
+            'min_length' => 'GAD objective must be at least 10 characters long.'
+        ],
+        'activity' => [
+            'required' => 'GAD activity is required.',
+            'min_length' => 'GAD activity must be at least 10 characters long.'
+        ],
+        'indicators' => [
+            'required' => 'Performance targets are required.',
+            'min_length' => 'Performance targets must be at least 10 characters long.'
+        ],
+        'startDate' => [
+            'required' => 'Start date is required.',
+            'valid_date' => 'Please enter a valid start date.'
+        ],
+        'endDate' => [
+            'required' => 'End date is required.',
+            'valid_date' => 'Please enter a valid end date.'
+        ],
+        'authors_division' => [
+            'required' => 'Responsible unit is required.'
+        ],
+        'budget' => [
+            'required' => 'Budget amount is required.',
+            'numeric' => 'Budget amount must be a number.',
+            'greater_than' => 'Budget amount must be greater than 0.'
+        ],
+        'mfoPapData' => [
+            'valid_json' => 'MFO/PAP data must be a valid JSON string.'
+        ]
+    ];
+
+    public function getGadPlans()
+    {
+        return $this->findAll();
+    }
+
+    public function getGadPlanById($id)
+    {
+        return $this->find($id);
+    }
+
+    protected function beforeInsert(array $data)
+    {
+        if (isset($data['data']['startDate']) && isset($data['data']['endDate'])) {
+            $startDate = strtotime($data['data']['startDate']);
+            $endDate = strtotime($data['data']['endDate']);
+            if ($endDate <= $startDate) {
+                throw new \Exception('End date must be after start date.');
+            }
+        }
+        return $data;
+    }
+
+    protected function beforeUpdate(array $data)
+    {
+        if (isset($data['data']['startDate']) && isset($data['data']['endDate'])) {
+            $startDate = strtotime($data['data']['startDate']);
+            $endDate = strtotime($data['data']['endDate']);
+            if ($endDate <= $startDate) {
+                throw new \Exception('End date must be after start date.');
+            }
+        }
+        return $data;
+    }
+}
