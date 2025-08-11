@@ -16,6 +16,7 @@ class GadMandateController extends Controller
         $this->validation = \Config\Services::validation();
         $this->session = \Config\Services::session();
     }
+    
 
     public function getMandates()
     {
@@ -26,8 +27,8 @@ class GadMandateController extends Controller
             ])->setStatusCode(403);
         }
 
-        $year = $this->request->getPost('year');
         try {
+            $year = $this->request->getVar('year');
             $mandates = $this->mandateModel->getMandates($year);
             return $this->response->setJSON([
                 'success' => true,
@@ -85,7 +86,8 @@ class GadMandateController extends Controller
             if ($this->mandateModel->save($data)) {
                 return $this->response->setJSON([
                     'success' => true,
-                    'message' => 'GAD Mandate saved successfully'
+                    'message' => 'GAD Mandate saved successfully',
+                    'id' => $this->mandateModel->getInsertID()
                 ]);
             }
             throw new \Exception('Failed to save GAD Mandate');

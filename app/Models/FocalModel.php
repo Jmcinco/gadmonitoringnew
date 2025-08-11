@@ -13,7 +13,8 @@ class FocalModel extends Model
         'cause',
         'gad_objective',
         'activity',
-        'indicators',
+        'indicator_text',
+        'target_text', // Match database column
         'startDate',
         'endDate',
         'authors_division', // Match database column
@@ -23,7 +24,9 @@ class FocalModel extends Model
         'remarks',
         'approved_by', // From database schema
         'mfo_id', // From database schema
-        'pap_id' // From database schema
+        'pap_id',
+            'file_attachments',
+            'hgdg_score'  
     ];
     protected $returnType = 'array';
     protected $useTimestamps = true;
@@ -117,5 +120,12 @@ class FocalModel extends Model
             }
         }
         return $data;
+    }
+     public function getGadPlansWithAmount()
+    {
+        return $this->select('plan.*, COALESCE(SUM(budget.amount),0) AS amount')
+                    ->join('budget', 'budget.plan_id = plan.plan_id', 'left')
+                    ->groupBy('plan.plan_id')
+                    ->findAll();
     }
 }

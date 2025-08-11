@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -7,6 +8,7 @@
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css" rel="stylesheet">
 </head>
+
 <body>
     <!-- Navigation -->
     <nav class="navbar navbar-expand-lg navbar-dark bg-primary">
@@ -42,7 +44,8 @@
                             <i class="bi bi-person-circle"></i> Admin User
                         </a>
                         <ul class="dropdown-menu">
-                            <li><a class="dropdown-item" href="index.html"><i class="bi bi-box-arrow-right"></i> Logout</a></li>
+                            <li><a class="dropdown-item" href="index.html"><i class="bi bi-box-arrow-right"></i>
+                                    Logout</a></li>
                         </ul>
                     </li>
                 </ul>
@@ -69,7 +72,8 @@
                         <i class="bi bi-file-earmark-ruled text-primary"></i> Consolidated GAD Plan & Budget
                     </h1>
                     <div class="btn-group">
-                        <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#approveConsolidatedModal">
+                        <button type="button" class="btn btn-primary" data-bs-toggle="modal"
+                            data-bs-target="#approveConsolidatedModal">
                             <i class="bi bi-check-circle"></i> Approve Consolidated Plan
                         </button>
                         <button type="button" class="btn btn-success" onclick="printConsolidatedPlan()">
@@ -158,7 +162,8 @@
                             </div>
                             <div class="col-auto">
                                 <div class="form-check">
-                                    <input class="form-check-input" type="checkbox" value="" id="selectAll" onchange="toggleSelectAll()">
+                                    <input class="form-check-input" type="checkbox" value="" id="selectAll"
+                                        onchange="toggleSelectAll()">
                                     <label class="form-check-label" for="selectAll">
                                         Select All
                                     </label>
@@ -187,7 +192,8 @@
                                 <tbody id="consolidatedTableBody">
                                     <tr>
                                         <td>
-                                            <input type="checkbox" class="form-check-input plan-checkbox" value="GAD001">
+                                            <input type="checkbox" class="form-check-input plan-checkbox"
+                                                value="GAD001">
                                         </td>
                                         <td>GAD001</td>
                                         <td>Gender Sensitivity Training Program</td>
@@ -197,7 +203,8 @@
                                         <td>Jan - Mar 2024</td>
                                         <td><span class="badge bg-success">Approved</span></td>
                                         <td>
-                                            <button class="btn btn-sm btn-outline-primary" onclick="viewPlanDetails('GAD001')">
+                                            <button class="btn btn-sm btn-outline-primary"
+                                                onclick="viewPlanDetails('GAD001')">
                                                 <i class="bi bi-eye"></i>
                                             </button>
                                             <button class="btn btn-sm btn-outline-warning" onclick="editPlan('GAD001')">
@@ -207,7 +214,8 @@
                                     </tr>
                                     <tr>
                                         <td>
-                                            <input type="checkbox" class="form-check-input plan-checkbox" value="GAD002">
+                                            <input type="checkbox" class="form-check-input plan-checkbox"
+                                                value="GAD002">
                                         </td>
                                         <td>GAD002</td>
                                         <td>Women's Leadership Development Workshop</td>
@@ -217,7 +225,8 @@
                                         <td>Feb - Apr 2024</td>
                                         <td><span class="badge bg-success">Approved</span></td>
                                         <td>
-                                            <button class="btn btn-sm btn-outline-primary" onclick="viewPlanDetails('GAD002')">
+                                            <button class="btn btn-sm btn-outline-primary"
+                                                onclick="viewPlanDetails('GAD002')">
                                                 <i class="bi bi-eye"></i>
                                             </button>
                                             <button class="btn btn-sm btn-outline-warning" onclick="editPlan('GAD002')">
@@ -227,7 +236,8 @@
                                     </tr>
                                     <tr>
                                         <td>
-                                            <input type="checkbox" class="form-check-input plan-checkbox" value="GAD003">
+                                            <input type="checkbox" class="form-check-input plan-checkbox"
+                                                value="GAD003">
                                         </td>
                                         <td>GAD003</td>
                                         <td>Anti-Sexual Harassment Campaign</td>
@@ -237,7 +247,8 @@
                                         <td>Mar - May 2024</td>
                                         <td><span class="badge bg-success">Approved</span></td>
                                         <td>
-                                            <button class="btn btn-sm btn-outline-primary" onclick="viewPlanDetails('GAD003')">
+                                            <button class="btn btn-sm btn-outline-primary"
+                                                onclick="viewPlanDetails('GAD003')">
                                                 <i class="bi bi-eye"></i>
                                             </button>
                                             <button class="btn btn-sm btn-outline-warning" onclick="editPlan('GAD003')">
@@ -247,7 +258,8 @@
                                     </tr>
                                     <tr>
                                         <td>
-                                            <input type="checkbox" class="form-check-input plan-checkbox" value="GAD004">
+                                            <input type="checkbox" class="form-check-input plan-checkbox"
+                                                value="GAD004">
                                         </td>
                                         <td>GAD004</td>
                                         <td>Work-Life Balance Policy Development</td>
@@ -257,7 +269,8 @@
                                         <td>Apr - Jun 2024</td>
                                         <td><span class="badge bg-success">Approved</span></td>
                                         <td>
-                                            <button class="btn btn-sm btn-outline-primary" onclick="viewPlanDetails('GAD004')">
+                                            <button class="btn btn-sm btn-outline-primary"
+                                                onclick="viewPlanDetails('GAD004')">
                                                 <i class="bi bi-eye"></i>
                                             </button>
                                             <button class="btn btn-sm btn-outline-warning" onclick="editPlan('GAD004')">
@@ -282,7 +295,8 @@
     </div>
 
     <!-- Approve Consolidated Plan Modal -->
-    <div class="modal fade" id="approveConsolidatedModal" tabindex="-1" aria-labelledby="approveConsolidatedModalLabel" aria-hidden="true">
+    <div class="modal fade" id="approveConsolidatedModal" tabindex="-1" aria-labelledby="approveConsolidatedModalLabel"
+        aria-hidden="true">
         <div class="modal-dialog">
             <div class="modal-content">
                 <div class="modal-header">
@@ -303,7 +317,7 @@
                                 <li>Target Year: 2024</li>
                             </ul>
                         </div>
-                        
+
                         <div class="mb-3">
                             <label for="approvalDate" class="form-label">Approval Date *</label>
                             <input type="date" class="form-control" id="approvalDate" name="approvalDate" required>
@@ -311,24 +325,27 @@
                                 Please provide an approval date.
                             </div>
                         </div>
-                        
+
                         <div class="mb-3">
                             <label for="approvalRemarks" class="form-label">Approval Remarks *</label>
-                            <textarea class="form-control" id="approvalRemarks" name="approvalRemarks" rows="3" required></textarea>
+                            <textarea class="form-control" id="approvalRemarks" name="approvalRemarks" rows="3"
+                                required></textarea>
                             <div class="invalid-feedback">
                                 Please provide approval remarks.
                             </div>
                         </div>
-                        
+
                         <div class="mb-3">
                             <label for="approvedBy" class="form-label">Approved By</label>
-                            <input type="text" class="form-control" id="approvedBy" name="approvedBy" value="Admin User" readonly>
+                            <input type="text" class="form-control" id="approvedBy" name="approvedBy" value="Admin User"
+                                readonly>
                         </div>
-                        
+
                         <div class="form-check">
                             <input class="form-check-input" type="checkbox" value="" id="confirmApproval" required>
                             <label class="form-check-label" for="confirmApproval">
-                                I confirm that all plans and budgets have been reviewed and are approved for implementation.
+                                I confirm that all plans and budgets have been reviewed and are approved for
+                                implementation.
                             </label>
                             <div class="invalid-feedback">
                                 Please confirm your approval.
@@ -338,14 +355,16 @@
                 </div>
                 <div class="modal-footer">
                     <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-                    <button type="submit" form="approveConsolidatedForm" class="btn btn-success">Approve Plan & Budget</button>
+                    <button type="submit" form="approveConsolidatedForm" class="btn btn-success">Approve Plan &
+                        Budget</button>
                 </div>
             </div>
         </div>
     </div>
 
     <!-- Plan Details Modal -->
-    <div class="modal fade" id="planDetailsModal" tabindex="-1" aria-labelledby="planDetailsModalLabel" aria-hidden="true">
+    <div class="modal fade" id="planDetailsModal" tabindex="-1" aria-labelledby="planDetailsModalLabel"
+        aria-hidden="true">
         <div class="modal-dialog modal-lg">
             <div class="modal-content">
                 <div class="modal-header">
@@ -393,18 +412,18 @@
 
     <!-- Bootstrap JavaScript -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
-    
+
     <script>
         // Set current date
         document.getElementById('approvalDate').value = new Date().toISOString().split('T')[0];
 
         // Bootstrap form validation
-        (function() {
+        (function () {
             'use strict';
-            window.addEventListener('load', function() {
+            window.addEventListener('load', function () {
                 var forms = document.getElementsByClassName('needs-validation');
-                Array.prototype.filter.call(forms, function(form) {
-                    form.addEventListener('submit', function(event) {
+                Array.prototype.filter.call(forms, function (form) {
+                    form.addEventListener('submit', function (event) {
                         if (form.checkValidity() === false) {
                             event.preventDefault();
                             event.stopPropagation();
@@ -430,7 +449,7 @@
         function toggleSelectAll() {
             const selectAll = document.getElementById('selectAll');
             const checkboxes = document.querySelectorAll('.plan-checkbox');
-            
+
             checkboxes.forEach(checkbox => {
                 checkbox.checked = selectAll.checked;
             });
@@ -440,7 +459,7 @@
         function viewPlanDetails(planId) {
             const modal = new bootstrap.Modal(document.getElementById('planDetailsModal'));
             const rows = document.querySelectorAll('#consolidatedTableBody tr');
-            
+
             rows.forEach(row => {
                 if (row.cells[1].textContent === planId) {
                     document.getElementById('detailPlanId').textContent = row.cells[1].textContent;
@@ -451,7 +470,7 @@
                     document.getElementById('detailTimeline').textContent = row.cells[6].textContent;
                 }
             });
-            
+
             modal.show();
         }
 
@@ -471,4 +490,5 @@
         }
     </script>
 </body>
+
 </html>

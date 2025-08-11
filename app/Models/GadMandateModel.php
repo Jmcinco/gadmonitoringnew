@@ -6,7 +6,7 @@ use CodeIgniter\Model;
 
 class GadMandateModel extends Model
 {
-    protected $table = 'plan';
+    protected $table = 'gad_mandate';
     protected $primaryKey = 'id';
     protected $allowedFields = ['year', 'description'];
     protected $useTimestamps = true;

@@ -6,70 +6,203 @@
     <title>GAD Plan Review & Approval - GAD Management System</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --sidebar-width: 280px;
+            --sidebar-bg: #2c3e50;
+            --sidebar-hover: #34495e;
+        }
+        body {
+            font-family: 'Poppins', Arial, sans-serif;
+            background-color: #f4f6f9;
+            margin: 0;
+            padding: 0;
+        }
+        .sidebar {
+            position: fixed;
+            top: 0;
+            left: 0;
+            height: 100vh;
+            width: var(--sidebar-width);
+            background: linear-gradient(180deg, var(--sidebar-bg) 0%, #1a252f 100%);
+            color: white;
+            z-index: 1000;
+            display: flex;
+            flex-direction: column;
+            box-shadow: 0 1rem 3rem rgba(0, 0, 0, 0.175);
+            transform: translateX(0) !important;
+        }
+        .sidebar-header {
+            padding: 1.5rem 1rem;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+            text-align: center;
+        }
+        .sidebar-content {
+            flex: 1;
+            padding: 1rem;
+            overflow-y: auto;
+        }
+        .sidebar-footer {
+            padding: 1rem;
+            border-top: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        .user-info {
+            padding: 1rem;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 0.5rem;
+            margin-bottom: 1rem;
+            display: flex;
+            align-items: center;
+        }
+        .sidebar .nav-link {
+            color: rgba(255, 255, 255, 0.8);
+            padding: 0.75rem 1rem;
+            margin-bottom: 0.25rem;
+            border-radius: 0.5rem;
+            transition: all 0.2s ease;
+            text-decoration: none;
+            display: flex;
+            align-items: center;
+        }
+        .sidebar .nav-link:hover {
+            background-color: var(--sidebar-hover);
+            color: white;
+            transform: translateX(3px);
+        }
+        .sidebar .nav-link.active {
+            background-color: #3498db;
+            color: white;
+        }
+        .main-content {
+            margin-left: var(--sidebar-width);
+            min-height: 100vh;
+            padding: 2rem;
+            background-color: #fafbfe;
+        }
+        .card {
+            border: none;
+            border-radius: 0.5rem;
+            box-shadow: 0 0.15rem 1.75rem 0 rgba(58, 59, 69, 0.15);
+        }
+        .card-header {
+            background-color: #f8f9fc;
+            border-bottom: 1px solid #e3e6f0;
+        }
+        .table th, .table td {
+            vertical-align: middle;
+            padding: 0.75rem;
+        }
+        @media (max-width: 768px) {
+            .sidebar {
+                transform: translateX(-100%);
+                transition: transform 0.3s ease;
+            }
+            .sidebar.show {
+                transform: translateX(0);
+            }
+            .main-content {
+                margin-left: 0;
+                padding: 1rem;
+            }
+            .table-responsive {
+                font-size: 0.85rem;
+            }
+            .table th, .table td {
+                padding: 0.5rem;
+            }
+        }
+    </style>
 </head>
 <body>
-    <!-- Navigation -->
-    <nav class="navbar navbar-expand-lg navbar-dark bg-primary">
-        <div class="container-fluid">
-            <a class="navbar-brand" href="dashboard.html">
+    <!-- Sidebar -->
+    <nav id="sidebar" class="sidebar">
+        <div class="sidebar-header">
+            <h4 class="text-white mb-0">
                 <i class="bi bi-shield-check"></i> GAD Management System
-            </a>
-            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
-                <span class="navbar-toggler-icon"></span>
-            </button>
-            <div class="collapse navbar-collapse" id="navbarNav">
-                <ul class="navbar-nav me-auto">
-                    <li class="nav-item">
-                        <a class="nav-link" href="dashboard.html">
-                            <i class="bi bi-house-door"></i> Dashboard
-                        </a>
-                    </li>
-                    <li class="nav-item dropdown">
-                        <a class="nav-link dropdown-toggle active" href="#" role="button" data-bs-toggle="dropdown">
-                            <i class="bi bi-gear"></i> GAD Workflow
-                        </a>
-                        <ul class="dropdown-menu">
-                            <li><a class="dropdown-item" href="gad_budget_preparation.html">Budget Preparation</a></li>
-                            <li><a class="dropdown-item" href="gad_budget_crafting.html">Budget Crafting</a></li>
-                            <li><a class="dropdown-item active" href="gad_plan_review.html">Plan Review</a></li>
-                            <li><a class="dropdown-item" href="consolidated_plan.html">Consolidated Plan</a></li>
-                        </ul>
-                    </li>
-                </ul>
-                <ul class="navbar-nav">
-                    <li class="nav-item dropdown">
-                        <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown">
-                            <i class="bi bi-person-circle"></i> Admin User
-                        </a>
-                        <ul class="dropdown-menu">
-                            <li><a class="dropdown-item" href="index.html"><i class="bi bi-box-arrow-right"></i> Logout</a></li>
-                        </ul>
-                    </li>
-                </ul>
-            </div>
+            </h4>
         </div>
-    </nav>
-
-    <!-- Breadcrumb -->
-    <nav aria-label="breadcrumb" class="bg-light">
-        <div class="container-fluid">
-            <ol class="breadcrumb py-2 mb-0">
-                <li class="breadcrumb-item"><a href="dashboard.html">Dashboard</a></li>
-                <li class="breadcrumb-item active">GAD Plan Review & Approval</li>
-            </ol>
+        <div class="sidebar-content">
+            <div class="user-info mb-4">
+                <div class="text-white d-flex align-items-center">
+                    <i class="bi bi-person-circle fs-4 me-2"></i>
+                    <div>
+                        <div class="fw-bold"><?php echo esc(($first_name ?? 'Admin') . ' ' . ($last_name ?? 'User')); ?></div>
+                        <small class="text-light">Administrator</small>
+                    </div>
+                </div>
+            </div>
+           <!-- Navigation Menu -->
+            <ul class="nav nav-pills flex-column">
+                <li class="nav-item">
+                    <a class="nav-link" href="<?= base_url('FocalDashboard') ?>">
+                        <i class="bi bi-house-door me-2"></i>Dashboard
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" href="<?= base_url('Focal/PlanPreparation') ?>">
+                        <i class="bi bi-clipboard-plus me-2"></i>Preparation of GAD Plan
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" href="<?= base_url('Focal/BudgetCrafting') ?>">
+                        <i class="bi bi-calculator me-2"></i>Budget Crafting
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link active" href="<?= base_url('Focal/PlanReview') ?>">
+                        <i class="bi bi-check-circle me-2"></i>Review & Approval of GAD Plan
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" href="<?= base_url('Focal/ConsolidatedPlan') ?>">
+                        <i class="bi bi-file-earmark-text me-2"></i>Consolidated Plan & Budget
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" href="<?= base_url('Focal/AccomplishmentSubmission') ?>">
+                        <i class="bi bi-send me-2"></i>Submission of GAD Accomplishment
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" href="<?= base_url('Focal/ReviewApproval') ?>">
+                        <i class="bi bi-clipboard-check me-2"></i>Review & Approval of Accomplishment
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" href="<?= base_url('Focal/ConsolidatedAccomplishment') ?>">
+                        <i class="bi bi-collection me-2"></i>Consolidated GAD Accomplishment
+                    </a>
+                </li>
+            </ul>
+        </div>
+        <div class="sidebar-footer">
+            <a href="<?php echo base_url('logout'); ?>" class="btn btn-outline-light w-100"><i class="bi bi-box-arrow-right"></i> Logout</a>
         </div>
     </nav>
 
     <!-- Main Content -->
-    <div class="container-fluid py-4">
-        <div class="row">
-            <div class="col-12">
-                <div class="d-flex justify-content-between align-items-center mb-4">
-                    <h1 class="h3 mb-0">
-                        <i class="bi bi-clipboard-check text-primary"></i> GAD Plan Review & Approval
-                    </h1>
-                    <div class="btn-group">
-                        <button class="btn btn-outline-primary" onclick="filterByStatus('all')">
+    <div class="main-content">
+        <div class="container-fluid py-4">
+            <!-- Breadcrumb -->
+            <nav aria-label="breadcrumb" class="bg-light">
+                <div class="container-fluid">
+                    <ol class="breadcrumb py-2 mb-4">
+                        <li class="breadcrumb-item"><a href="<?php echo base_url('Focal/dashboard'); ?>">Dashboard</a></li>
+                        <li class="breadcrumb-item active">GAD Plan Review & Approval</li>
+                    </ol>
+                </div>
+            </nav>
+
+            <div class="ontainer-fluid-py-4"></div>
+            <div class="row">
+                <div class="col-12">
+                    <div class="d-flex justify-content-between align-items-center mb-4">
+                        <h1 class="h3 mb-0">
+                            <i class="bi bi-clipboard-check text-primary"></i> GAD Plan Review & Approval
+                        </h1>
+                        <div class="btn-group">
+                            <button class="btn btn-outline-primary" onclick="filterByStatus('all')">
                             <i class="bi bi-funnel"></i> All
                         </button>
                         <button class="btn btn-outline-warning" onclick="filterByStatus('pending')">
@@ -81,31 +214,31 @@
                         <button class="btn btn-outline-danger" onclick="filterByStatus('returned')">
                             <i class="bi bi-arrow-left-circle"></i> Returned
                         </button>
+                        </div>
                     </div>
                 </div>
             </div>
-        </div>
 
-        <!-- Review Table -->
-        <div class="row">
-            <div class="col-12">
-                <div class="card shadow">
-                    <div class="card-header">
-                        <div class="row align-items-center">
-                            <div class="col">
-                                <h5 class="mb-0">Submitted GAD Plans</h5>
-                            </div>
-                            <div class="col-auto">
-                                <div class="input-group">
-                                    <input type="text" class="form-control" placeholder="Search plans..." id="searchInput">
+            <!-- Review Table -->
+            <div class="row">
+                <div class="col-12">
+                    <div class="card shadow">
+                        <div class="card-header">
+                            <div class="row align-items-center">
+                                <div class="col">
+                                    <h5 class="mb-0">Submitted GAD Plans</h5>
+                                </div>
+                                <div class="col-auto">
+                                    <div class="input-group">
+                                       <input type="text" class="form-control" placeholder="Search plans..." id="searchInput">
                                     <button class="btn btn-outline-secondary" type="button">
                                         <i class="bi bi-search"></i>
-                                    </button>
+                                        </button>
+                                    </div>
                                 </div>
                             </div>
                         </div>
-                    </div>
-                    <div class="card-body">
+ <div class="card-body">
                         <div class="table-responsive">
                             <table class="table table-hover table-striped">
                                 <thead class="table-dark">
@@ -119,43 +252,78 @@
                                         <th>Actions</th>
                                     </tr>
                                 </thead>
-                               <tbody id="reviewTableBody">
-    <?php foreach ($gadPlans as $plan): ?>
-        <tr data-status="<?php echo esc($plan['status'] ?? 'pending'); ?>">
-            <td><?php echo esc($plan['id']); ?></td>
-            <td><?php echo esc($plan['gadActivity']); ?></td>
-            <td><?php echo esc($plan['responsibleUnit']); ?></td>
-            <td><?php echo esc($plan['created_at']); ?></td>
-            <td>
-                <span class="badge bg-<?php echo $plan['status'] == 'approved' ? 'success' : ($plan['status'] == 'returned' ? 'danger' : 'warning'); ?>">
-                    <?php echo esc(ucfirst($plan['status'] ?? 'pending')); ?>
-                </span>
-            </td>
-            <td><?php echo esc($plan['remarks'] ?? '-'); ?></td>
-            <td>
-                <button class="btn btn-sm btn-outline-primary" onclick="reviewPlan('<?php echo esc($plan['id']); ?>')">
-                    <i class="bi bi-eye"></i> <?php echo $plan['status'] == 'pending' ? 'Review' : 'View'; ?>
-                </button>
-                <?php if ($plan['status'] == 'pending' || empty($plan['status'])): ?>
-                    <button class="btn btn-sm btn-outline-success" onclick="updateStatus('<?php echo esc($plan['id']); ?>', 'approved')">
-                        <i class="bi bi-check"></i> Approve
-                    </button>
-                    <button class="btn btn-sm btn-outline-danger" onclick="updateStatus('<?php echo esc($plan['id']); ?>', 'returned')">
-                        <i class="bi bi-x"></i> Return
-                    </button>
-                <?php elseif ($plan['status'] == 'approved'): ?>
-                    <button class="btn btn-sm btn-outline-warning" onclick="updateStatus('<?php echo esc($plan['id']); ?>', 'pending')">
-                        <i class="bi bi-arrow-clockwise"></i> Reopen
-                    </button>
-                <?php elseif ($plan['status'] == 'returned'): ?>
-                    <button class="btn btn-sm btn-outline-success" onclick="updateStatus('<?php echo esc($plan['id']); ?>', 'approved')">
-                        <i class="bi bi-check"></i> Approve
-                    </button>
-                <?php endif; ?>
-            </td>
-        </tr>
-    <?php endforeach; ?>
-</tbody>
+                                <tbody id="reviewTableBody">
+                                    <tr data-status="pending">
+                                        <td>GAD001</td>
+                                        <td>Gender Sensitivity Training Program</td>
+                                        <td>Human Resources Division</td>
+                                        <td>2024-01-15</td>
+                                        <td><span class="badge bg-warning">Pending</span></td>
+                                        <td>-</td>
+                                        <td>
+                                            <button class="btn btn-sm btn-outline-primary" onclick="reviewPlan('GAD001')">
+                                                <i class="bi bi-eye"></i> Review
+                                            </button>
+                                            <button class="btn btn-sm btn-outline-success" onclick="updateStatus('GAD001', 'approved')">
+                                                <i class="bi bi-check"></i> Approve
+                                            </button>
+                                            <button class="btn btn-sm btn-outline-danger" onclick="updateStatus('GAD001', 'returned')">
+                                                <i class="bi bi-x"></i> Return
+                                            </button>
+                                        </td>
+                                    </tr>
+                                    <tr data-status="approved">
+                                        <td>GAD002</td>
+                                        <td>Women's Leadership Development Workshop</td>
+                                        <td>Training Division</td>
+                                        <td>2024-01-20</td>
+                                        <td><span class="badge bg-success">Approved</span></td>
+                                        <td>Well-structured program with clear objectives</td>
+                                        <td>
+                                            <button class="btn btn-sm btn-outline-primary" onclick="reviewPlan('GAD002')">
+                                                <i class="bi bi-eye"></i> View
+                                            </button>
+                                            <button class="btn btn-sm btn-outline-warning" onclick="updateStatus('GAD002', 'pending')">
+                                                <i class="bi bi-arrow-clockwise"></i> Reopen
+                                            </button>
+                                        </td>
+                                    </tr>
+                                    <tr data-status="returned">
+                                        <td>GAD003</td>
+                                        <td>Anti-Sexual Harassment Campaign</td>
+                                        <td>Legal Affairs Division</td>
+                                        <td>2024-01-25</td>
+                                        <td><span class="badge bg-danger">Returned</span></td>
+                                        <td>Need more detailed budget breakdown</td>
+                                        <td>
+                                            <button class="btn btn-sm btn-outline-primary" onclick="reviewPlan('GAD003')">
+                                                <i class="bi bi-eye"></i> View
+                                            </button>
+                                            <button class="btn btn-sm btn-outline-success" onclick="updateStatus('GAD003', 'approved')">
+                                                <i class="bi bi-check"></i> Approve
+                                            </button>
+                                        </td>
+                                    </tr>
+                                    <tr data-status="pending">
+                                        <td>GAD004</td>
+                                        <td>Work-Life Balance Policy Development</td>
+                                        <td>Policy Development Unit</td>
+                                        <td>2024-01-30</td>
+                                        <td><span class="badge bg-warning">Pending</span></td>
+                                        <td>-</td>
+                                        <td>
+                                            <button class="btn btn-sm btn-outline-primary" onclick="reviewPlan('GAD004')">
+                                                <i class="bi bi-eye"></i> Review
+                                            </button>
+                                            <button class="btn btn-sm btn-outline-success" onclick="updateStatus('GAD004', 'approved')">
+                                                <i class="bi bi-check"></i> Approve
+                                            </button>
+                                            <button class="btn btn-sm btn-outline-danger" onclick="updateStatus('GAD004', 'returned')">
+                                                <i class="bi bi-x"></i> Return
+                                            </button>
+                                        </td>
+                                    </tr>
+                                </tbody>
                             </table>
                         </div>
                     </div>
@@ -334,21 +502,12 @@
         }
 
         // Update plan status in table
-function updatePlanStatus(planId, status, remarks) {
-    fetch('<?php echo base_url('FocalController/updateStatus'); ?>', {
-        method: 'POST',
-        headers: {
-            'Content-Type': 'application/json',
-            'X-Requested-With': 'XMLHttpRequest'
-        },
-        body: JSON.stringify({ planId, status, remarks })
-    })
-    .then(response => response.json())
-    .then(data => {
-        if (data.success) {
+        function updatePlanStatus(planId, status, remarks) {
             const rows = document.querySelectorAll('#reviewTableBody tr');
+            
             rows.forEach(row => {
                 if (row.cells[0].textContent === planId) {
+                    // Update status badge
                     let statusBadge = '';
                     if (status === 'pending') {
                         statusBadge = '<span class="badge bg-warning">Pending</span>';
@@ -360,13 +519,17 @@ function updatePlanStatus(planId, status, remarks) {
                         statusBadge = '<span class="badge bg-danger">Returned</span>';
                         row.dataset.status = 'returned';
                     }
+                    
                     row.cells[4].innerHTML = statusBadge;
                     row.cells[5].textContent = remarks || '-';
+                    
+                    // Update action buttons based on status
                     let actionButtons = `
                         <button class="btn btn-sm btn-outline-primary" onclick="reviewPlan('${planId}')">
                             <i class="bi bi-eye"></i> ${status === 'pending' ? 'Review' : 'View'}
                         </button>
                     `;
+                    
                     if (status === 'pending') {
                         actionButtons += `
                             <button class="btn btn-sm btn-outline-success" onclick="updateStatus('${planId}', 'approved')">
@@ -389,18 +552,11 @@ function updatePlanStatus(planId, status, remarks) {
                             </button>
                         `;
                     }
+                    
                     row.cells[6].innerHTML = actionButtons;
                 }
             });
-        } else {
-            alert(data.message);
         }
-    })
-    .catch(error => {
-        console.error('Error:', error);
-        alert('An error occurred while updating the status.');
-    });
-}
 
         // Filter by status
         function filterByStatus(status) {

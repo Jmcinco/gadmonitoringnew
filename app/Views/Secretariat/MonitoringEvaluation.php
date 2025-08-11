@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -7,6 +8,7 @@
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css" rel="stylesheet">
 </head>
+
 <body>
     <!-- Navigation -->
     <nav class="navbar navbar-expand-lg navbar-dark bg-primary">
@@ -36,7 +38,8 @@
                             <i class="bi bi-person-circle"></i> Admin User
                         </a>
                         <ul class="dropdown-menu">
-                            <li><a class="dropdown-item" href="index.html"><i class="bi bi-box-arrow-right"></i> Logout</a></li>
+                            <li><a class="dropdown-item" href="index.html"><i class="bi bi-box-arrow-right"></i>
+                                    Logout</a></li>
                         </ul>
                     </li>
                 </ul>
@@ -63,7 +66,8 @@
                         <i class="bi bi-graph-up text-primary"></i> GAD Monitoring & Evaluation Dashboard
                     </h1>
                     <div class="btn-group">
-                        <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#addIndicatorModal">
+                        <button type="button" class="btn btn-primary" data-bs-toggle="modal"
+                            data-bs-target="#addIndicatorModal">
                             <i class="bi bi-plus-circle"></i> Add KPI
                         </button>
                         <button type="button" class="btn btn-success" onclick="exportDashboard()">
@@ -152,7 +156,8 @@
                                         <td><span class="badge bg-success">On Track</span></td>
                                         <td><i class="bi bi-arrow-up text-success"></i></td>
                                         <td>
-                                            <button class="btn btn-sm btn-outline-primary" onclick="viewDetails('training-sessions')">
+                                            <button class="btn btn-sm btn-outline-primary"
+                                                onclick="viewDetails('training-sessions')">
                                                 <i class="bi bi-eye"></i>
                                             </button>
                                         </td>
@@ -165,7 +170,8 @@
                                         <td><span class="badge bg-success">Exceeded</span></td>
                                         <td><i class="bi bi-arrow-up text-success"></i></td>
                                         <td>
-                                            <button class="btn btn-sm btn-outline-primary" onclick="viewDetails('female-leadership')">
+                                            <button class="btn btn-sm btn-outline-primary"
+                                                onclick="viewDetails('female-leadership')">
                                                 <i class="bi bi-eye"></i>
                                             </button>
                                         </td>
@@ -178,7 +184,8 @@
                                         <td><span class="badge bg-warning">Behind</span></td>
                                         <td><i class="bi bi-arrow-down text-warning"></i></td>
                                         <td>
-                                            <button class="btn btn-sm btn-outline-primary" onclick="viewDetails('policies')">
+                                            <button class="btn btn-sm btn-outline-primary"
+                                                onclick="viewDetails('policies')">
                                                 <i class="bi bi-eye"></i>
                                             </button>
                                         </td>
@@ -191,7 +198,8 @@
                                         <td><span class="badge bg-success">Achieved</span></td>
                                         <td><i class="bi bi-arrow-up text-success"></i></td>
                                         <td>
-                                            <button class="btn btn-sm btn-outline-primary" onclick="viewDetails('budget')">
+                                            <button class="btn btn-sm btn-outline-primary"
+                                                onclick="viewDetails('budget')">
                                                 <i class="bi bi-eye"></i>
                                             </button>
                                         </td>
@@ -204,7 +212,8 @@
                                         <td><span class="badge bg-success">Exceeded</span></td>
                                         <td><i class="bi bi-arrow-up text-success"></i></td>
                                         <td>
-                                            <button class="btn btn-sm btn-outline-primary" onclick="viewDetails('satisfaction')">
+                                            <button class="btn btn-sm btn-outline-primary"
+                                                onclick="viewDetails('satisfaction')">
                                                 <i class="bi bi-eye"></i>
                                             </button>
                                         </td>
@@ -308,7 +317,8 @@
                                 <h5 class="mb-0">Action Items & Recommendations</h5>
                             </div>
                             <div class="col-auto">
-                                <button type="button" class="btn btn-outline-primary btn-sm" data-bs-toggle="modal" data-bs-target="#addActionModal">
+                                <button type="button" class="btn btn-outline-primary btn-sm" data-bs-toggle="modal"
+                                    data-bs-target="#addActionModal">
                                     <i class="bi bi-plus"></i> Add Action
                                 </button>
                             </div>
@@ -341,7 +351,8 @@
                                             </div>
                                         </td>
                                         <td>
-                                            <button class="btn btn-sm btn-outline-success" onclick="updateAction('action1')">
+                                            <button class="btn btn-sm btn-outline-success"
+                                                onclick="updateAction('action1')">
                                                 <i class="bi bi-pencil"></i>
                                             </button>
                                         </td>
@@ -358,7 +369,8 @@
                                             </div>
                                         </td>
                                         <td>
-                                            <button class="btn btn-sm btn-outline-primary" onclick="viewAction('action2')">
+                                            <button class="btn btn-sm btn-outline-primary"
+                                                onclick="viewAction('action2')">
                                                 <i class="bi bi-eye"></i>
                                             </button>
                                         </td>
@@ -375,7 +387,8 @@
                                             </div>
                                         </td>
                                         <td>
-                                            <button class="btn btn-sm btn-outline-success" onclick="updateAction('action3')">
+                                            <button class="btn btn-sm btn-outline-success"
+                                                onclick="updateAction('action3')">
                                                 <i class="bi bi-pencil"></i>
                                             </button>
                                         </td>
@@ -390,7 +403,8 @@
     </div>
 
     <!-- Add KPI Modal -->
-    <div class="modal fade" id="addIndicatorModal" tabindex="-1" aria-labelledby="addIndicatorModalLabel" aria-hidden="true">
+    <div class="modal fade" id="addIndicatorModal" tabindex="-1" aria-labelledby="addIndicatorModalLabel"
+        aria-hidden="true">
         <div class="modal-dialog">
             <div class="modal-content">
                 <div class="modal-header">
@@ -412,7 +426,8 @@
                             <div class="col-md-6">
                                 <div class="mb-3">
                                     <label for="targetValue" class="form-label">Target Value *</label>
-                                    <input type="number" class="form-control" id="targetValue" name="targetValue" required>
+                                    <input type="number" class="form-control" id="targetValue" name="targetValue"
+                                        required>
                                     <div class="invalid-feedback">
                                         Please provide a target value.
                                     </div>
@@ -477,7 +492,8 @@
                     <form id="addActionForm" class="needs-validation" novalidate>
                         <div class="mb-3">
                             <label for="actionItem" class="form-label">Action Item *</label>
-                            <textarea class="form-control" id="actionItem" name="actionItem" rows="2" required></textarea>
+                            <textarea class="form-control" id="actionItem" name="actionItem" rows="2"
+                                required></textarea>
                             <div class="invalid-feedback">
                                 Please provide an action item description.
                             </div>
@@ -533,15 +549,15 @@
 
     <!-- Bootstrap JavaScript -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
-    
+
     <script>
         // Bootstrap form validation
-        (function() {
+        (function () {
             'use strict';
-            window.addEventListener('load', function() {
+            window.addEventListener('load', function () {
                 var forms = document.getElementsByClassName('needs-validation');
-                Array.prototype.filter.call(forms, function(form) {
-                    form.addEventListener('submit', function(event) {
+                Array.prototype.filter.call(forms, function (form) {
+                    form.addEventListener('submit', function (event) {
                         if (form.checkValidity() === false) {
                             event.preventDefault();
                             event.stopPropagation();
@@ -558,17 +574,17 @@
         // Handle form submission
         function handleFormSubmit(form) {
             const formId = form.id;
-            
+
             if (formId === 'addIndicatorForm') {
                 alert('New KPI added successfully!');
             } else if (formId === 'addActionForm') {
                 alert('New action item added successfully!');
             }
-            
+
             // Close modal
             const modal = form.closest('.modal');
             bootstrap.Modal.getInstance(modal).hide();
-            
+
             // Reset form
             form.reset();
             form.classList.remove('was-validated');
@@ -598,4 +614,5 @@
         // using Chart.js or similar library for progressChart and budgetChart
     </script>
 </body>
+
 </html>

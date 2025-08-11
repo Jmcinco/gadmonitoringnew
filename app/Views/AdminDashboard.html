@@ -1,0 +1,1179 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Employee Management - GAD Management System</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --sidebar-width: 280px;
+            --sidebar-bg: #2c3e50;
+            --sidebar-hover: #34495e;
+        }
+        body {
+            font-family: 'Poppins', Arial, sans-serif;
+            background-color: #f8f9fa;
+        }
+        .sidebar {
+            position: fixed;
+            top: 0;
+            left: 0;
+            height: 100vh;
+            width: var(--sidebar-width);
+            background: linear-gradient(180deg, var(--sidebar-bg) 0%, #1a252f 100%);
+            color: white;
+            z-index: 1000;
+            overflow-y: auto;
+        }
+        .main-content {
+            margin-left: var(--sidebar-width);
+            min-height: 100vh;
+            padding: 2rem;
+        }
+        .sidebar .nav-link {
+            color: rgba(255, 255, 255, 0.8);
+            transition: all 0.2s ease;
+        }
+        .sidebar .nav-link:hover {
+            background-color: var(--sidebar-hover);
+            color: white;
+        }
+        .sidebar .nav-link.active {
+            background-color: #0d6efd;
+            color: white;
+        }
+        .user-info {
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 0.5rem;
+        }
+        @media (max-width: 768px) {
+            .sidebar {
+                transform: translateX(-100%);
+                transition: transform 0.3s ease;
+            }
+            .sidebar.show {
+                transform: translateX(0);
+            }
+            .main-content {
+                margin-left: 0;
+                padding: 1rem;
+            }
+            .mobile-toggle {
+                display: block !important;
+            }
+        }
+        .mobile-toggle {
+            display: none;
+        }
+    </style>
+</head>
+<body>
+    <!-- Mobile Toggle Button -->
+    <button class="btn btn-primary mobile-toggle position-fixed" style="top: 1rem; left: 1rem; z-index: 1001;" onclick="toggleSidebar()">
+        <i class="bi bi-list"></i>
+    </button>
+
+    <!-- Sidebar -->
+    <nav id="sidebar" class="sidebar">
+        <div class="sidebar-header">
+            <h4 class="text-white mb-0">
+                <i class="bi bi-shield-check"></i> GAD Management System
+            </h4>
+        </div>
+        
+        <div class="sidebar-content">
+            <!-- User Info -->
+            <div class="user-info mb-4">
+                <div class="text-white d-flex align-items-center">
+                    <i class="bi bi-person-circle fs-4 me-2"></i>
+                    <div>
+                        <div class="fw-bold">Admin User</div>
+                        <small class="text-light">Administrator</small>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Navigation Menu -->
+            <ul class="nav nav-pills flex-column">
+               <li class="nav-item">
+                    <a class="nav-link" href="#dashboard" onclick="showSection('dashboard')">
+                        <i class="bi bi-house-door me-2"></i>Dashboard
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link active" href="#employee-management" onclick="showSection('employee-management')">
+                        <i class="bi bi-people me-2"></i>Employee Management
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" href="#audit-trail" onclick="showSection('audit-trail')">
+                        <i class="bi bi-clock-history me-2"></i>Audit Trail
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" href="#plan-preparation" onclick="showSection('plan-preparation')">
+                        <i class="bi bi-clipboard-plus me-2"></i>GAD Plan Preparation
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" href="#budget-crafting" onclick="showSection('budget-crafting')">
+                        <i class="bi bi-calculator me-2"></i>Budget Crafting
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" href="#plan-review" onclick="showSection('plan-review')">
+                        <i class="bi bi-check-circle me-2"></i>Review & Approval of GAD Plan
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" href="#consolidated-plan" onclick="showSection('consolidated-plan')">
+                        <i class="bi bi-file-earmark-ruled me-2"></i>Generate Consolidated Plan & Budget
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" href="#accomplishment-submission" onclick="showSection('accomplishment-submission')">
+                        <i class="bi bi-send me-2"></i>Submit GAD Accomplishment
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" href="#review-approval" onclick="showSection('review-approval')">
+                        <i class="bi bi-clipboard-check me-2"></i>Review & Approval
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" href="#consolidated-accomplishment" onclick="showSection('consolidated-accomplishment')">
+                        <i class="bi bi-collection me-2"></i>Generate Consolidated GAD Accomplishment
+                    </a>
+                </li>   
+            </ul>
+        </div>
+        
+        <!-- Logout Button -->
+        <div class="sidebar-footer">
+            <a href="#logout" class="btn btn-outline-light w-100">
+                <i class="bi bi-box-arrow-right"></i> Logout
+            </a>
+        </div>
+    </nav>
+
+    <!-- Main Content -->
+    <div class="main-content">
+        <!-- Dashboard Section -->
+        <div id="dashboard-section" class="content-section" style="display: none;">
+            <div class="row">
+                <div class="col-12">
+                    <div class="d-flex justify-content-between align-items-center mb-4">
+                        <h1 class="h3 mb-0">
+                            <i class="bi bi-house-door text-primary"></i> Dashboard
+                        </h1>
+                        <nav aria-label="breadcrumb">
+                            <ol class="breadcrumb">
+                                <li class="breadcrumb-item active" aria-current="page">Dashboard</li>
+                            </ol>
+                        </nav>
+                    </div>
+                </div>
+            </div>
+            <div class="card">
+                <div class="card-body text-center py-5">
+                    <i class="bi bi-house-door display-1 text-muted mb-3"></i>
+                    <h4>Welcome to GAD Management System</h4>
+                    <p class="text-muted">Select a module from the sidebar to get started.</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Employee Management Section -->
+        <div id="employee-management-section" class="content-section">
+            <!-- Header -->
+            <div class="row">
+                <div class="col-12">
+                    <div class="d-flex justify-content-between align-items-center mb-4">
+                        <h1 class="h3 mb-0">
+                            <i class="bi bi-people text-primary"></i> Employee Management
+                        </h1>
+                        <nav aria-label="breadcrumb">
+                            <ol class="breadcrumb">
+                                <li class="breadcrumb-item"><a href="#dashboard" onclick="showSection('dashboard')">Dashboard</a></li>
+                                <li class="breadcrumb-item active" aria-current="page">Employee Management</li>
+                            </ol>
+                        </nav>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Action Buttons -->
+            <div class="row mb-4">
+                <div class="col-12">
+                    <button class="btn btn-primary" onclick="showEmployeeForm()">
+                        <i class="bi bi-person-plus me-2"></i>Add New Employee
+                    </button>
+                    <button class="btn btn-outline-secondary ms-2" onclick="showEmployeeList()">
+                        <i class="bi bi-list me-2"></i>View All Employees
+                    </button>
+                </div>
+            </div>
+
+            <!-- Success/Error Alerts -->
+            <div id="alertContainer"></div>
+
+            <!-- Employee Form Section -->
+            <div id="employeeFormSection" class="row" style="display: none;">
+                <div class="col-12">
+                    <div class="card shadow">
+                        <div class="card-header">
+                            <h5 class="mb-0">
+                                <i class="bi bi-person-badge me-2"></i><span id="formTitle">Add New Employee</span>
+                            </h5>
+                        </div>
+                        <div class="card-body">
+                            <form id="employeeForm" novalidate>
+                                <input type="hidden" id="employeeId" name="employeeId">
+                                
+                                <!-- Personal Information Section -->
+                                <div class="section-title">
+                                    <i class="bi bi-person me-2"></i>Personal Information
+                                </div>
+                                
+                                <div class="row mb-3">
+                                    <div class="col-md-6">
+                                        <label for="firstName" class="form-label">First Name <span class="required">*</span></label>
+                                        <input type="text" class="form-control" id="firstName" name="firstName" required>
+                                        <div class="invalid-feedback">
+                                            Please provide a valid first name.
+                                        </div>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <label for="lastName" class="form-label">Last Name <span class="required">*</span></label>
+                                        <input type="text" class="form-control" id="lastName" name="lastName" required>
+                                        <div class="invalid-feedback">
+                                            Please provide a valid last name.
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div class="row mb-3">
+                                    <div class="col-md-6">
+                                        <label for="gender" class="form-label">Gender <span class="required">*</span></label>
+                                        <select class="form-select" id="gender" name="gender" required>
+                                            <option value="">Select Gender</option>
+                                            <option value="Male">Male</option>
+                                            <option value="Female">Female</option>
+                                            <option value="Other">Other</option>
+                                        </select>
+                                        <div class="invalid-feedback">
+                                            Please select a gender.
+                                        </div>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <label for="email" class="form-label">Email Address <span class="required">*</span></label>
+                                        <input type="email" class="form-control" id="email" name="email" required>
+                                        <div class="invalid-feedback">
+                                            Please provide a valid email address.
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- Work Information Section -->
+                                <div class="section-title mt-4">
+                                    <i class="bi bi-briefcase me-2"></i>Work Information
+                                </div>
+
+                                <div class="row mb-3">
+                                    <div class="col-md-6">
+                                        <label for="division" class="form-label">Division <span class="required">*</span></label>
+                                        <select class="form-select" id="division" name="division" required>
+                                            <option value="">Select Division</option>
+                                            <option value="Human Resources">Human Resources</option>
+                                            <option value="Finance">Finance</option>
+                                            <option value="IT Department">IT Department</option>
+                                            <option value="Operations">Operations</option>
+                                            <option value="Marketing">Marketing</option>
+                                            <option value="Administration">Administration</option>
+                                        </select>
+                                        <div class="invalid-feedback">
+                                            Please select a division.
+                                        </div>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <label for="role" class="form-label">Role <span class="required">*</span></label>
+                                        <select class="form-select" id="role" name="role" required>
+                                            <option value="">Select Role</option>
+                                            <option value="Administrator">Administrator</option>
+                                            <option value="Manager">Manager</option>
+                                            <option value="Supervisor">Supervisor</option>
+                                            <option value="Employee">Employee</option>
+                                            <option value="Coordinator">Coordinator</option>
+                                        </select>
+                                        <div class="invalid-feedback">
+                                            Please select a role.
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- Security Information Section -->
+                                <div class="section-title mt-4">
+                                    <i class="bi bi-shield-lock me-2"></i>Security Information
+                                </div>
+
+                                <div class="row mb-3">
+                                    <div class="col-md-6">
+                                        <label for="password" class="form-label">Password <span class="required">*</span></label>
+                                        <input type="password" class="form-control" id="password" name="password" required minlength="6">
+                                        <div class="invalid-feedback">
+                                            Password must be at least 6 characters long.
+                                        </div>
+                                        <div class="form-text">Minimum 6 characters required</div>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <label for="confirmPassword" class="form-label">Confirm Password <span class="required">*</span></label>
+                                        <input type="password" class="form-control" id="confirmPassword" name="confirmPassword" required>
+                                        <div class="invalid-feedback">
+                                            Passwords do not match.
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- Form Actions -->
+                                <div class="row mt-4">
+                                    <div class="col-12">
+                                        <button type="submit" class="btn btn-primary me-2">
+                                            <i class="bi bi-check-circle me-2"></i><span id="submitBtnText">Add Employee</span>
+                                        </button>
+                                        <button type="button" class="btn btn-secondary" onclick="cancelForm()">
+                                            <i class="bi bi-x-circle me-2"></i>Cancel
+                                        </button>
+                                    </div>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Employee List Section -->
+            <div id="employeeListSection" class="row">
+                <div class="col-12">
+                    <div class="card shadow">
+                        <div class="card-header">
+                            <h5 class="mb-0">
+                                <i class="bi bi-people me-2"></i>Employee List
+                            </h5>
+                        </div>
+                        <div class="card-body">
+                            <div class="table-responsive">
+                                <table class="table table-hover">
+                                    <thead class="table-light">
+                                        <tr>
+                                            <th>Name</th>
+                                            <th>Email</th>
+                                            <th>Gender</th>
+                                            <th>Division</th>
+                                            <th>Role</th>
+                                            <th>Actions</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="employeeTableBody">
+                                        <!-- Employee data will be populated here -->
+                                    </tbody>
+                                </table>
+                                <div id="noEmployeesMessage" class="text-center py-4" style="display: none;">
+                                    <i class="bi bi-people display-4 text-muted mb-3"></i>
+                                    <h5 class="text-muted">No employees found</h5>
+                                    <p class="text-muted">Click "Add New Employee" to create your first employee record.</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Other Sections (Placeholder) -->
+        <div id="plan-preparation-section" class="content-section" style="display: none;">
+            <div class="card">
+                <div class="card-body text-center py-5">
+                    <i class="bi bi-clipboard-plus display-1 text-muted mb-3"></i>
+                    <h4>GAD Plan Preparation</h4>
+                    <p class="text-muted">This section is under development.</p>
+                </div>
+            </div>
+        </div>
+
+        <div id="budget-crafting-section" class="content-section" style="display: none;">
+            <div class="card">
+                <div class="card-body text-center py-5">
+                    <i class="bi bi-calculator display-1 text-muted mb-3"></i>
+                    <h4>Budget Crafting</h4>
+                    <p class="text-muted">This section is under development.</p>
+                </div>
+            </div>
+        </div>
+
+        <div id="plan-review-section" class="content-section" style="display: none;">
+            <div class="card">
+                <div class="card-body text-center py-5">
+                    <i class="bi bi-check-circle display-1 text-muted mb-3"></i>
+                    <h4>Review & Approval of GAD Plan</h4>
+                    <p class="text-muted">This section is under development.</p>
+                </div>
+            </div>
+        </div>
+
+        <div id="consolidated-plan-section" class="content-section" style="display: none;">
+            <div class="card">
+                <div class="card-body text-center py-5">
+                    <i class="bi bi-file-earmark-ruled display-1 text-muted mb-3"></i>
+                    <h4>Generate Consolidated Plan & Budget</h4>
+                    <p class="text-muted">This section is under development.</p>
+                </div>
+            </div>
+        </div>
+
+        <div id="accomplishment-submission-section" class="content-section" style="display: none;">
+            <div class="card">
+                <div class="card-body text-center py-5">
+                    <i class="bi bi-send display-1 text-muted mb-3"></i>
+                    <h4>Submit GAD Accomplishment</h4>
+                    <p class="text-muted">This section is under development.</p>
+                </div>
+            </div>
+        </div>
+
+        <div id="review-approval-section" class="content-section" style="display: none;">
+            <div class="card">
+                <div class="card-body text-center py-5">
+                    <i class="bi bi-clipboard-check display-1 text-muted mb-3"></i>
+                    <h4>Review & Approval</h4>
+                    <p class="text-muted">This section is under development.</p>
+                </div>
+            </div>
+        </div>
+
+        <div id="consolidated-accomplishment-section" class="content-section" style="display: none;">
+            <div class="card">
+                <div class="card-body text-center py-5">
+                    <i class="bi bi-collection display-1 text-muted mb-3"></i>
+                    <h4>Generate Consolidated GAD Accomplishment</h4>
+                    <p class="text-muted">This section is under development.</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Audit Trail Section -->
+        <div id="audit-trail-section" class="content-section" style="display: none;">
+            <div class="row">
+                <div class="col-12">
+                    <div class="d-flex justify-content-between align-items-center mb-4">
+                        <h1 class="h3 mb-0">
+                            <i class="bi bi-clock-history text-primary"></i> Audit Trail
+                        </h1>
+                        <nav aria-label="breadcrumb">
+                            <ol class="breadcrumb">
+                                <li class="breadcrumb-item"><a href="#dashboard" onclick="showSection('dashboard')">Dashboard</a></li>
+                                <li class="breadcrumb-item active" aria-current="page">Audit Trail</li>
+                            </ol>
+                        </nav>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Filter Controls -->
+            <div class="row mb-4">
+                <div class="col-12">
+                    <div class="card">
+                        <div class="card-header">
+                            <h6 class="mb-0"><i class="bi bi-funnel me-2"></i>Filter Activities</h6>
+                        </div>
+                        <div class="card-body">
+                            <div class="row">
+                                <div class="col-md-3">
+                                    <label for="actionFilter" class="form-label">Action Type</label>
+                                    <select class="form-select" id="actionFilter" onchange="filterAuditTrail()">
+                                        <option value="">All Actions</option>
+                                        <option value="CREATE">Create Employee</option>
+                                        <option value="UPDATE">Update Employee</option>
+                                        <option value="DELETE">Delete Employee</option>
+                                    </select>
+                                </div>
+                                <div class="col-md-3">
+                                    <label for="dateFromFilter" class="form-label">From Date</label>
+                                    <input type="date" class="form-control" id="dateFromFilter" onchange="filterAuditTrail()">
+                                </div>
+                                <div class="col-md-3">
+                                    <label for="dateToFilter" class="form-label">To Date</label>
+                                    <input type="date" class="form-control" id="dateToFilter" onchange="filterAuditTrail()">
+                                </div>
+                                <div class="col-md-3">
+                                    <label for="userFilter" class="form-label">User</label>
+                                    <input type="text" class="form-control" id="userFilter" placeholder="Filter by user..." onkeyup="filterAuditTrail()">
+                                </div>
+                            </div>
+                            <div class="row mt-3">
+                                <div class="col-12">
+                                    <button class="btn btn-outline-secondary btn-sm" onclick="clearAuditFilters()">
+                                        <i class="bi bi-x-circle me-1"></i>Clear Filters
+                                    </button>
+                                    <button class="btn btn-outline-primary btn-sm ms-2" onclick="exportAuditTrail()">
+                                        <i class="bi bi-download me-1"></i>Export CSV
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Audit Trail Table -->
+            <div class="row">
+                <div class="col-12">
+                    <div class="card">
+                        <div class="card-header">
+                            <h6 class="mb-0"><i class="bi bi-list-check me-2"></i>Activity Log</h6>
+                        </div>
+                        <div class="card-body">
+                            <div class="table-responsive">
+                                <table class="table table-hover">
+                                    <thead>
+                                        <tr>
+                                            <th>Date & Time</th>
+                                            <th>User</th>
+                                            <th>Action</th>
+                                            <th>Employee</th>
+                                            <th>Details</th>
+                                            <th>IP Address</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="auditTrailTableBody">
+                                        <!-- Audit trail entries will be populated here -->
+                                    </tbody>
+                                </table>
+                            </div>
+                            
+                            <!-- No Records Message -->
+                            <div id="noAuditRecords" class="text-center py-4" style="display: none;">
+                                <i class="bi bi-inbox display-1 text-muted mb-3"></i>
+                                <h5>No Audit Records Found</h5>
+                                <p class="text-muted">No activities match your current filter criteria.</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Statistics Cards -->
+            <div class="row mt-4">
+                <div class="col-md-3">
+                    <div class="card bg-primary text-white">
+                        <div class="card-body">
+                            <div class="d-flex justify-content-between">
+                                <div>
+                                    <h6>Total Activities</h6>
+                                    <h4 id="totalActivities">0</h4>
+                                </div>
+                                <div class="align-self-center">
+                                    <i class="bi bi-activity fs-2"></i>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="card bg-success text-white">
+                        <div class="card-body">
+                            <div class="d-flex justify-content-between">
+                                <div>
+                                    <h6>Employees Created</h6>
+                                    <h4 id="totalCreated">0</h4>
+                                </div>
+                                <div class="align-self-center">
+                                    <i class="bi bi-person-plus fs-2"></i>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="card bg-warning text-white">
+                        <div class="card-body">
+                            <div class="d-flex justify-content-between">
+                                <div>
+                                    <h6>Employees Updated</h6>
+                                    <h4 id="totalUpdated">0</h4>
+                                </div>
+                                <div class="align-self-center">
+                                    <i class="bi bi-pencil-square fs-2"></i>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="card bg-danger text-white">
+                        <div class="card-body">
+                            <div class="d-flex justify-content-between">
+                                <div>
+                                    <h6>Employees Deleted</h6>
+                                    <h4 id="totalDeleted">0</h4>
+                                </div>
+                                <div class="align-self-center">
+                                    <i class="bi bi-trash fs-2"></i>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Delete Confirmation Modal -->
+    <div class="modal fade" id="deleteModal" tabindex="-1" aria-labelledby="deleteModalLabel" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="deleteModalLabel">Confirm Delete</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <p>Are you sure you want to delete this employee? This action cannot be undone.</p>
+                    <div class="alert alert-warning">
+                        <i class="bi bi-exclamation-triangle me-2"></i>
+                        <strong>Employee:</strong> <span id="deleteEmployeeName"></span>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="button" class="btn btn-danger" id="confirmDeleteBtn">Delete Employee</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Bootstrap JS -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    
+    <!-- Simple JavaScript for basic functionality -->
+    <script>
+        // Global variables
+        let employees = [];
+        let editingEmployeeId = null;
+        let auditTrail = [];
+        let filteredAuditTrail = [];
+
+        // Initialize the application
+        document.addEventListener('DOMContentLoaded', function() {
+            loadEmployeesFromStorage();
+            loadAuditTrailFromStorage();
+            showEmployeeList();
+            setupFormValidation();
+        });
+
+        // Load employees from localStorage
+        function loadEmployeesFromStorage() {
+            const storedEmployees = localStorage.getItem('gad_employees');
+            if (storedEmployees) {
+                employees = JSON.parse(storedEmployees);
+            }
+        }
+
+        // Save employees to localStorage
+        function saveEmployeesToStorage() {
+            localStorage.setItem('gad_employees', JSON.stringify(employees));
+        }
+
+        // Load audit trail from localStorage
+        function loadAuditTrailFromStorage() {
+            const storedAuditTrail = localStorage.getItem('gad_audit_trail');
+            if (storedAuditTrail) {
+                auditTrail = JSON.parse(storedAuditTrail);
+            }
+            filteredAuditTrail = [...auditTrail];
+        }
+
+        // Save audit trail to localStorage
+        function saveAuditTrailToStorage() {
+            localStorage.setItem('gad_audit_trail', JSON.stringify(auditTrail));
+        }
+
+        // Add audit log entry
+        function addAuditLog(action, employeeData, details = '') {
+            const auditEntry = {
+                id: 'audit_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9),
+                timestamp: new Date().toISOString(),
+                user: 'Admin User', // In a real app, this would be from the session
+                action: action,
+                employeeName: employeeData ? `${employeeData.firstName} ${employeeData.lastName}` : '',
+                employeeEmail: employeeData ? employeeData.email : '',
+                details: details,
+                ipAddress: '127.0.0.1' // In a real app, this would be the actual IP
+            };
+            
+            auditTrail.unshift(auditEntry); // Add to beginning of array
+            saveAuditTrailToStorage();
+            
+            // Update filtered trail if on audit trail page
+            if (document.getElementById('audit-trail-section').style.display !== 'none') {
+                filterAuditTrail();
+            }
+        }
+
+        // Setup form validation
+        function setupFormValidation() {
+            const form = document.getElementById('employeeForm');
+            if (form) {
+                form.addEventListener('submit', handleFormSubmit);
+                
+                // Password confirmation validation
+                const password = document.getElementById('password');
+                const confirmPassword = document.getElementById('confirmPassword');
+                
+                if (confirmPassword) {
+                    confirmPassword.addEventListener('input', function() {
+                        if (password.value !== confirmPassword.value) {
+                            confirmPassword.setCustomValidity('Passwords do not match');
+                        } else {
+                            confirmPassword.setCustomValidity('');
+                        }
+                    });
+                }
+            }
+        }
+
+        // Handle form submission
+        function handleFormSubmit(event) {
+            event.preventDefault();
+            
+            const formData = new FormData(event.target);
+            const employeeData = {
+                id: formData.get('employeeId') || generateId(),
+                firstName: formData.get('firstName'),
+                lastName: formData.get('lastName'),
+                gender: formData.get('gender'),
+                email: formData.get('email'),
+                division: formData.get('division'),
+                role: formData.get('role'),
+                password: formData.get('password'),
+                createdAt: editingEmployeeId ? getEmployeeById(editingEmployeeId).createdAt : new Date().toISOString(),
+                updatedAt: new Date().toISOString()
+            };
+            
+            // Check for duplicate email
+            const existingEmployee = employees.find(emp => 
+                emp.email === employeeData.email && emp.id !== employeeData.id
+            );
+            
+            if (existingEmployee) {
+                showAlert('danger', 'Email address already exists. Please use a different email address.');
+                return;
+            }
+            
+            if (editingEmployeeId) {
+                // Update existing employee
+                const index = employees.findIndex(emp => emp.id === editingEmployeeId);
+                if (index !== -1) {
+                    const oldEmployee = employees[index];
+                    employees[index] = employeeData;
+                    addAuditLog('UPDATE', employeeData, `Updated employee details`);
+                    showAlert('success', 'Employee updated successfully!');
+                }
+            } else {
+                // Add new employee
+                employees.push(employeeData);
+                addAuditLog('CREATE', employeeData, `New employee created with email: ${employeeData.email}`);
+                showAlert('success', 'Employee created successfully!');
+            }
+            
+            saveEmployeesToStorage();
+            resetForm();
+            showEmployeeList();
+        }
+
+        // Generate unique ID
+        function generateId() {
+            return 'emp_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+        }
+
+        // Get employee by ID
+        function getEmployeeById(id) {
+            return employees.find(emp => emp.id === id);
+        }
+
+        // Show alert message
+        function showAlert(type, message) {
+            const alertContainer = document.getElementById('alertContainer');
+            const iconClass = type === 'success' ? 'bi-check-circle' : 'bi-exclamation-triangle';
+            
+            alertContainer.innerHTML = `
+                <div class="alert alert-${type} alert-dismissible fade show" role="alert">
+                    <i class="bi ${iconClass} me-2"></i>
+                    ${message}
+                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                </div>
+            `;
+        }
+
+        // Show employee form
+        function showEmployeeForm(employeeId = null) {
+            document.getElementById('employeeFormSection').style.display = 'block';
+            document.getElementById('employeeListSection').style.display = 'none';
+            
+            if (employeeId) {
+                // Edit mode
+                editingEmployeeId = employeeId;
+                const employee = getEmployeeById(employeeId);
+                if (employee) {
+                    populateForm(employee);
+                    document.getElementById('formTitle').textContent = 'Edit Employee';
+                    document.getElementById('submitBtnText').textContent = 'Update Employee';
+                }
+            } else {
+                // Add mode
+                editingEmployeeId = null;
+                resetForm();
+                document.getElementById('formTitle').textContent = 'Add New Employee';
+                document.getElementById('submitBtnText').textContent = 'Add Employee';
+            }
+        }
+
+        // Show employee list
+        function showEmployeeList() {
+            document.getElementById('employeeFormSection').style.display = 'none';
+            document.getElementById('employeeListSection').style.display = 'block';
+            populateEmployeeTable();
+        }
+
+        // Populate form with employee data
+        function populateForm(employee) {
+            document.getElementById('employeeId').value = employee.id;
+            document.getElementById('firstName').value = employee.firstName;
+            document.getElementById('lastName').value = employee.lastName;
+            document.getElementById('gender').value = employee.gender;
+            document.getElementById('email').value = employee.email;
+            document.getElementById('division').value = employee.division;
+            document.getElementById('role').value = employee.role;
+        }
+
+        // Reset form
+        function resetForm() {
+            const form = document.getElementById('employeeForm');
+            form.reset();
+            form.classList.remove('was-validated');
+            editingEmployeeId = null;
+        }
+
+        // Cancel form
+        function cancelForm() {
+            resetForm();
+            showEmployeeList();
+        }
+
+        // Populate employee table
+        function populateEmployeeTable() {
+            const tableBody = document.getElementById('employeeTableBody');
+            const noEmployeesMessage = document.getElementById('noEmployeesMessage');
+            
+            if (!tableBody) return;
+            
+            if (employees.length === 0) {
+                tableBody.innerHTML = '';
+                if (noEmployeesMessage) noEmployeesMessage.style.display = 'block';
+                return;
+            }
+            
+            if (noEmployeesMessage) noEmployeesMessage.style.display = 'none';
+            
+            tableBody.innerHTML = employees.map(employee => `
+                <tr>
+                    <td>
+                        <div class="d-flex align-items-center">
+                            <i class="bi bi-person-circle fs-4 text-muted me-2"></i>
+                            <div>
+                                <div class="fw-bold">${employee.firstName} ${employee.lastName}</div>
+                                <small class="text-muted">ID: ${employee.id}</small>
+                            </div>
+                        </div>
+                    </td>
+                    <td>${employee.email}</td>
+                    <td>
+                        <span class="badge bg-secondary">
+                            ${employee.gender}
+                        </span>
+                    </td>
+                    <td>${employee.division}</td>
+                    <td>
+                        <span class="badge bg-primary">
+                            ${employee.role}
+                        </span>
+                    </td>
+                    <td>
+                        <button class="btn btn-outline-primary btn-sm me-1" onclick="editEmployee('${employee.id}')" title="Edit Employee">
+                            <i class="bi bi-pencil"></i>
+                        </button>
+                        <button class="btn btn-outline-danger btn-sm" onclick="confirmDeleteEmployee('${employee.id}', '${employee.firstName} ${employee.lastName}')" title="Delete Employee">
+                            <i class="bi bi-trash"></i>
+                        </button>
+                    </td>
+                </tr>
+            `).join('');
+        }
+
+        // Edit employee
+        function editEmployee(employeeId) {
+            showEmployeeForm(employeeId);
+        }
+
+        // Confirm delete employee
+        function confirmDeleteEmployee(employeeId, employeeName) {
+            document.getElementById('deleteEmployeeName').textContent = employeeName;
+            
+            const confirmBtn = document.getElementById('confirmDeleteBtn');
+            confirmBtn.onclick = () => deleteEmployee(employeeId);
+            
+            const deleteModal = new bootstrap.Modal(document.getElementById('deleteModal'));
+            deleteModal.show();
+        }
+
+        // Delete employee
+        function deleteEmployee(employeeId) {
+            const employeeToDelete = getEmployeeById(employeeId);
+            employees = employees.filter(emp => emp.id !== employeeId);
+            
+            if (employeeToDelete) {
+                addAuditLog('DELETE', employeeToDelete, `Employee deleted from system`);
+            }
+            
+            saveEmployeesToStorage();
+            populateEmployeeTable();
+            showAlert('success', 'Employee deleted successfully!');
+            
+            // Close modal
+            const deleteModal = bootstrap.Modal.getInstance(document.getElementById('deleteModal'));
+            deleteModal.hide();
+        }
+
+        // Toggle sidebar for mobile
+        function toggleSidebar() {
+            const sidebar = document.getElementById('sidebar');
+            sidebar.classList.toggle('show');
+        }
+
+        // Show section
+        function showSection(sectionName) {
+            // Hide all content sections
+            const sections = document.querySelectorAll('.content-section');
+            sections.forEach(section => {
+                section.style.display = 'none';
+            });
+            
+            // Show selected section
+            const targetSection = document.getElementById(sectionName + '-section');
+            if (targetSection) {
+                targetSection.style.display = 'block';
+            }
+            
+            // Load audit trail data if showing audit section
+            if (sectionName === 'audit-trail') {
+                populateAuditTrailTable();
+                updateAuditStatistics();
+            }
+            
+            // Update active nav link
+            const navLinks = document.querySelectorAll('.sidebar .nav-link');
+            navLinks.forEach(link => {
+                link.classList.remove('active');
+            });
+            
+            const activeLink = document.querySelector(`.sidebar .nav-link[href="#${sectionName}"]`);
+            if (activeLink) {
+                activeLink.classList.add('active');
+            }
+            
+            // Close sidebar on mobile after selection
+            if (window.innerWidth <= 768) {
+                const sidebar = document.getElementById('sidebar');
+                sidebar.classList.remove('show');
+            }
+        }
+
+        // Populate audit trail table
+        function populateAuditTrailTable() {
+            const tableBody = document.getElementById('auditTrailTableBody');
+            const noRecordsMessage = document.getElementById('noAuditRecords');
+            
+            if (!tableBody) return;
+            
+            if (filteredAuditTrail.length === 0) {
+                tableBody.innerHTML = '';
+                if (noRecordsMessage) noRecordsMessage.style.display = 'block';
+                return;
+            }
+            
+            if (noRecordsMessage) noRecordsMessage.style.display = 'none';
+            
+            tableBody.innerHTML = filteredAuditTrail.map(entry => `
+                <tr>
+                    <td>
+                        <div class="fw-bold">${formatDateTime(entry.timestamp)}</div>
+                        <small class="text-muted">${formatTime(entry.timestamp)}</small>
+                    </td>
+                    <td>
+                        <div class="d-flex align-items-center">
+                            <i class="bi bi-person-circle text-muted me-2"></i>
+                            ${entry.user}
+                        </div>
+                    </td>
+                    <td>
+                        <span class="badge bg-${getActionBadgeColor(entry.action)}">
+                            ${entry.action}
+                        </span>
+                    </td>
+                    <td>
+                        <div class="fw-bold">${entry.employeeName}</div>
+                        <small class="text-muted">${entry.employeeEmail}</small>
+                    </td>
+                    <td>
+                        <span class="text-muted">${entry.details}</span>
+                    </td>
+                    <td>
+                        <code class="text-muted">${entry.ipAddress}</code>
+                    </td>
+                </tr>
+            `).join('');
+        }
+
+        // Format date and time
+        function formatDateTime(timestamp) {
+            const date = new Date(timestamp);
+            return date.toLocaleDateString();
+        }
+
+        function formatTime(timestamp) {
+            const date = new Date(timestamp);
+            return date.toLocaleTimeString();
+        }
+
+        // Get action badge color
+        function getActionBadgeColor(action) {
+            switch (action) {
+                case 'CREATE': return 'success';
+                case 'UPDATE': return 'warning';
+                case 'DELETE': return 'danger';
+                default: return 'secondary';
+            }
+        }
+
+        // Filter audit trail
+        function filterAuditTrail() {
+            const actionFilter = document.getElementById('actionFilter').value;
+            const dateFromFilter = document.getElementById('dateFromFilter').value;
+            const dateToFilter = document.getElementById('dateToFilter').value;
+            const userFilter = document.getElementById('userFilter').value.toLowerCase();
+            
+            filteredAuditTrail = auditTrail.filter(entry => {
+                // Filter by action
+                if (actionFilter && entry.action !== actionFilter) {
+                    return false;
+                }
+                
+                // Filter by date range
+                const entryDate = new Date(entry.timestamp).toISOString().split('T')[0];
+                if (dateFromFilter && entryDate < dateFromFilter) {
+                    return false;
+                }
+                if (dateToFilter && entryDate > dateToFilter) {
+                    return false;
+                }
+                
+                // Filter by user
+                if (userFilter && !entry.user.toLowerCase().includes(userFilter)) {
+                    return false;
+                }
+                
+                return true;
+            });
+            
+            populateAuditTrailTable();
+            updateAuditStatistics();
+        }
+
+        // Clear audit filters
+        function clearAuditFilters() {
+            document.getElementById('actionFilter').value = '';
+            document.getElementById('dateFromFilter').value = '';
+            document.getElementById('dateToFilter').value = '';
+            document.getElementById('userFilter').value = '';
+            filteredAuditTrail = [...auditTrail];
+            populateAuditTrailTable();
+            updateAuditStatistics();
+        }
+
+        // Update audit statistics
+        function updateAuditStatistics() {
+            const totalActivities = filteredAuditTrail.length;
+            const totalCreated = filteredAuditTrail.filter(entry => entry.action === 'CREATE').length;
+            const totalUpdated = filteredAuditTrail.filter(entry => entry.action === 'UPDATE').length;
+            const totalDeleted = filteredAuditTrail.filter(entry => entry.action === 'DELETE').length;
+            
+            const totalActivitiesElement = document.getElementById('totalActivities');
+            const totalCreatedElement = document.getElementById('totalCreated');
+            const totalUpdatedElement = document.getElementById('totalUpdated');
+            const totalDeletedElement = document.getElementById('totalDeleted');
+            
+            if (totalActivitiesElement) totalActivitiesElement.textContent = totalActivities;
+            if (totalCreatedElement) totalCreatedElement.textContent = totalCreated;
+            if (totalUpdatedElement) totalUpdatedElement.textContent = totalUpdated;
+            if (totalDeletedElement) totalDeletedElement.textContent = totalDeleted;
+        }
+
+        // Export audit trail to CSV
+        function exportAuditTrail() {
+            if (filteredAuditTrail.length === 0) {
+                showAlert('danger', 'No audit records to export');
+                return;
+            }
+            
+            const headers = ['Date & Time', 'User', 'Action', 'Employee Name', 'Employee Email', 'Details', 'IP Address'];
+            const csvContent = [
+                headers.join(','),
+                ...filteredAuditTrail.map(entry => [
+                    `"${new Date(entry.timestamp).toLocaleString()}"`,
+                    `"${entry.user}"`,
+                    `"${entry.action}"`,
+                    `"${entry.employeeName}"`,
+                    `"${entry.employeeEmail}"`,
+                    `"${entry.details}"`,
+                    `"${entry.ipAddress}"`
+                ].join(','))
+            ].join('\\n');
+            
+            const blob = new Blob([csvContent], { type: 'text/csv' });
+            const url = window.URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `audit_trail_${new Date().toISOString().split('T')[0]}.csv`;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            window.URL.revokeObjectURL(url);
+            
+            showAlert('success', 'Audit trail exported successfully!');
+        }
+
+        // Close sidebar when clicking outside on mobile
+        document.addEventListener('click', function(event) {
+            if (window.innerWidth <= 768) {
+                const sidebar = document.getElementById('sidebar');
+                const mobileToggle = document.querySelector('.mobile-toggle');
+                
+                if (sidebar && mobileToggle && !sidebar.contains(event.target) && !mobileToggle.contains(event.target)) {
+                    sidebar.classList.remove('show');
+                }
+            }
+        });
+    </script>
+</body>
+</html>

@@ -6,84 +6,190 @@
     <title>GAD Budget Crafting - GAD Management System</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css" rel="stylesheet">
-
-    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600&display=swap" rel="stylesheet">
-
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600&display=swap" rel="stylesheet">
     <style>
-        .navbar {
-            font-family: 'Poppins', sans-serif;
-
+        :root {
+            --bs-primary-rgb: 36, 20, 68;
+            --sidebar-width: 280px;
+            --sidebar-bg: #2c3e50;
+            --sidebar-hover: #34495e;
+        }
+        body {
+            font-family: 'Poppins', Arial, sans-serif;
+            background-color: #f4f6f9;
+            margin: 0;
+            padding: 0;
+        }
+        .sidebar {
+            position: fixed;
+            top: 0;
+            left: 0;
+            height: 100vh;
+            width: var(--sidebar-width);
+            background: linear-gradient(180deg, var(--sidebar-bg) 0%, #1a252f 100%);
+            color: white;
+            z-index: 1000;
+            display: flex;
+            flex-direction: column;
+            box-shadow: 0 1rem 3rem rgba(0, 0, 0, 0.175);
+        }
+        .sidebar-header {
+            padding: 1.5rem 1rem;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+            text-align: center;
+        }
+        .sidebar-content {
+            flex: 1;
+            padding: 1rem;
+            overflow-y: auto;
+        }
+        .sidebar-footer {
+            padding: 1rem;
+            border-top: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        .user-info {
+            padding: 1rem;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 0.5rem;
+            margin-bottom: 1rem;
+            display: flex;
+            align-items: center;
+        }
+        .sidebar .nav-link {
+            color: rgba(255, 255, 255, 0.8);
+            padding: 0.75rem 1rem;
+            margin-bottom: 0.25rem;
+            border-radius: 0.5rem;
+            transition: all 0.2s ease;
+            text-decoration: none;
+            display: flex;
+            align-items: center;
+        }
+        .sidebar .nav-link:hover {
+            background-color: var(--sidebar-hover);
+            color: white;
+            transform: translateX(3px);
+        }
+        .sidebar .nav-link.active {
+            background-color: #3498db;
+            color: white;
+        }
+        .main-content {
+            margin-left: var(--sidebar-width);
+            min-height: 100vh;
+            padding: 2rem;
+            background-color: #fafbfe;
+        }
+        .card {
+            border: none;
+            border-radius: 0.5rem;
+            box-shadow: 0 0.15rem 1.75rem 0 rgba(58, 59, 69, 0.15);
+        }
+        .card-header {
+            background-color: #f8f9fc;
+            border-bottom: 1px solid #e3e6f0;
+        }
+        .table th, .table td {
+            vertical-align: middle;
+            padding: 0.75rem;
+        }
+        .modal-body {
+            padding: 1.5rem;
+        }
+        .form-label {
+            font-weight: 600;
+        }
+        @media (max-width: 768px) {
+            .sidebar {
+                transform: translateX(-100%);
+                transition: transform 0.3s ease;
+            }
+            .sidebar.show {
+                transform: translateX(0);
+            }
+            .main-content {
+                margin-left: 0;
+                padding: 1rem;
+            }
+            .table-responsive {
+                font-size: 0.85rem;
+            }
+            .table th, .table td {
+                padding: 0.5rem;
+            }
         }
     </style>
 </head>
 <body>
-    <!-- Navigation -->
-    <nav class="navbar navbar-expand-lg navbar-dark" style="background-color: #241444;">
-        <div class="container-fluid">
-            <a class="navbar-brand" href="dashboard.html">
-                <i class="bi bi-shield-check"></i> GAD Management System
-            </a>
-            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
-                <span class="navbar-toggler-icon"></span>
-            </button>
-            <div class="collapse navbar-collapse" id="navbarNav">
-                <ul class="navbar-nav me-auto">
-                    <li class="nav-item">
-                        <a class="nav-link" href="dashboard.html">
-                            <i class="bi bi-house-door"></i> Dashboard
-                        </a>
-                    </li>
-                    <li class="nav-item dropdown">
-                        <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown">
-                            <i class="bi bi-clipboard-check"></i> GAD Activities
-                        </a>
-                       <ul class="dropdown-menu">
-                            <li><a class="dropdown-item" href="<?= base_url('Focal/PlanPreparation') ?>">GAD Plan
-                                    Preparation</a></li>
-                            <li><a class="dropdown-item" href="<?= base_url('Focal/BudgetCrafting') ?>">Budget
-                                    Crafting</a></li>
-                            <li><a class="dropdown-item" href="<?= base_url('Focal/PlanReview') ?>">Review &
-                                    Approval of GAD Plan</a></li>
-                            <li><a class="dropdown-item" href="<?= base_url('Focal/ConsolidatedPlan') ?>">Generate
-                                    Consolidated Plan &
-                                    Budget</a></li>
-                            <li><a class="dropdown-item" href="<?= base_url('Focal/AccomplishmentSubmission') ?>">Submit
-                                    GAD
-                                    Accomplishment</a></li>
-                            <li><a class="dropdown-item" href="<?= base_url('Focal/ReviewApproval') ?>">Review &
-                                    Approval</a></li>
-                            <li><a class="dropdown-item"
-                                    href="<?= base_url('Focal/ConsolidatedAccomplishment') ?>">Generate
-                                    Consolidated GAD Accomplishment</a></li>
-                        </ul>
-                    </li>
-                </ul>
-                <ul class="navbar-nav">
-                    <li class="nav-item dropdown">
-                        <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown">
-                            <i class="bi bi-person-circle"></i> Admin User
-                        </a>
-                        <ul class="dropdown-menu">
-                            <li><a class="dropdown-item" href="index.html"><i class="bi bi-box-arrow-right"></i> Logout</a></li>
-                        </ul>
-                    </li>
-                </ul>
-            </div>
+    <!-- Sidebar -->
+    <nav id="sidebar" class="sidebar">
+        <div class="sidebar-header">
+            <h4 class="text-white mb-0">
+                <i class="bi bi-shield-check"></i> GAD Monitoring System
+            </h4>
         </div>
-    </nav>
-
-    <!-- Breadcrumb -->
-    <nav aria-label="breadcrumb" class="bg-light">
-        <div class="container-fluid">
-            <ol class="breadcrumb py-2 mb-0">
-                <li class="breadcrumb-item"><a href="dashboard.html">Dashboard</a></li>
-                <li class="breadcrumb-item active">GAD Budget Crafting</li>
-            </ol>
+        <div class="sidebar-content">
+            <div class="user-info mb-4">
+                <div class="text-white d-flex align-items-center">
+                    <i class="bi bi-person-circle fs-4 me-2"></i>
+                    <div>
+                        <div class="fw-bold">Admin User</div>
+                        <small class="text-light">Administrator</small>
+                    </div>
+                </div>
+            </div>
+            <ul class="nav nav-pills flex-column">
+                <li class="nav-item">
+                    <a class="nav-link" href="<?= base_url('FocalDashboard') ?>">
+                        <i class="bi bi-house-door me-2"></i>Dashboard
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" href="<?= base_url('Focal/PlanPreparation') ?>">
+                        <i class="bi bi-clipboard-plus me-2"></i>Preparation of GAD Plan
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link active" href="<?= base_url('Focal/BudgetCrafting') ?>">
+                        <i class="bi bi-calculator me-2"></i>Budget Crafting
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" href="<?= base_url('Focal/PlanReview') ?>">
+                        <i class="bi bi-check-circle me-2"></i>Review & Approval of GAD Plan
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" href="<?= base_url('Focal/ConsolidatedPlan') ?>">
+                        <i class="bi bi-file-earmark-text me-2"></i>Consolidated Plan & Budget
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" href="<?= base_url('Focal/AccomplishmentSubmission') ?>">
+                        <i class="bi bi-send me-2"></i>Submission of GAD Accomplishment
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" href="<?= base_url('Focal/ReviewApproval') ?>">
+                        <i class="bi bi-clipboard-check me-2"></i>Review & Approval of Accomplishment
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" href="<?= base_url('Focal/ConsolidatedAccomplishment') ?>">
+                        <i class="bi bi-collection me-2"></i>Consolidated GAD Accomplishment
+                    </a>
+                </li>
+            </ul>
+        </div>
+        <div class="sidebar-footer">
+            <a href="index.html" class="btn btn-outline-light w-100">
+                <i class="bi bi-box-arrow-right"></i> Logout
+            </a>
         </div>
     </nav>
 
     <!-- Main Content -->
-    <div class="container-fluid py-4">
+    <div class="main-content">
         <div class="row">
             <div class="col-12">
                 <div class="d-flex justify-content-between align-items-center mb-4">
@@ -125,6 +231,7 @@
                                     <tr>
                                         <th>GAD Activity ID</th>
                                         <th>Particulars/Items of Expense</th>
+                                        <th>Type of Expense</th>
                                         <th>Object of Expenses</th>
                                         <th>Source of Budget</th>
                                         <th>Amount</th>
@@ -132,56 +239,36 @@
                                     </tr>
                                 </thead>
                                 <tbody id="budgetTableBody">
-                                    <tr>
-                                        <td>GAD001</td>
-                                        <td>Training materials and supplies for gender sensitivity training</td>
-                                        <td>Training and Seminar Expenses</td>
-                                        <td>General Fund</td>
-                                        <td>₱25,000.00</td>
-                                        <td>
-                                            <button class="btn btn-sm btn-outline-primary" onclick="editBudgetItem('GAD001')">
-                                                <i class="bi bi-pencil"></i>
-                                            </button>
-                                            <button class="btn btn-sm btn-outline-danger" onclick="deleteBudgetItem('GAD001')">
-                                                <i class="bi bi-trash"></i>
-                                            </button>
-                                        </td>
-                                    </tr>
-                                    <tr>
-                                        <td>GAD002</td>
-                                        <td>Venue rental for women's leadership development workshop</td>
-                                        <td>Travel and Transportation</td>
-                                        <td>Special Education Fund</td>
-                                        <td>₱15,000.00</td>
-                                        <td>
-                                            <button class="btn btn-sm btn-outline-primary" onclick="editBudgetItem('GAD002')">
-                                                <i class="bi bi-pencil"></i>
-                                            </button>
-                                            <button class="btn btn-sm btn-outline-danger" onclick="deleteBudgetItem('GAD002')">
-                                                <i class="bi bi-trash"></i>
-                                            </button>
-                                        </td>
-                                    </tr>
-                                    <tr>
-                                        <td>GAD003</td>
-                                        <td>Professional speaker fees for anti-harassment seminar</td>
-                                        <td>Professional Services</td>
-                                        <td>General Fund</td>
-                                        <td>₱30,000.00</td>
-                                        <td>
-                                            <button class="btn btn-sm btn-outline-primary" onclick="editBudgetItem('GAD003')">
-                                                <i class="bi bi-pencil"></i>
-                                            </button>
-                                            <button class="btn btn-sm btn-outline-danger" onclick="deleteBudgetItem('GAD003')">
-                                                <i class="bi bi-trash"></i>
-                                            </button>
-                                        </td>
-                                    </tr>
+                                    <?php if (empty($budgetItems)): ?>
+                                        <tr><td colspan="7" class="text-center">No budget items found.</td></tr>
+                                    <?php else: ?>
+                                        <?php foreach ($budgetItems as $item): ?>
+                                            <tr data-act-id="<?= esc($item['act_id']) ?>" 
+                                                data-plan-id="<?= esc($item['plan_id']) ?>" 
+                                                data-obj-id="<?= esc($item['obj_id']) ?>" 
+                                                data-src-id="<?= esc($item['src_id']) ?>">
+                                                <td><?= esc($item['act_id']) ?></td>
+                                                <td><?= esc($item['particulars']) ?></td>
+                                                <td><?= esc($item['type_of_expense']) ?></td>
+                                                <td><?= esc($item['object_name'] ?? 'N/A') ?></td>
+                                                <td><?= esc($item['source_name'] ?? 'N/A') ?></td>
+                                                <td>₱<?= number_format($item['amount'], 2) ?></td>
+                                                <td>
+                                                    <button class="btn btn-sm btn-outline-primary" onclick="editBudgetItem('<?= esc($item['act_id']) ?>')">
+                                                        <i class="bi bi-pencil"></i>
+                                                    </button>
+                                                    <button class="btn btn-sm btn-outline-danger" onclick="deleteBudgetItem('<?= esc($item['act_id']) ?>')">
+                                                        <i class="bi bi-trash"></i>
+                                                    </button>
+                                                </td>
+                                            </tr>
+                                        <?php endforeach; ?>
+                                    <?php endif; ?>
                                 </tbody>
                                 <tfoot class="table-light">
                                     <tr>
-                                        <th colspan="4" class="text-end">Total Budget:</th>
-                                        <th id="totalBudget">₱70,000.00</th>
+                                        <th colspan="5" class="text-end">Total Budget:</th>
+                                        <th id="totalBudget">₱0.00</th>
                                         <th></th>
                                     </tr>
                                 </tfoot>
@@ -206,10 +293,21 @@
                 <div class="modal-body">
                     <form id="addBudgetItemForm" class="needs-validation" novalidate>
                         <div class="mb-3">
-                            <label for="gadActivityId" class="form-label">GAD Activity ID *</label>
-                            <input type="text" class="form-control" id="gadActivityId" name="gadActivityId" required>
+                            <label for="planId" class="form-label">Plan ID *</label>
+                            <select class="form-select" id="planId" name="plan_id" required>
+                                <option value="">Select Plan</option>
+                                <?php if (empty($plans)): ?>
+                                    <option value="" disabled>No plans available</option>
+                                <?php else: ?>
+                                    <?php foreach ($plans as $plan): ?>
+                                        <option value="<?= esc($plan['plan_id']) ?>">
+                                            <?= esc($plan['activity'] ?? 'Plan ' . $plan['plan_id']) ?>
+                                        </option>
+                                    <?php endforeach; ?>
+                                <?php endif; ?>
+                            </select>
                             <div class="invalid-feedback">
-                                Please provide a valid GAD Activity ID.
+                                Please select a valid Plan ID.
                             </div>
                         </div>
                         <div class="mb-3">
@@ -219,17 +317,26 @@
                                 Please provide valid particulars or items of expense.
                             </div>
                         </div>
+                        <div class="mb-3">
+                            <label for="expenseType" class="form-label">Type of Expense *</label>
+                            <select class="form-select" id="expenseType" name="expenseType" required>
+                                <option value="">Select Type of Expense</option>
+                                <option value="Direct Expense">Direct Expense</option>
+                                <option value="Appropriation">Appropriation</option>
+                            </select>
+                            <div class="invalid-feedback">
+                                Please select a type of expense.
+                            </div>
+                        </div>
                         <div class="row">
                             <div class="col-md-6">
                                 <div class="mb-3">
                                     <label for="objectOfExpenses" class="form-label">Object of Expenses *</label>
-                                    <select class="form-select" id="objectOfExpenses" name="objectOfExpenses" required>
+                                    <select class="form-select" id="objectOfExpenses" name="obj_id" required>
                                         <option value="">Select Object of Expenses</option>
-                                        <option value="Training and Seminar Expenses">Training and Seminar Expenses</option>
-                                        <option value="Office Supplies and Materials">Office Supplies and Materials</option>
-                                        <option value="Professional Services">Professional Services</option>
-                                        <option value="Travel and Transportation">Travel and Transportation</option>
-                                        <option value="Communication and Utilities">Communication and Utilities</option>
+                                        <?php foreach ($objectsOfExpense as $obj): ?>
+                                            <option value="<?= esc($obj['obj_id']) ?>"><?= esc($obj['object_name']) ?></option>
+                                        <?php endforeach; ?>
                                     </select>
                                     <div class="invalid-feedback">
                                         Please select an object of expenses.
@@ -239,13 +346,11 @@
                             <div class="col-md-6">
                                 <div class="mb-3">
                                     <label for="sourceOfBudget" class="form-label">Source of Budget *</label>
-                                    <select class="form-select" id="sourceOfBudget" name="sourceOfBudget" required>
+                                    <select class="form-select" id="sourceOfBudget" name="src_id" required>
                                         <option value="">Select Source of Budget</option>
-                                        <option value="General Fund">General Fund</option>
-                                        <option value="Special Education Fund">Special Education Fund</option>
-                                        <option value="Trust Fund">Trust Fund</option>
-                                        <option value="Development Fund">Development Fund</option>
-                                        <option value="Foreign Assistance">Foreign Assistance</option>
+                                        <?php foreach ($sourcesOfFund as $src): ?>
+                                            <option value="<?= esc($src['src_id']) ?>"><?= esc($src['source_name']) ?></option>
+                                        <?php endforeach; ?>
                                     </select>
                                     <div class="invalid-feedback">
                                         Please select a source of budget.
@@ -285,32 +390,48 @@
                 </div>
                 <div class="modal-body">
                     <form id="editBudgetItemForm" class="needs-validation" novalidate>
-                        <input type="hidden" id="editBudgetItemId" name="editBudgetItemId">
+                        <input type="hidden" id="editBudgetItemId" name="act_id">
                         <div class="mb-3">
-                            <label for="editGadActivityId" class="form-label">GAD Activity ID *</label>
-                            <input type="text" class="form-control" id="editGadActivityId" name="editGadActivityId" required>
+                            <label for="editPlanId" class="form-label">Plan ID *</label>
+                            <select class="form-select" id="editPlanId" name="plan_id" required>
+                                <option value="">Select Plan</option>
+                                <?php foreach ($plans as $plan): ?>
+                                    <option value="<?= esc($plan['plan_id']) ?>">
+                                        <?= esc($plan['activity'] ?? 'Plan ' . $plan['plan_id']) ?>
+                                    </option>
+                                <?php endforeach; ?>
+                            </select>
                             <div class="invalid-feedback">
-                                Please provide a valid GAD Activity ID.
+                                Please select a valid Plan ID.
                             </div>
                         </div>
                         <div class="mb-3">
                             <label for="editParticulars" class="form-label">Particulars/Items of Expense *</label>
-                            <textarea class="form-control" id="editParticulars" name="editParticulars" rows="3" required></textarea>
+                            <textarea class="form-control" id="editParticulars" name="particulars" rows="3" required></textarea>
                             <div class="invalid-feedback">
                                 Please provide valid particulars or items of expense.
+                            </div>
+                        </div>
+                        <div class="mb-3">
+                            <label for="editExpenseType" class="form-label">Type of Expense *</label>
+                            <select class="form-select" id="editExpenseType" name="expenseType" required>
+                                <option value="">Select Type of Expense</option>
+                                <option value="Direct Expense">Direct Expense</option>
+                                <option value="Appropriation">Appropriation</option>
+                            </select>
+                            <div class="invalid-feedback">
+                                Please select a type of expense.
                             </div>
                         </div>
                         <div class="row">
                             <div class="col-md-6">
                                 <div class="mb-3">
                                     <label for="editObjectOfExpenses" class="form-label">Object of Expenses *</label>
-                                    <select class="form-select" id="editObjectOfExpenses" name="editObjectOfExpenses" required>
+                                    <select class="form-select" id="editObjectOfExpenses" name="obj_id" required>
                                         <option value="">Select Object of Expenses</option>
-                                        <option value="Training and Seminar Expenses">Training and Seminar Expenses</option>
-                                        <option value="Office Supplies and Materials">Office Supplies and Materials</option>
-                                        <option value="Professional Services">Professional Services</option>
-                                        <option value="Travel and Transportation">Travel and Transportation</option>
-                                        <option value="Communication and Utilities">Communication and Utilities</option>
+                                        <?php foreach ($objectsOfExpense as $obj): ?>
+                                            <option value="<?= esc($obj['obj_id']) ?>"><?= esc($obj['object_name']) ?></option>
+                                        <?php endforeach; ?>
                                     </select>
                                     <div class="invalid-feedback">
                                         Please select an object of expenses.
@@ -320,13 +441,11 @@
                             <div class="col-md-6">
                                 <div class="mb-3">
                                     <label for="editSourceOfBudget" class="form-label">Source of Budget *</label>
-                                    <select class="form-select" id="editSourceOfBudget" name="editSourceOfBudget" required>
+                                    <select class="form-select" id="editSourceOfBudget" name="src_id" required>
                                         <option value="">Select Source of Budget</option>
-                                        <option value="General Fund">General Fund</option>
-                                        <option value="Special Education Fund">Special Education Fund</option>
-                                        <option value="Trust Fund">Trust Fund</option>
-                                        <option value="Development Fund">Development Fund</option>
-                                        <option value="Foreign Assistance">Foreign Assistance</option>
+                                        <?php foreach ($sourcesOfFund as $src): ?>
+                                            <option value="<?= esc($src['src_id']) ?>"><?= esc($src['source_name']) ?></option>
+                                        <?php endforeach; ?>
                                     </select>
                                     <div class="invalid-feedback">
                                         Please select a source of budget.
@@ -338,7 +457,7 @@
                             <label for="editAmount" class="form-label">Amount *</label>
                             <div class="input-group">
                                 <span class="input-group-text">₱</span>
-                                <input type="number" class="form-control" id="editAmount" name="editAmount" required min="0" step="0.01">
+                                <input type="number" class="form-control" id="editAmount" name="amount" required min="0" step="0.01">
                                 <div class="invalid-feedback">
                                     Please provide a valid amount.
                                 </div>
@@ -354,8 +473,9 @@
         </div>
     </div>
 
-    <!-- Bootstrap JavaScript -->
+    <!-- Bootstrap JavaScript and jQuery -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
     
     <script>
         // Bootstrap form validation
@@ -375,6 +495,7 @@
                         form.classList.add('was-validated');
                     }, false);
                 });
+                calculateTotal(); // Calculate total on page load
             }, false);
         })();
 
@@ -382,117 +503,89 @@
         function handleFormSubmit(form) {
             const formData = new FormData(form);
             const formId = form.id;
-            
-            if (formId === 'addBudgetItemForm') {
-                addBudgetItemToTable(formData);
-            } else if (formId === 'editBudgetItemForm') {
-                updateBudgetItemInTable(formData);
-            }
-            
+            const url = formId === 'addBudgetItemForm' 
+                ? '<?= base_url('FocalController/addBudgetItem') ?>'
+                : '<?= base_url('FocalController/editBudgetItem') ?>';
+
+            $.ajax({
+                url: url,
+                type: 'POST',
+                data: formData,
+                processData: false,
+                contentType: false,
+                success: function(response) {
+                    if (response.success) {
+                        alert(response.message);
+                        location.reload(); // Reload to refresh table
+                    } else {
+                        let errorMessage = response.message;
+                        if (response.errors) {
+                            errorMessage += '\nErrors:\n' + Object.values(response.errors).join('\n');
+                        } else if (response.error) {
+                            errorMessage += '\nError: ' + response.error;
+                        }
+                        alert(errorMessage);
+                    }
+                },
+                error: function(xhr, status, error) {
+                    alert('An error occurred while processing the request: ' + error);
+                }
+            });
+
             // Close modal
             const modal = form.closest('.modal');
             bootstrap.Modal.getInstance(modal).hide();
-            
+
             // Reset form
             form.reset();
             form.classList.remove('was-validated');
-            
-            // Recalculate total
-            calculateTotal();
-        }
-
-        // Add budget item to table
-        function addBudgetItemToTable(formData) {
-            const tableBody = document.getElementById('budgetTableBody');
-            const newRow = document.createElement('tr');
-            const gadActivityId = formData.get('gadActivityId');
-            const particulars = formData.get('particulars');
-            const objectOfExpenses = formData.get('objectOfExpenses');
-            const sourceOfBudget = formData.get('sourceOfBudget');
-            const amount = parseFloat(formData.get('amount'));
-            
-            newRow.innerHTML = `
-                <td>${gadActivityId}</td>
-                <td>${particulars}</td>
-                <td>${objectOfExpenses}</td>
-                <td>${sourceOfBudget}</td>
-                <td>₱${amount.toLocaleString()}</td>
-                <td>
-                    <button class="btn btn-sm btn-outline-primary" onclick="editBudgetItem('${gadActivityId}')">
-                        <i class="bi bi-pencil"></i>
-                    </button>
-                    <button class="btn btn-sm btn-outline-danger" onclick="deleteBudgetItem('${gadActivityId}')">
-                        <i class="bi bi-trash"></i>
-                    </button>
-                </td>
-            `;
-            
-            tableBody.appendChild(newRow);
         }
 
         // Edit budget item
-        function editBudgetItem(gadActivityId) {
+        function editBudgetItem(actId) {
             const modal = new bootstrap.Modal(document.getElementById('editBudgetItemModal'));
-            const rows = document.querySelectorAll('#budgetTableBody tr');
-            
-            rows.forEach(row => {
-                if (row.cells[0].textContent === gadActivityId) {
-                    document.getElementById('editBudgetItemId').value = gadActivityId;
-                    document.getElementById('editGadActivityId').value = row.cells[0].textContent;
-                    document.getElementById('editParticulars').value = row.cells[1].textContent;
-                    document.getElementById('editObjectOfExpenses').value = row.cells[2].textContent;
-                    document.getElementById('editSourceOfBudget').value = row.cells[3].textContent;
-                    
-                    // Extract amount from formatted text
-                    const amountText = row.cells[4].textContent.replace('₱', '').replace(/,/g, '');
-                    document.getElementById('editAmount').value = parseFloat(amountText);
-                }
-            });
-            
-            modal.show();
-        }
+            const row = document.querySelector(`#budgetTableBody tr[data-act-id="${actId}"]`);
 
-        // Update budget item in table
-        function updateBudgetItemInTable(formData) {
-            const gadActivityId = formData.get('editBudgetItemId');
-            const newGadActivityId = formData.get('editGadActivityId');
-            const particulars = formData.get('editParticulars');
-            const objectOfExpenses = formData.get('editObjectOfExpenses');
-            const sourceOfBudget = formData.get('editSourceOfBudget');
-            const amount = parseFloat(formData.get('editAmount'));
-            
-            const rows = document.querySelectorAll('#budgetTableBody tr');
-            rows.forEach(row => {
-                if (row.cells[0].textContent === gadActivityId) {
-                    row.cells[0].textContent = newGadActivityId;
-                    row.cells[1].textContent = particulars;
-                    row.cells[2].textContent = objectOfExpenses;
-                    row.cells[3].textContent = sourceOfBudget;
-                    row.cells[4].textContent = `₱${amount.toLocaleString()}`;
-                    
-                    // Update action buttons
-                    row.cells[5].innerHTML = `
-                        <button class="btn btn-sm btn-outline-primary" onclick="editBudgetItem('${newGadActivityId}')">
-                            <i class="bi bi-pencil"></i>
-                        </button>
-                        <button class="btn btn-sm btn-outline-danger" onclick="deleteBudgetItem('${newGadActivityId}')">
-                            <i class="bi bi-trash"></i>
-                        </button>
-                    `;
-                }
-            });
+            if (row) {
+                document.getElementById('editBudgetItemId').value = actId;
+                document.getElementById('editPlanId').value = row.dataset.planId;
+                document.getElementById('editParticulars').value = row.cells[1].textContent;
+                document.getElementById('editExpenseType').value = row.cells[2].textContent;
+                document.getElementById('editObjectOfExpenses').value = row.dataset.objId;
+                document.getElementById('editSourceOfBudget').value = row.dataset.srcId;
+                const amountText = row.cells[5].textContent.replace('₱', '').replace(/,/g, '');
+                document.getElementById('editAmount').value = parseFloat(amountText);
+                modal.show();
+            } else {
+                alert('Budget item not found.');
+            }
         }
 
         // Delete budget item
-        function deleteBudgetItem(gadActivityId) {
+        function deleteBudgetItem(actId) {
             if (confirm('Are you sure you want to delete this budget item?')) {
-                const rows = document.querySelectorAll('#budgetTableBody tr');
-                rows.forEach(row => {
-                    if (row.cells[0].textContent === gadActivityId) {
-                        row.remove();
+                $.ajax({
+                    url: '<?= base_url('FocalController/deleteBudgetItem') ?>',
+                    type: 'POST',
+                    data: { act_id: actId },
+                    success: function(response) {
+                        if (response.success) {
+                            alert(response.message);
+                            location.reload(); // Reload to refresh table
+                        } else {
+                            let errorMessage = response.message;
+                            if (response.errors) {
+                                errorMessage += '\nErrors:\n' + Object.values(response.errors).join('\n');
+                            } else if (response.error) {
+                                errorMessage += '\nError: ' + response.error;
+                            }
+                            alert(errorMessage);
+                        }
+                    },
+                    error: function(xhr, status, error) {
+                        alert('An error occurred while deleting the budget item: ' + error);
                     }
                 });
-                calculateTotal();
             }
         }
 
@@ -500,13 +593,13 @@
         function calculateTotal() {
             const rows = document.querySelectorAll('#budgetTableBody tr');
             let total = 0;
-            
+
             rows.forEach(row => {
-                const amountText = row.cells[4].textContent.replace('₱', '').replace(/,/g, '');
+                const amountText = row.cells[5].textContent.replace('₱', '').replace(/,/g, '');
                 total += parseFloat(amountText) || 0;
             });
-            
-            document.getElementById('totalBudget').textContent = `₱${total.toLocaleString()}`;
+
+            document.getElementById('totalBudget').textContent = `₱${total.toLocaleString('en-US', { minimumFractionDigits: 2 })}`;
         }
 
         // Export budget

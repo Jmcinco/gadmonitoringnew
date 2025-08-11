@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -7,6 +8,7 @@
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css" rel="stylesheet">
 </head>
+
 <body>
     <!-- Navigation -->
     <nav class="navbar navbar-expand-lg navbar-dark bg-primary">
@@ -31,7 +33,8 @@
                         <ul class="dropdown-menu">
                             <li><a class="dropdown-item" href="accomplishment_submission.html">Submission</a></li>
                             <li><a class="dropdown-item" href="accomplishment_review.html">Review</a></li>
-                            <li><a class="dropdown-item active" href="consolidated_accomplishment.html">Consolidated</a></li>
+                            <li><a class="dropdown-item active" href="consolidated_accomplishment.html">Consolidated</a>
+                            </li>
                         </ul>
                     </li>
                 </ul>
@@ -41,7 +44,8 @@
                             <i class="bi bi-person-circle"></i> Admin User
                         </a>
                         <ul class="dropdown-menu">
-                            <li><a class="dropdown-item" href="index.html"><i class="bi bi-box-arrow-right"></i> Logout</a></li>
+                            <li><a class="dropdown-item" href="index.html"><i class="bi bi-box-arrow-right"></i>
+                                    Logout</a></li>
                         </ul>
                     </li>
                 </ul>
@@ -329,7 +333,7 @@
                                 </table>
                             </div>
                         </div>
-                        
+
                         <div id="chartView" style="display: none;">
                             <div class="row">
                                 <div class="col-md-6">
@@ -377,7 +381,7 @@
 
     <!-- Bootstrap JavaScript -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
-    
+
     <script>
         // Set current date
         document.getElementById('reportDate').textContent = new Date().toLocaleDateString('en-US', {
@@ -391,9 +395,9 @@
             const tableView = document.getElementById('tableView');
             const chartView = document.getElementById('chartView');
             const buttons = document.querySelectorAll('.btn-group .btn');
-            
+
             buttons.forEach(btn => btn.classList.remove('active'));
-            
+
             if (viewType === 'table') {
                 tableView.style.display = 'block';
                 chartView.style.display = 'none';
@@ -412,7 +416,7 @@
             const year = document.getElementById('reportYear').value;
             const quarter = document.getElementById('reportQuarter').value;
             const office = document.getElementById('reportOffice').value;
-            
+
             // In a real implementation, this would filter the data
             alert(`Filtering report for:\nYear: ${year}\nQuarter: ${quarter || 'All'}\nOffice: ${office || 'All'}`);
         }
@@ -433,4 +437,5 @@
         }
     </script>
 </body>
+
 </html>

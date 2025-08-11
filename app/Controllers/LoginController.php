@@ -12,60 +12,74 @@ class LoginController extends BaseController
         return view('login');
     }
 
-public function authenticate()
-{
-    $model = new LoginModel();
-    $email = $this->request->getPost('email');
-    $password = $this->request->getPost('password');
+    public function authenticate()
+    {
+        $model = new LoginModel();
+        $email = $this->request->getPost('email');
+        $password = $this->request->getPost('password');
 
-    $user = $model->authenticate($email, $password);
-    log_message('debug', "Authenticate called for {$email}, user: " . json_encode($user));
+        $user = $model->authenticate($email, $password);
+        log_message('debug', "Authenticate called for {$email}, user: " . json_encode($user));
 
-    if ($user) {
-        $session = session();
-        $session->set([
-            'user_id' => $user['emp_id'],
-            'email' => $user['email'],
-            'role_id' => $user['role_id'],
-            'first_name' => $user['first_name'],
-            'last_name' => $user['last_name'],
-            'isLoggedIn' => true
-        ]);
-        log_message('debug', "Session set for {$email}, role_id: {$user['role_id']}");
-        switch ($user['role_id']) {;
-            case 1: return redirect()->to('/Views/FocalDashboard');
-            case 3: log_message('debug', "Redirecting to FocalDashboard for {$email}"); return redirect()->to('/Views/FocalDashboard');
-            case 2: return redirect()->to('/Views/SecretariatDashboard');
-            case 4: return redirect()->to('/Views/AdminDashboard');
-            default: return redirect()->to('/Dashboard');
+        if ($user) {
+            $session = session();
+            $session->set([
+                'user_id' => $user['emp_id'],
+                'email' => $user['email'],
+                'role_id' => $user['role_id'],
+                'first_name' => $user['first_name'],
+                'last_name' => $user['last_name'],
+                'isLoggedIn' => true
+            ]);
+            log_message('debug', "Session set for {$email}, role_id: {$user['role_id']}");
+            switch ($user['role_id']) {
+                case 1: // Focal
+                    log_message('debug', "Redirecting {$email} to /FocalDashboard");
+                    return redirect()->to('/FocalDashboard'); // Update when route is defined
+                case 2: // Member
+                    log_message('debug', "Redirecting {$email} to /MemberDashboard");
+                    return redirect()->to('/MemberDashboard'); // Update when route is defined
+                case 3: // Secretariat
+                    log_message('debug', "Redirecting {$email} to /SecretariatDashboard");
+                    return redirect()->to('/SecretariatDashboard'); // Update when route is defined
+                case 4: // Administrator
+                    log_message('debug', "Redirecting {$email} to /AdminDashboard");
+                    return redirect()->to('/AdminDashboard'); // Update when route is defined
+                default:
+                    log_message('error', "Unknown role_id: {$user['role_id']} for {$email}");
+                    return redirect()->to('/login')->with('error', 'Unknown role assigned.');
+            }
+        } else {
+            log_message('debug', "Authentication failed for {$email}");
+            return redirect()->back()->with('error', 'Invalid email or password');
         }
-    } else {
-        log_message('debug', "Authentication failed for {$email}");
-        return redirect()->back()->with('error', 'Invalid email or password');
     }
-}
-public function createUser()
-{
-    $model = new LoginModel();
-    $data = [
-        'first_name' => $this->request->getPost('first_name'),
-        'last_name' => $this->request->getPost('last_name'),
-        'role_id' => $this->request->getPost('role_id'),
-        'div_id' => $this->request->getPost('div_id'),
-        'gender' => $this->request->getPost('gender'),
-        'email' => $this->request->getPost('email'),
-        'password' => $this->request->getPost('password')
-    ];
 
-    if ($model->saveUser($data) === false) {
-        return redirect()->back()->with('error', 'Failed to create user. Check your input or duplicate email.');
+    public function createUser()
+    {
+        $model = new LoginModel();
+        $data = [
+            'first_name' => $this->request->getPost('first_name'),
+            'last_name' => $this->request->getPost('last_name'),
+            'role_id' => $this->request->getPost('role_id'),
+            'div_id' => $this->request->getPost('div_id'),
+            'gender' => $this->request->getPost('gender'),
+            'email' => $this->request->getPost('email'),
+            'password' => $this->request->getPost('password')
+        ];
+
+        if ($model->saveUser($data) === false) {
+            log_message('error', "Failed to create user with email: {$data['email']}");
+            return redirect()->back()->with('error', 'Failed to create user. Check your input or duplicate email.');
+        }
+        log_message('debug', "User created successfully: {$data['email']}");
+        return redirect()->to('/login')->with('success', 'User created');
     }
-    return redirect()->to('/login')->with('success', 'User created');
-}
 
     public function logout()
     {
         session()->destroy();
+        log_message('debug', 'User logged out');
         return redirect()->to('/login');
     }
 }

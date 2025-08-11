@@ -1,7 +1,7 @@
 <?php
 
 namespace App\Controllers;
-
+use App\Models\BudgetModel;
 use CodeIgniter\Controller;
 
 class GadPlanController extends Controller
@@ -10,6 +10,7 @@ class GadPlanController extends Controller
     protected $session;
     protected $model;
     protected $mandateModel;
+    
 
     public function __construct()
     {
@@ -17,221 +18,244 @@ class GadPlanController extends Controller
         $this->session = \Config\Services::session();
         $this->model = new \App\Models\FocalModel();
         $this->mandateModel = new \App\Models\GadMandateModel();
+        // Load the Form Helper in the constructor
+        helper('form');
     }
 
     public function index()
     {
-        $data['gadPlans'] = $this->model->findAll();
+        // Ensure the Form Helper is available
+        helper('form');
+
+        $data['gadPlans']  = $this->model->getGadPlansWithAmount();
         $data['mandates'] = $this->mandateModel->findAll();
-        return view('Focal/PlanPreparation', $data); // Updated path to match view
+        $data['divisions'] = $this->getDivisions();
+        return view('Focal/PlanPreparation', $data);
+    }
+
+    protected function getDivisions()
+    {
+        $db = \Config\Database::connect();
+        return $db->table('divisions')->get()->getResult();
     }
 
     public function save($id = null)
     {
-        try {
-            // Check if user is authorized
-            if (!$this->session->get('isLoggedIn') || $this->session->get('role_id') != 1) {
-                return $this->response->setJSON([
-                    'success' => false,
-                    'message' => 'Unauthorized access.'
-                ])->setStatusCode(403);
-            }
-
-            // Define validation rules
-            $validationRules = [
-                'issue_mandate' => 'required|min_length[10]',
-                'cause' => 'required|min_length[10]',
-                'gad_objective' => 'required|min_length[10]',
-                'activity' => 'required|min_length[10]',
-                'indicators' => 'required|min_length[10]',
-                'startDate' => 'required|valid_date',
-                'endDate' => 'required|valid_date',
-                'responsibleUnit' => 'required',
-                'budgetAmount' => 'required|numeric|greater_than[0]',
-                'mfoPapType_0' => 'permit_empty|in_list[MFO,MFA]',
-                'mfoPapStatement_0' => 'permit_empty|min_length[5]',
-                'mfoPapType_1' => 'permit_empty|in_list[MFO,MFA]',
-                'mfoPapStatement_1' => 'permit_empty|min_length[5]',
-                'mfoPapType_2' => 'permit_empty|in_list[MFO,MFA]',
-                'mfoPapStatement_2' => 'permit_empty|min_length[5]',
-            ];
-
-            if (!$this->validate($validationRules)) {
-                return $this->response->setJSON([
-                    'success' => false,
-                    'message' => 'Validation failed',
-                    'errors' => $this->validation->getErrors()
-                ])->setStatusCode(400);
-            }
-
-            // Custom date validation
-            $startDate = strtotime($this->request->getPost('startDate'));
-            $endDate = strtotime($this->request->getPost('endDate'));
-            if ($endDate <= $startDate) {
-                return $this->response->setJSON([
-                    'success' => false,
-                    'message' => 'Validation failed',
-                    'errors' => ['endDate' => 'End date must be after start date.']
-                ])->setStatusCode(400);
-            }
-
-            // Handle multiple causes and objectives
-            $causes = $this->request->getPost('cause');
-            $objectives = $this->request->getPost('gad_objective');
-            $mfoPapData = $this->request->getPost('mfoPapData');
-
-            if (empty($mfoPapData)) {
-                $mfoPapData = [];
-            } else {
-                $mfoPapData = json_decode($mfoPapData, true);
-                if (json_last_error() !== JSON_ERROR_NONE) {
-                    return $this->response->setJSON([
-                        'success' => false,
-                        'message' => 'Validation failed',
-                        'errors' => ['mfoPapData' => 'Invalid MFO/PAP data format.']
-                    ])->setStatusCode(400);
-                }
-            }
-
-            // Prepare data for saving
-            $data = [
-                'issue_mandate' => $this->request->getPost('issue_mandate'),
-                'cause' => is_array($causes) ? implode('; ', $causes) : $causes,
-                'gad_objective' => is_array($objectives) ? implode('; ', $objectives) : $objectives,
-                'activity' => $this->request->getPost('activity'),
-                'indicators' => $this->request->getPost('indicators'),
-                'startDate' => $this->request->getPost('startDate'),
-                'endDate' => $this->request->getPost('endDate'),
-                'authors_division' => $this->request->getPost('responsibleUnit'),
-                'budget' => $this->request->getPost('budgetAmount'),
-                'mfoPapData' => json_encode($mfoPapData),
-            ];
-
-            // Check for planId in POST data as a fallback
-            $planId = $this->request->getPost('planId') ?? $id;
-
-            if ($planId) {
-                // Update existing plan
-                if (!$this->model->find($planId)) {
-                    return $this->response->setJSON([
-                        'success' => false,
-                        'message' => 'GAD Plan not found'
-                    ])->setStatusCode(404);
-                }
-                if ($this->model->update($planId, $data)) {
-                    return $this->response->setJSON([
-                        'success' => true,
-                        'message' => 'GAD Plan updated successfully',
-                        'planId' => $planId
-                    ]);
-                } else {
-                    throw new \Exception('Failed to update GAD Plan in database');
-                }
-            } else {
-                // Create new plan
-                if ($this->model->save($data)) {
-                    return $this->response->setJSON([
-                        'success' => true,
-                        'message' => 'GAD Plan saved successfully',
-                        'planId' => $this->model->getInsertID()
-                    ]);
-                } else {
-                    throw new \Exception('Failed to save GAD Plan to database');
-                }
-            }
-        } catch (\Exception $e) {
-            log_message('error', 'Error in GadPlanController/save: ID=' . ($planId ?? 'new') . ', Error=' . $e->getMessage());
-            return $this->response->setStatusCode(500)->setJSON([
-                'success' => false,
-                'message' => 'An unexpected error occurred: ' . $e->getMessage(),
-                'error' => $e->getMessage()
-            ]);
+        // auth
+        if (! $this->session->get('isLoggedIn') || $this->session->get('role_id') != 1) {
+            return $this->response
+                        ->setStatusCode(403)
+                        ->setJSON(['success'=>false,'message'=>'Unauthorized access.']);
         }
+
+        $post      = $this->request->getPost();
+        $isDraft   = (isset($post['is_draft']) && $post['is_draft']==='1');
+        $planId    = $post['planId'] ?? $id;
+
+        // validation rules
+        $rules = $isDraft ? [] : [
+            'issue_mandate'    => 'required|min_length[10]',
+            'cause'            => 'required|min_length[10]',
+            'gad_objective.*'  => 'permit_empty|min_length[10]',
+            'activity'         => 'required|min_length[10]',
+            'indicator_text' => 'required',
+            'target_text'    => 'required',
+            'startDate'        => 'required|valid_date',
+            'endDate'          => 'required|valid_date',
+            'responsibleUnits' => 'required',
+            'status'           => 'required|in_list[Pending,In Progress,Completed]',
+            'budgetAmount'     => 'required|numeric|greater_than[0]',
+            'hgdgScore'        => 'required|numeric|greater_than_equal_to[0]|less_than_equal_to[100]',
+            'fileAttachments.*'=> 'permit_empty|uploaded[fileAttachments]|max_size[fileAttachments,10240]|ext_in[fileAttachments,pdf,doc,docx,jpg,png]',
+        ];
+        
+        $rawIndicators = $this->request->getPost('indicators') ?? [];
+        if (! is_array($rawIndicators)) {
+            $rawIndicators = [$rawIndicators];
+        }
+        $rawTargets = $this->request->getPost('targets') ?? [];
+        if (! is_array($rawTargets)) {
+            $rawTargets = [$rawTargets];
+        }
+
+        if (! $isDraft && ! $this->validate($rules)) {
+            return $this->response
+                        ->setStatusCode(400)
+                        ->setJSON([
+                            'success'=>false,
+                            'message'=>'Validation failed',
+                            'errors'=> $this->validator->getErrors()
+                        ]);
+        }
+
+        // parse objectives
+        $objectives = $this->request->getPost('gad_objective') ?? [];
+        if (! is_array($objectives)) {
+            $objectives = [$objectives];
+        }
+        $objectives = array_filter($objectives, fn($v)=> is_string($v) && strlen(trim($v))>=10);
+
+        if (! $isDraft && empty($objectives)) {
+            return $this->response
+                        ->setStatusCode(400)
+                        ->setJSON([
+                            'success'=>false,
+                            'message'=>'Validation failed',
+                            'errors'=>['gad_objective'=>'At least one valid GAD objective is required.']
+                        ]);
+        }
+
+        // date check
+        if (! $isDraft) {
+            $start = strtotime($post['startDate']);
+            $end   = strtotime($post['endDate']);
+            if ($end <= $start) {
+                return $this->response
+                            ->setStatusCode(400)
+                            ->setJSON([
+                                'success'=>false,
+                                'message'=>'Validation failed',
+                                'errors'=>['endDate'=>'End date must be after start date.']
+                            ]);
+            }
+        }
+
+        // parse MFO/PAP
+        $mfoPapData = json_decode($post['mfoPapData'] ?? '[]', true);
+        if (json_last_error() !== JSON_ERROR_NONE) {
+            $mfoPapData = [];
+        }
+
+        // responsible units
+        $units = $this->request->getPost('responsibleUnits') ?? [];
+        if (! is_array($units)) {
+            $units = [$units];
+        }
+
+        // handle file uploads
+        $attachments = [];
+        foreach ($this->request->getFiles()['fileAttachments'] ?? [] as $file) {
+            if ($file->isValid() && ! $file->hasMoved()) {
+                $name = $file->getRandomName();
+                $file->move(WRITEPATH.'uploads', $name);
+                $attachments[] = 'Uploads/'.$name;
+            }
+        }
+
+        // payload
+        $saveData = [
+            'plan_id'          => $planId,                // needed by Model->save()
+            'issue_mandate'    => $post['issue_mandate'],
+            'cause'            => $post['cause'],
+            'gad_objective'    => json_encode($objectives),
+            'activity'         => $post['activity'],
+              'indicator_text' => $post['indicator_text'],
+              'target_text'    => $post['target_text'],
+            'startDate'        => $post['startDate'],
+            'endDate'          => $post['endDate'],
+            'authors_division' => json_encode($units),
+            'status'           => $isDraft ? 'Draft' : $post['status'],
+            'budget'           => $post['budgetAmount'],
+            'hgdg_score'       => $post['hgdgScore'],
+            'file_attachments' => json_encode($attachments),
+            'mfoPapData'       => json_encode($mfoPapData),
+            'is_draft'         => $isDraft ? 1 : 0,
+        ];
+
+        // skip built-in model validation since we've done ours
+        $this->model->skipValidation(true);
+
+        // save() will INSERT or UPDATE based on presence of plan_id
+        $this->model->save($saveData);
+        $insertId = $this->model->getInsertID() ?: $planId;
+
+        return $this->response
+                    ->setJSON([
+                        'success'         => true,
+                        'message'         => $isDraft
+                                               ? 'GAD Plan saved as draft'
+                                               : 'GAD Plan saved successfully',
+                        'planId'          => $insertId,
+                        'fileAttachments' => $attachments,
+                    ]);
     }
 
     public function getGadPlan($id)
-    {
-        try {
-            if (!$this->session->get('isLoggedIn') || $this->session->get('role_id') != 1) {
-                return $this->response->setJSON([
-                    'success' => false,
-                    'message' => 'Unauthorized access.'
-                ])->setStatusCode(403);
-            }
-
-            $plan = $this->model->find($id);
-            if (!$plan) {
-                return $this->response->setJSON([
-                    'success' => false,
-                    'message' => 'GAD Plan not found'
-                ])->setStatusCode(404);
-            }
-
-            return $this->response->setJSON([
-                'success' => true,
-                'plan' => [
-                    'issue_mandate' => $plan['issue_mandate'],
-                    'cause' => $plan['cause'],
-                    'gad_objective' => $plan['gad_objective'],
-                    'activity' => $plan['activity'],
-                    'indicators' => $plan['indicators'],
-                    'startDate' => $plan['startDate'],
-                    'endDate' => $plan['endDate'],
-                    'responsibleUnit' => $plan['authors_division'],
-                    'budgetAmount' => $plan['budget'],
-                    'mfoPapData' => $plan['mfoPapData'] ? json_decode($plan['mfoPapData'], true) : []
-                ]
-            ]);
-        } catch (\Exception $e) {
-            log_message('error', 'Error in GadPlanController/getGadPlan: ID=' . $id . ', Error=' . $e->getMessage());
-            return $this->response->setStatusCode(500)->setJSON([
-                'success' => false,
-                'message' => 'An unexpected error occurred: ' . $e->getMessage()
-            ]);
-        }
+{
+    if (! $this->session->get('isLoggedIn') || $this->session->get('role_id') != 1) {
+        return $this->response
+                    ->setStatusCode(403)
+                    ->setJSON(['success'=>false,'message'=>'Unauthorized access.']);
     }
+
+    $db = \Config\Database::connect();
+    $builder = $db->table('plan')
+                  ->select('plan.*, COALESCE(SUM(b.amount),0) AS total_budget')
+                  ->join('budget b', 'b.plan_id = plan.plan_id', 'left')
+                  ->where('plan.plan_id', $id)
+                  ->groupBy('plan.plan_id');
+    $plan = $builder->get()->getRowArray();
+
+    if (! $plan) {
+        return $this->response
+                    ->setStatusCode(404)
+                    ->setJSON(['success'=>false,'message'=>'GAD Plan not found']);
+    }
+
+    // decode JSON fields
+    $plan['gad_objective']    = json_decode($plan['gad_objective'], true)    ?: [];
+    $plan['authors_division'] = json_decode($plan['authors_division'], true) ?: [];
+    $plan['file_attachments'] = json_decode($plan['file_attachments'], true) ?: [];
+    $plan['mfoPapData']       = json_decode($plan['mfoPapData'], true)       ?: [];
+
+    // leave indicators/targets as strings
+    $plan['indicators'] = json_decode($plan['indicator_text'], true) ?: [];
+    $plan['targets']    = json_decode($plan['target_text'],    true) ?: [];
+
+
+    return $this->response
+                ->setJSON(['success'=>true,'plan'=>$plan]);
+}
+
 
     public function deleteGadPlan($id)
-    {
-        try {
-            if (!$this->session->get('isLoggedIn') || $this->session->get('role_id') != 1) {
-                return $this->response->setJSON([
-                    'success' => false,
-                    'message' => 'Unauthorized access.'
-                ])->setStatusCode(403);
-            }
+{
+    // authorization
+    if (! $this->session->get('isLoggedIn') || $this->session->get('role_id') != 1) {
+        return $this->response
+                    ->setStatusCode(403)
+                    ->setJSON(['success' => false, 'message' => 'Unauthorized access.']);
+    }
 
-            if (!$id || !is_numeric($id)) {
-                return $this->response->setJSON([
-                    'success' => false,
-                    'message' => 'Invalid GAD Plan ID'
-                ])->setStatusCode(400);
-            }
+    // ensure plan exists
+    $plan = $this->model->find($id);
+    if (! $plan) {
+        return $this->response
+                    ->setStatusCode(404)
+                    ->setJSON(['success' => false, 'message' => 'GAD Plan not found']);
+    }
 
-            $plan = $this->model->find($id);
-            if (!$plan) {
-                return $this->response->setJSON([
-                    'success' => false,
-                    'message' => 'GAD Plan not found'
-                ])->setStatusCode(404);
-            }
+    // 1) delete all budgets for this plan
+    $budgetModel = new BudgetModel();
+    $budgetModel->where('plan_id', $id)->delete();
 
-            if ($this->model->delete($id)) {
-                return $this->response->setJSON([
-                    'success' => true,
-                    'message' => 'GAD Plan deleted successfully'
-                ]);
-            } else {
-                throw new \Exception('Failed to delete GAD plan from database');
-            }
-        } catch (\Exception $e) {
-            log_message('error', 'Error in GadPlanController/deleteGadPlan: ID=' . $id . ', Error=' . $e->getMessage());
-            return $this->response->setStatusCode(500)->setJSON([
-                'success' => false,
-                'message' => 'An unexpected error occurred: ' . $e->getMessage()
-            ]);
+    // 2) delete any uploaded attachments
+    foreach (json_decode($plan['file_attachments'], true) ?: [] as $file) {
+        $path = WRITEPATH . $file;
+        if (is_file($path)) {
+            unlink($path);
         }
     }
+
+    // 3) delete the plan itself
+    $this->model->delete($id);
+
+    return $this->response
+                ->setJSON([
+                  'success' => true,
+                  'message' => 'GAD Plan and its budget items deleted successfully'
+                ]);
+}
 
     public function saveMandate()
     {
@@ -263,11 +287,44 @@ class GadPlanController extends Controller
             ];
 
             if ($this->mandateModel->save($data)) {
-                return $this->response->setJSON(['success' => true]);
+                return $this->response->setJSON([
+                    'success' => true,
+                    'message' => 'GAD Mandate saved successfully'
+                ]);
             }
             return $this->response->setJSON(['success' => false, 'message' => 'Failed to save mandate']);
         } catch (\Exception $e) {
             log_message('error', 'Error in GadPlanController/saveMandate: ' . $e->getMessage());
+            return $this->response->setStatusCode(500)->setJSON([
+                'success' => false,
+                'message' => 'An unexpected error occurred: ' . $e->getMessage()
+            ]);
+        }
+    }
+
+    public function getMandates()
+    {
+        try {
+            if (!$this->session->get('isLoggedIn') || $this->session->get('role_id') != 1) {
+                return $this->response->setJSON([
+                    'success' => false,
+                    'message' => 'Unauthorized access.'
+                ])->setStatusCode(403);
+            }
+
+            $year = $this->request->getPost('year');
+            $builder = $this->mandateModel->builder();
+            if ($year) {
+                $builder->where('year', $year);
+            }
+            $mandates = $builder->get()->getResultArray();
+
+            return $this->response->setJSON([
+                'success' => true,
+                'mandates' => $mandates
+            ]);
+        } catch (\Exception $e) {
+            log_message('error', 'Error in GadPlanController/getMandates: ' . $e->getMessage());
             return $this->response->setStatusCode(500)->setJSON([
                 'success' => false,
                 'message' => 'An unexpected error occurred: ' . $e->getMessage()
