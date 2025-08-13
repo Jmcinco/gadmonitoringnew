@@ -13,7 +13,7 @@ if (!session()->get('isLoggedIn') || session()->get('role_id') != 1) {
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>FOCAL DASHBOARD - GAD Monitoring System</title>
+    <title>Focal DASHBOARD - GAD Monitoring System</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css" rel="stylesheet">
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600&display=swap" rel="stylesheet">
@@ -153,7 +153,6 @@ if (!session()->get('isLoggedIn') || session()->get('role_id') != 1) {
             </div>
 
             <!-- Navigation Menu -->
-            <!-- Navigation Menu -->
             <ul class="nav nav-pills flex-column">
                 <li class="nav-item">
                     <a class="nav-link active" href="<?= base_url('FocalDashboard') ?>">
@@ -224,7 +223,7 @@ if (!session()->get('isLoggedIn') || session()->get('role_id') != 1) {
                             <div class="card-body">
                                 <div class="d-flex justify-content-between">
                                     <div>
-                                        <h4 id="totalPlans">0</h4>
+                                        <h4 id="totalPlans"><?php echo esc($totalPlans ?? 0); ?></h4>
                                         <p class="card-text">Total GAD Plans</p>
                                     </div>
                                     <div class="align-self-center">
@@ -239,7 +238,7 @@ if (!session()->get('isLoggedIn') || session()->get('role_id') != 1) {
                             <div class="card-body">
                                 <div class="d-flex justify-content-between">
                                     <div>
-                                        <h4 id="approvedPlans">0</h4>
+                                        <h4 id="approvedPlans"><?php echo esc($approvedPlans ?? 0); ?></h4>
                                         <p class="card-text">Approved Plans</p>
                                     </div>
                                     <div class="align-self-center">
@@ -254,7 +253,7 @@ if (!session()->get('isLoggedIn') || session()->get('role_id') != 1) {
                             <div class="card-body">
                                 <div class="d-flex justify-content-between">
                                     <div>
-                                        <h4 id="pendingPlans">0</h4>
+                                        <h4 id="pendingPlans"><?php echo esc($pendingPlans ?? 0); ?></h4>
                                         <p class="card-text">Pending Review</p>
                                     </div>
                                     <div class="align-self-center">
@@ -289,6 +288,27 @@ if (!session()->get('isLoggedIn') || session()->get('role_id') != 1) {
                             </div>
                             <div class="card-body">
                                 <div class="list-group list-group-flush" id="recentActivities">
+                                    <?php if (!empty($recentPlans)): ?>
+                                        <?php foreach (array_slice($recentPlans, 0, 5) as $plan): ?>
+                                        <div class="list-group-item d-flex justify-content-between align-items-center">
+                                            <div>
+                                                <h6 class="mb-1">GAD Plan: <?php echo esc($plan['activity']); ?></h6>
+                                                <p class="mb-1 text-muted">Division: <?php echo esc($plan['division'] ?? 'Unknown'); ?></p>
+                                                <small class="text-muted">Status:
+                                                    <span class="badge bg-<?php echo match(strtolower($plan['status'] ?? 'pending')) {
+                                                        'approved' => 'success',
+                                                        'returned' => 'danger',
+                                                        'pending' => 'warning',
+                                                        default => 'secondary'
+                                                    }; ?>">
+                                                        <?php echo esc(ucfirst($plan['status'] ?? 'Pending')); ?>
+                                                    </span>
+                                                </small>
+                                            </div>
+                                            <small class="text-muted"><?php echo date('M d', strtotime($plan['created_at'])); ?></small>
+                                        </div>
+                                        <?php endforeach; ?>
+                                    <?php else: ?>
                                     <div class="list-group-item d-flex justify-content-between align-items-center">
                                         <div>
                                             <h6 class="mb-1">No recent activities</h6>
@@ -296,6 +316,7 @@ if (!session()->get('isLoggedIn') || session()->get('role_id') != 1) {
                                         </div>
                                         <small class="text-muted">Today</small>
                                     </div>
+                                    <?php endif; ?>
                                 </div>
                             </div>
                         </div>

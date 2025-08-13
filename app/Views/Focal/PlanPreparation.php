@@ -9,860 +9,1188 @@ if (!session()->get('isLoggedIn') || session()->get('role_id') != 1) {
 
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>GAD Plan Preparation - GAD Monitoring System</title>
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css" rel="stylesheet">
-    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600&display=swap" rel="stylesheet">
-    <style>
-        :root {
-            --bs-primary-rgb: 36, 20, 68;
-            --sidebar-width: 280px;
-            --sidebar-bg: #2c3e50;
-            --sidebar-hover: #34495e;
-        }
-        body {
-            font-family: 'Poppins', Arial, sans-serif;
-            background-color: #f4f6f9;
-            margin: 0;
-            padding: 0;
-        }
-        .sidebar {
-            position: fixed;
-            top: 0;
-            left: 0;
-            height: 100vh;
-            width: var(--sidebar-width);
-            background: linear-gradient(180deg, var(--sidebar-bg) 0%, #1a252f 100%);
-            color: white;
-            z-index: 1000;
-            display: flex;
-            flex-direction: column;
-            box-shadow: 0 1rem 3rem rgba(0, 0, 0, 0.175);
-        }
-        .sidebar-header {
-            padding: 1.5rem 1rem;
-            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
-            text-align: center;
-        }
-        .sidebar-content {
-            flex: 1;
-            padding: 1rem;
-            overflow-y: auto;
-        }
-        .sidebar-footer {
-            padding: 1rem;
-            border-top: 1px solid rgba(255, 255, 255, 0.1);
-        }
-        .user-info {
-            padding: 1rem;
-            background: rgba(255, 255, 255, 0.1);
-            border-radius: 0.5rem;
-            margin-bottom: 1rem;
-            display: flex;
-            align-items: center;
-        }
-        .sidebar .nav-link {
-            color: rgba(255, 255, 255, 0.8);
-            padding: 0.75rem 1rem;
-            margin-bottom: 0.25rem;
-            border-radius: 0.5rem;
-            transition: all 0.2s ease;
-            text-decoration: none;
-            display: flex;
-            align-items: center;
-        }
-        .sidebar .nav-link:hover {
-            background-color: var(--sidebar-hover);
-            color: white;
-            transform: translateX(3px);
-        }
-        .sidebar .nav-link.active {
-            background-color: #3498db;
-            color: white;
-        }
-        .main-content {
-            margin-left: var(--sidebar-width);
-            min-height: 100vh;
-            padding: 2rem;
-            background-color: #fafbfe;
-        }
-        .mandate-icon {
-            cursor: pointer;
-            margin-left: 0.5rem;
-            color: #0d6efd;
-            font-size: 1.2rem;
-            vertical-align: middle;
-        }
-        .additional-row {
-            margin-top: 1rem;
-            position: relative;
-        }
-        .remove-row {
-            color: #dc3545;
-            cursor: pointer;
-            font-size: 0.9rem;
-            position: absolute;
-            right: 0;
-            top: -1.5rem;
-        }
-        .table-responsive {
-            min-height: 0.01%;
-            overflow-x: auto;
-        }
-        .table th, .table td {
-            vertical-align: middle;
-            padding: 0.75rem;
-            text-align: left;
-        }
-        .modal-body {
-            padding: 1.5rem;
-        }
-        .form-label {
-            font-weight: 600;
-            margin-bottom: 0.5rem;
-        }
-        .input-group {
-            align-items: center;
-        }
-        .btn-group .btn {
-            padding: 0.375rem 0.75rem;
-        }
-        .card-header {
-            padding: 1rem 1.5rem;
-            background-color: #f8f9fc;
-            border-bottom: 1px solid #e3e6f0;
-        }
-        .modal-xl {
-            max-width: 90%;
-        }
-        .card {
-            border: none;
-            border-radius: 0.5rem;
-            box-shadow: 0 0.15rem 1.75rem 0 rgba(58, 59, 69, 0.15);
-        }
-        @media (max-width: 768px) {
-            .sidebar {
-                transform: translateX(-100%);
-                transition: transform 0.3s ease;
-            }
-            .sidebar.show {
-                transform: translateX(0);
-            }
-            .main-content {
-                margin-left: 0;
-                padding: 1rem;
-            }
-            .modal-xl {
-                max-width: 95%;
-            }
-            .table-responsive {
-                font-size: 0.85rem;
-            }
-            .table th, .table td {
-                padding: 0.5rem;
-            }
-        }
-    </style>
-</head>
-<body>
-    <!-- Success Modal -->
-    <div class="modal fade" id="successModal" tabindex="-1" aria-labelledby="successModalLabel" aria-hidden="true">
-        <div class="modal-dialog">
-            <div class="modal-content">
-                <div class="modal-header bg-success text-white">
-                    <h5 class="modal-title" id="successModalLabel">
-                        <i class="bi bi-check-circle me-2"></i> Success
-                    </h5>
-                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
-                </div>
-                <div class="modal-body" id="successModalBody">
-                </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-primary" data-bs-dismiss="modal">OK</button>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <!-- Sidebar -->
-    <nav id="sidebar" class="sidebar">
-        <div class="sidebar-header">
-            <h4 class="text-white mb-0">
-                <i class="bi bi-clipboard-data"></i> GAD System
-            </h4>
-        </div>
-        
-        <div class="sidebar-content">
-            <!-- User Info -->
-            <div class="user-info mb-4">
-                <div class="text-white d-flex align-items-center">
-                    <i class="bi bi-person-circle fs-4 me-2"></i>
-                    <div>
-                        <div class="fw-bold"><?php echo esc(session()->get('first_name') . ' ' . session()->get('last_name')); ?></div>
-                        <small class="text-light">Secretariat</small>
-                        <br><small class="text-light">Executive Division</small>
-                    </div>
-                </div>
-            </div>
-            
-            <!-- Navigation Menu -->
-            <ul class="nav nav-pills flex-column">
-                <li class="nav-item">
-                    <a class="nav-link" href="<?= base_url('FocalDashboard') ?>">
-                        <i class="bi bi-house-door me-2"></i>Dashboard
-                    </a>
-                </li>
-                <li class="nav-item">
-                    <a class="nav-link active" href="<?= base_url('Focal/PlanPreparation') ?>">
-                        <i class="bi bi-clipboard-plus me-2"></i>Preparation of GAD Plan
-                    </a>
-                </li>
-                <li class="nav-item">
-                    <a class="nav-link" href="<?= base_url('Focal/BudgetCrafting') ?>">
-                        <i class="bi bi-calculator me-2"></i>Budget Crafting
-                    </a>
-                </li>
-                <li class="nav-item">
-                    <a class="nav-link" href="<?= base_url('Focal/PlanReview') ?>">
-                        <i class="bi bi-check-circle me-2"></i>Review & Approval of GAD Plan
-                    </a>
-                </li>
-                <li class="nav-item">
-                    <a class="nav-link" href="<?= base_url('Focal/ConsolidatedPlan') ?>">
-                        <i class="bi bi-file-earmark-text me-2"></i>Consolidated Plan & Budget
-                    </a>
-                </li>
-                <li class="nav-item">
-                    <a class="nav-link" href="<?= base_url('Focal/AccomplishmentSubmission') ?>">
-                        <i class="bi bi-send me-2"></i>Submission of GAD Accomplishment
-                    </a>
-                </li>
-                <li class="nav-item">
-                    <a class="nav-link" href="<?= base_url('Focal/ReviewApproval') ?>">
-                        <i class="bi bi-clipboard-check me-2"></i>Review & Approval of Accomplishment
-                    </a>
-                </li>
-                <li class="nav-item">
-                    <a class="nav-link" href="<?= base_url('Focal/ConsolidatedAccomplishment') ?>">
-                        <i class="bi bi-collection me-2"></i>Consolidated GAD Accomplishment
-                    </a>
-                </li>
-            </ul>
-        </div>
-        
-        <!-- Logout Button -->
-        <div class="sidebar-footer">
-            <a href="<?= site_url('login/logout') ?>" class="btn btn-outline-light w-100">
-                <i class="bi bi-box-arrow-right"></i> Logout
-            </a>
-        </div>
-    </nav>
-
-    <!-- Main Content -->
-    <div class="main-content">
-        <div class="container-fluid py-4">
-            <div class="row">
-                <div class="col-12">
-                    <div class="d-flex justify-content-between align-items-center mb-4">
-                        <h1 class="h3 mb-0">
-                            <i class="bi bi-clipboard-data text-primary"></i> GAD Plan Preparation
-                        </h1>
-                        <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#gadPlanModal" onclick="resetGadPlanModal()">
-                            <i class="bi bi-plus-circle"></i> Create GAD Plan
-                        </button>
-                    </div>
-                </div>
-            </div>
-
-            <div class="row">
-                <div class="col-12">
-<div class="row">
-  <div class="col-12">
-    <div class="card shadow-lg">
-      <div class="card-header d-flex justify-content-between align-items-center">
-        <h5 class="mb-0">GAD Plan Activities</h5>
-        <div class="input-group w-25">
-          <input
-            type="text"
-            class="form-control"
-            placeholder="Search GAD plans..."
-            id="searchInput"
-            aria-label="Search GAD plans"
-          >
-          <button class="btn btn-outline-secondary" type="button" id="searchButton">
-            <i class="bi bi-search"></i>
-          </button>
-        </div>
-      </div>
-      <div class="card-body">
-        <div class="table-responsive">
-          <table class="table table-hover table-striped align-middle">
-            <thead class="table-dark">
-              <tr>
-                <th style="width: 8%;">Activity ID</th>
-                <th style="width: 12%;">Gender Issue / GAD Mandate</th>
-                <th style="width: 12%;">Cause of Gender Issue</th>
-                <th style="width: 12%;">GAD Objective</th>
-                <th style="width: 12%;">Relevant MFO/PAP</th>
-                <th style="width: 12%;">Performance Targets</th>
-                <th style="width: 10%;">Timeline</th>
-                <th style="width: 12%;">Responsible Units</th>
-                <th style="width: 8%;">Total Budget</th>
-                <th style="width: 8%;">HGDG Score</th>
-                <th style="width: 10%;">File Attachments</th>
-                <th style="width: 8%;">Status</th>
-                <th style="width: 8%;">Actions</th>
-              </tr>
-            </thead>
-                                    <tbody id="gadPlanTableBody">
-    <?php if (!isset($gadPlans) || empty($gadPlans)): ?>
-        <tr>
-            <td colspan="13" class="text-center">No GAD plans found.</td>
-        </tr>
-    <?php else: ?>
-        <?php foreach ($gadPlans as $plan): ?>
-            <tr data-plan-id="<?php echo esc($plan['plan_id'] ?? ''); ?>">
-                <td><?php echo esc('GAD-ACT-' . str_pad($plan['plan_id'] ?? '0', 3, '0', STR_PAD_LEFT)); ?></td>
-                <td><?php echo esc($plan['issue_mandate'] ?? ''); ?></td>
-                <td>
-                    <?php
-                    $causeData = !empty($plan['cause']) ? json_decode($plan['cause'], true) : [];
-                    if (is_array($causeData) && !empty($causeData)) {
-                        $causes = array_map(function($cause) {
-                            return is_string($cause) ? esc(strip_tags($cause)) : esc($cause);
-                        }, $causeData);
-                        echo implode('<br>', $causes);
-                    } else {
-                        echo esc($plan['cause'] ?? 'N/A');
-                    }
-                    ?>
-                </td>
-                <td>
-                    <?php
-                    $objectiveData = !empty($plan['gad_objective']) ? json_decode($plan['gad_objective'], true) : [];
-                    if (is_array($objectiveData) && !empty($objectiveData)) {
-                        $objectives = array_map(function($objective) {
-                            return is_string($objective) ? esc(strip_tags($objective)) : esc($objective);
-                        }, $objectiveData);
-                        echo implode('<br>', $objectives);
-                    } else {
-                        echo esc($plan['gad_objective'] ?? 'N/A');
-                    }
-                    ?>
-                </td>
-                <td>
-                    <?php
-                    $mfoPapData = !empty($plan['mfoPapData']) ? json_decode($plan['mfoPapData'], true) : [];
-                    if (!empty($mfoPapData)) {
-                        $mfoPapStrings = array_map(function($item) {
-                            return esc($item['type'] . ': ' . $item['statement']);
-                        }, $mfoPapData);
-                        echo implode('<br>', $mfoPapStrings);
-                    } else {
-                        echo 'N/A';
-                    }
-                    ?>
-                </td>
-  <td>
-  <?php
-    // Decode your JSON‐stored indicators and targets
-    $indicators = json_decode($plan['indicator_text'] ?? '[]', true) ?: [];
-    $targets    = json_decode($plan['target_text']    ?? '[]', true) ?: [];
-
-    if (empty($indicators)) {
-        echo 'N/A';
-    } else {
-        foreach ($indicators as $i => $indicator) {
-            // Print the indicator
-            echo '<strong>Indicator:</strong> ' . esc($indicator);
-
-            // If there's a matching target, print it underneath
-            if (isset($targets[$i]) && $targets[$i] !== '') {
-                echo '<br><strong>Target:</strong> ' . esc($targets[$i]);
-            }
-
-            // Add a blank line between entries
-            echo '<br>';
-        }
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>GAD Plan Preparation - GAD Monitoring System</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css" rel="stylesheet">
+  <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bs-primary-rgb: 36, 20, 68;
+      --sidebar-width: 280px;
+      --sidebar-bg: #2c3e50;
+      --sidebar-hover: #34495e;
     }
-  ?>
-</td>
-                <td>
-                    <?php
-                    $startDate = !empty($plan['startDate']) ? date('M d, Y', strtotime($plan['startDate'])) : 'N/A';
-                    $endDate = !empty($plan['endDate']) ? date('M d, Y', strtotime($plan['endDate'])) : 'N/A';
-                    echo $startDate . ' - ' . $endDate;
-                    ?>
-                </td>
-                <td>
-                    <?php
-                    $authorsDivisions = !empty($plan['authors_division']) ? json_decode($plan['authors_division'], true) : [];
-                    if (is_array($authorsDivisions) && !empty($authorsDivisions)) {
-                        echo implode(', ', array_map('esc', $authorsDivisions));
-                    } else {
-                        echo esc($plan['authors_division'] ?? 'N/A');
-                    }
-                    ?>
-                </td>
-                <td>
-  <a href="<?= base_url('Focal/BudgetCrafting') ?>?plan=<?= esc($plan['plan_id']) ?>"
-     class="btn btn-sm btn-outline-info">
-     ₱<?= number_format($plan['amount'], 0, '.', ',') ?>
-  </a>
-</td>
-                <td><?php echo isset($plan['hgdg_score']) ? number_format($plan['hgdg_score'], 2) : 'N/A'; ?></td>
-                <td>
-                    <?php
-                    $fileAttachments = !empty($plan['file_attachments']) ? json_decode($plan['file_attachments'], true) : [];
-                    if (is_array($fileAttachments) && !empty($fileAttachments)) {
-                        foreach ($fileAttachments as $file) {
-                            $fileName = basename($file);
-                            echo '<a href="' . base_url('Uploads/' . esc($fileName)) . '" target="_blank" class="d-block">' . esc($fileName) . '</a>';
-                        }
-                    } else {
-                        echo 'No attachments';
-                    }
-                    ?>
-                </td>
-                <td>
-                <?php if (($plan['status'] ?? 'Pending') === 'Draft'): ?>
-                  <span class="badge bg-warning">Draft</span>
-                <?php else: ?>
-                  <span class="badge bg-success">Submitted</span>
-                <?php endif; ?>
-              </td>
-                <td>
-                    <div class="btn-group" role="group">
-                        <button class="btn btn-sm btn-outline-primary me-2" onclick="editGadPlan(this, '<?php echo esc($plan['plan_id'] ?? ''); ?>')">
-                            <i class="bi bi-pencil"></i>
-                        </button>
-                        <button class="btn btn-sm btn-outline-danger" onclick="deleteGadPlan(this, '<?php echo esc($plan['plan_id'] ?? ''); ?>')">
-                            <i class="bi bi-trash"></i>
-                        </button>
-                    </div>
-                </td>
-            </tr>
-        <?php endforeach; endif?>
-                                    </tbody>
-                                </table>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
+
+    body {
+      font-family: 'Poppins', Arial, sans-serif;
+      background-color: #f4f6f9;
+      margin: 0;
+      padding: 0;
+    }
+
+    .sidebar {
+      position: fixed;
+      top: 0;
+      left: 0;
+      height: 100vh;
+      width: var(--sidebar-width);
+      background: linear-gradient(180deg, var(--sidebar-bg) 0%, #1a252f 100%);
+      color: white;
+      z-index: 1000;
+      display: flex;
+      flex-direction: column;
+      box-shadow: 0 1rem 3rem rgba(0, 0, 0, 0.175);
+    }
+
+    .sidebar-header {
+      padding: 1.5rem 1rem;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+      text-align: center;
+    }
+
+    .sidebar-content {
+      flex: 1;
+      padding: 1rem;
+      overflow-y: auto;
+    }
+
+    .sidebar-footer {
+      padding: 1rem;
+      border-top: 1px solid rgba(255, 255, 255, 0.1);
+    }
+
+    .user-info {
+      padding: 1rem;
+      background: rgba(255, 255, 255, 0.1);
+      border-radius: 0.5rem;
+      margin-bottom: 1rem;
+      display: flex;
+      align-items: center;
+    }
+
+    .sidebar .nav-link {
+      color: rgba(255, 255, 255, 0.8);
+      padding: 0.75rem 1rem;
+      margin-bottom: 0.25rem;
+      border-radius: 0.5rem;
+      transition: all 0.2s ease;
+      text-decoration: none;
+      display: flex;
+      align-items: center;
+    }
+
+    .sidebar .nav-link:hover {
+      background-color: var(--sidebar-hover);
+      color: white;
+      transform: translateX(3px);
+    }
+
+    .sidebar .nav-link.active {
+      background-color: #3498db;
+      color: white;
+    }
+
+    .main-content {
+      margin-left: var(--sidebar-width);
+      min-height: 100vh;
+      padding: 2rem;
+      background-color: #fafbfe;
+    }
+
+    .mandate-icon {
+      cursor: pointer;
+      margin-left: 0.5rem;
+      color: #0d6efd;
+      font-size: 1.2rem;
+      vertical-align: middle;
+    }
+
+    .additional-row {
+      margin-top: 1rem;
+      position: relative;
+    }
+
+    .remove-row {
+      color: #dc3545;
+      cursor: pointer;
+      font-size: 0.9rem;
+      position: absolute;
+      right: 0;
+      top: -1.5rem;
+    }
+
+    .table-responsive {
+      min-height: 0.01%;
+      overflow-x: auto;
+    }
+
+    /* Custom table styling */
+    .table-container {
+      background: white;
+      border-radius: 8px;
+      box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+      overflow: hidden;
+    }
+
+    .table-responsive {
+      border-radius: 8px;
+      max-height: 70vh;
+      overflow-x: auto;
+      overflow-y: auto;
+      scrollbar-width: thin;
+    }
+
+    .table {
+      margin-bottom: 0;
+      font-size: 1.1rem;
+      min-width: 1700px;
+    }
+
+    .table th {
+      background-color: #2c3e50 !important;
+      color: white !important;
+      font-weight: 600;
+      font-size: 1.05rem;
+      padding: 12px 8px;
+      border: none;
+      text-align: center;
+      vertical-align: middle;
+      white-space: nowrap;
+      position: sticky;
+      top: 0;
+      z-index: 10;
+    }
+
+    .table td {
+      padding: 12px 8px;
+      vertical-align: middle;
+      border-color: #e9ecef;
+      font-size: 1.1rem;
+      line-height: 1.5;
+      word-wrap: break-word;
+      word-break: break-word;
+    }
+
+    .table tbody tr:hover {
+      background-color: #f8f9fa;
+    }
+
+    /* Column specific styling */
+    .activity-id {
+      font-family: 'Courier New', monospace;
+      font-weight: 600;
+      color: #2c3e50;
+      text-align: center;
+      min-width: 100px;
+    }
+
+    .text-content {
+      max-width: 200px;
+      word-wrap: break-word;
+      line-height: 1.5;
+    }
+
+    .performance-targets {
+      max-width: 400px;
+      word-wrap: break-word;
+      line-height: 1.5;
+      min-width: 350px;
+    }
+
+    .timeline-cell {
+      text-align: center;
+      font-size: 0.9rem;
+      min-width: 120px;
+    }
+
+    .responsible-unit {
+      text-align: center;
+      font-weight: 500;
+      min-width: 150px;
+    }
+
+    .budget-cell {
+      text-align: center;
+      min-width: 100px;
+    }
+
+    .score-cell {
+      text-align: center;
+      font-weight: 600;
+      min-width: 80px;
+    }
+
+    .status-cell {
+      text-align: center;
+      min-width: 80px;
+    }
+
+    .actions-cell {
+      text-align: center;
+      min-width: 120px;
+      white-space: nowrap;
+    }
+
+    .attachment-cell {
+      font-size: 0.9rem;
+      min-width: 100px;
+    }
+
+    .division-cell {
+      font-size: 1rem;
+      font-weight: 500;
+      text-align: center;
+      min-width: 150px;
+    }
+
+    /* Responsive table improvements */
+    .table-responsive {
+      border-radius: 0.5rem;
+      box-shadow: 0 0 20px rgba(0,0,0,0.1);
+    }
+
+    .table {
+      margin-bottom: 0;
+      border-collapse: separate;
+      border-spacing: 0;
+    }
+
+    .table thead th:first-child {
+      border-top-left-radius: 0.5rem;
+    }
+
+    .table thead th:last-child {
+      border-top-right-radius: 0.5rem;
+    }
+
+    .table tbody tr:hover {
+      background-color: #f8f9fa;
+    }
+
+    .table tbody tr:last-child td:first-child {
+      border-bottom-left-radius: 0.5rem;
+    }
+
+    .table tbody tr:last-child td:last-child {
+      border-bottom-right-radius: 0.5rem;
+    }
+
+    /* Badge styling */
+    .badge {
+      font-size: 0.9rem;
+      padding: 0.45rem 0.85rem;
+      border-radius: 4px;
+    }
+
+    .badge.bg-warning {
+      background-color: #ffc107 !important;
+      color: #000 !important;
+    }
+
+    .badge.bg-success {
+      background-color: #198754 !important;
+    }
+
+    .badge.bg-info {
+      background-color: #0dcaf0 !important;
+      color: #000 !important;
+    }
+
+    /* Button styling */
+    .btn-sm {
+      font-size: 0.95rem;
+      padding: 0.4rem 0.7rem;
+    }
+
+    .btn-outline-info {
+      font-weight: 600;
+    }
+
+    /* Custom View button styling */
+    .btn-view {
+      background-color: #17a2b8;
+      border-color: #17a2b8;
+      color: white;
+      font-size: 0.9rem;
+      padding: 0.35rem 0.6rem;
+      border-radius: 4px;
+    }
+
+    .btn-view:hover {
+      background-color: #138496;
+      border-color: #117a8b;
+      color: white;
+    }
+
+    .btn-view:focus {
+      box-shadow: 0 0 0 0.2rem rgba(23, 162, 184, 0.25);
+    }
+
+    .btn-group-vertical .btn {
+      border-radius: 0.25rem !important;
+      margin-bottom: 0.2rem;
+    }
+
+    .btn-group-vertical .btn:last-child {
+      margin-bottom: 0;
+    }
+
+    /* Custom table scrollbar */
+    .table-responsive::-webkit-scrollbar {
+      height: 12px;
+      width: 12px;
+    }
+
+    .table-responsive::-webkit-scrollbar-track {
+      background: #f1f1f1;
+      border-radius: 6px;
+      margin: 4px;
+    }
+
+    .table-responsive::-webkit-scrollbar-thumb {
+      background: #888;
+      border-radius: 6px;
+      border: 2px solid #f1f1f1;
+    }
+
+    .table-responsive::-webkit-scrollbar-thumb:hover {
+      background: #555;
+    }
+
+    .table-responsive::-webkit-scrollbar-corner {
+      background: #f1f1f1;
+    }
+
+    /* Scrollbar styling for content divs */
+    div[style*="overflow-y: auto"]::-webkit-scrollbar {
+      width: 4px;
+    }
+
+    div[style*="overflow-y: auto"]::-webkit-scrollbar-track {
+      background: #f1f1f1;
+      border-radius: 2px;
+    }
+
+    div[style*="overflow-y: auto"]::-webkit-scrollbar-thumb {
+      background: #888;
+      border-radius: 2px;
+    }
+
+    div[style*="overflow-y: auto"]::-webkit-scrollbar-thumb:hover {
+      background: #555;
+    }
+
+    .modal-body {
+      padding: 1.5rem;
+    }
+
+    .form-label {
+      font-weight: 600;
+      margin-bottom: 0.5rem;
+    }
+
+    .input-group {
+      align-items: center;
+    }
+
+    .btn-group .btn {
+      padding: 0.375rem 0.75rem;
+    }
+
+    .card-header {
+      padding: 1rem 1.5rem;
+      background-color: #f8f9fc;
+      border-bottom: 1px solid #e3e6f0;
+    }
+
+    .modal-xl {
+      max-width: 90%;
+    }
+
+    .card {
+      border: none;
+      border-radius: 0.5rem;
+      box-shadow: 0 0.15rem 1.75rem 0 rgba(58, 59, 69, 0.15);
+    }
+
+    @media (max-width: 768px) {
+      .sidebar {
+        transform: translateX(-100%);
+        transition: transform 0.3s ease;
+      }
+
+      .sidebar.show {
+        transform: translateX(0);
+      }
+
+      .main-content {
+        margin-left: 0;
+        padding: 1rem;
+      }
+
+      .modal-xl {
+        max-width: 95%;
+      }
+
+      .table-responsive {
+        font-size: 0.9rem;
+      }
+
+      .table th,
+      .table td {
+        padding: 0.6rem 0.4rem;
+        font-size: 0.85rem;
+      }
+
+      .table th {
+        font-size: 0.85rem;
+      }
+    }
+  </style>
+</head>
+
+<body>
+  <!-- Success Modal -->
+  <div class="modal fade" id="successModal" tabindex="-1" aria-labelledby="successModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+      <div class="modal-content">
+        <div class="modal-header bg-success text-white">
+          <h5 class="modal-title" id="successModalLabel">
+            <i class="bi bi-check-circle me-2"></i> Success
+          </h5>
+          <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
         </div>
-    </div>
-
-    <!-- Creation of GAD Plan -->
-    <div class="modal fade" id="gadPlanModal" tabindex="-1" aria-labelledby="gadPlanModalLabel" aria-hidden="true">
-        <div class="modal-dialog modal-xl">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <h5 class="modal-title" id="gadPlanModalLabel">
-                        <i class="bi bi-clipboard-data"></i> Create New GAD Plan
-                    </h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-                </div>
-                <div class="modal-body">
-                    <?php if (session()->getFlashdata('error')): ?>
-                        <div class="alert alert-danger"><?php echo session()->getFlashdata('error'); ?></div>
-                    <?php endif; ?>
-                    <?php echo form_open_multipart('GadPlanController/save', ['id' => 'gadPlanForm', 'class' => 'needs-validation', 'novalidate' => 'novalidate']); ?>
-                        <input type="hidden" name="indicator_text" id="indicator_text">
-                        <input type="hidden" name="target_text"     id="target_text">
-                    <input type="hidden" name="is_draft" id="is_draft" value="0">
-                    <input type="hidden" name="status" id="status" value="">
-                        <div class="row g-3 mb-4">
-                            <div class="col-md-6">
-                                <label for="displayPlanId" class="form-label"><strong>PLAN ID</strong></label>
-                                <input type="text" class="form-control" id="displayPlanId" readonly>
-                                <div class="form-text">Plan ID is automatically assigned and cannot be edited.</div>
-                            </div>
-
-
-                        <div class="mb-4 position-relative">
-                            <label for="issue_mandate" class="form-label"><strong>INDICATE THE GAD MANDATE / GENDER ISSUE BEING ADDRESSED BY THE ACTIVITY</strong> <span class="text-danger">*</span></label>
-                            <div class="input-group">
-                                <textarea class="form-control <?php echo (isset($validation) && $validation->hasError('issue_mandate')) ? 'is-invalid' : ''; ?>" id="issue_mandate" name="issue_mandate" rows="3" placeholder="Describe the gender issue or GAD mandate to be addressed..." required><?php echo set_value('issue_mandate'); ?></textarea>
-                                <button type="button" class="btn btn-outline-primary mandate-icon" data-bs-toggle="modal" data-bs-target="#mandateModal" onclick="loadMandates()">
-                                    <i class="bi bi-search"></i>
-                                </button>
-                            </div>
-                            <div class="invalid-feedback">
-                                <?php echo (isset($validation) && $validation->hasError('issue_mandate')) ? $validation->getError('issue_mandate') : 'Please provide a gender issue or GAD mandate (min 10 characters).'; ?>
-                            </div>
-                        </div>
-
-<div class="mb-4" id="causeContainer">
-    <label for="cause" class="form-label"><strong>INDICATE THE CAUSE OF GENDER ISSUE</strong> <span class="text-danger">*</span></label>
-    <input type="text" class="form-control <?php echo (isset($validation) && $validation->hasError('cause')) ? 'is-invalid' : ''; ?>" id="cause" name="cause" placeholder="Identify the root cause..." required value="<?php echo set_value('cause'); ?>">
-    <div class="invalid-feedback">
-        <?php echo (isset($validation) && $validation->hasError('cause')) ? $validation->getError('cause') : 'Please provide a cause of the gender issue.'; ?>
-    </div>
-</div>
-
-                        <div class="mb-4">
-                            <label for="gad_objective" class="form-label"><strong>GAD RESULT/STATEMENT OR GAD OBJECTIVE</strong> <span class="text-danger">*</span></label>
-                            <textarea class="form-control <?php echo (isset($validation) && $validation->hasError('gad_objective')) ? 'is-invalid' : ''; ?>" id="gad_objective" name="gad_objective" rows="3" placeholder="Define the expected GAD result..." required><?php echo set_value('gad_objective'); ?></textarea>
-                            <div class="invalid-feedback">
-                                <?php echo (isset($validation) && $validation->hasError('gad_objective')) ? $validation->getError('gad_objective') : ''; ?>
-                            </div>
-                        </div>
-
-                        <div class="mb-4">
-                            <label><strong>RELEVANT ORGANIZATION/MFO/PAP</strong></label>
-                            <div id="mfoPapTableContainer">
-                                <table class="table table-bordered mb-2" id="mfoPapTable_0">
-                                    <thead>
-                                        <tr>
-                                            <th style="width: 25%;">Type</th>
-                                            <th style="width: 60%;">MFO / PAP Statement</th>
-                                            <th style="width: 15%;">Action</th>
-                                        </tr>
-                                    </thead>
-                                    <tbody>
-                                        <tr>
-                                            <td>
-                                                <select class="form-select <?php echo (isset($validation) && $validation->hasError('mfoPapType_0')) ? 'is-invalid' : ''; ?>" name="mfoPapType_0">
-                                                    <option value="" <?php echo set_select('mfoPapType_0', '', true); ?>>Select Type</option>
-                                                    <option value="MFO" <?php echo set_select('mfoPapType_0', 'MFO'); ?>>MFO</option>
-                                                    <option value="MFA" <?php echo set_select('mfoPapType_0', 'MFA'); ?>>MFA</option>
-                                                </select>
-                                            </td>
-                                            <td><input type="text" class="form-control <?php echo (isset($validation) && $validation->hasError('mfoPapStatement_0')) ? 'is-invalid' : ''; ?>" name="mfoPapStatement_0" placeholder="Enter MFO / PAP statement..." value="<?php echo set_value('mfoPapStatement_0'); ?>"></td>
-                                            <td><button type="button" class="btn btn-danger btn-sm" onclick="removeMfoPapRow(this)">Delete</button></td>
-                                        </tr>
-                                    </tbody>
-                                </table>
-                            </div>
-                            <button type="button" class="btn btn-secondary btn-sm mt-2" onclick="addMfoPapRow()">Add Another</button>
-                            <?php if (isset($validation) && $validation->hasError('mfoPap')): ?>
-                                <div class="invalid-feedback d-block"><?php echo $validation->getError('mfoPap'); ?></div>
-                            <?php endif; ?>
-                        </div>
-
-                        <div class="mb-4">
-                            <label for="activity" class="form-label"><strong>GAD ACTIVITY</strong> <span class="text-danger">*</span></label>
-                            <textarea class="form-control <?php echo (isset($validation) && $validation->hasError('activity')) ? 'is-invalid' : ''; ?>" id="activity" name="activity" rows="3" placeholder="Describe the specific GAD activity..." required><?php echo set_value('activity'); ?></textarea>
-                            <div class="invalid-feedback">
-                                <?php echo (isset($validation) && $validation->hasError('activity')) ? $validation->getError('activity') : ''; ?>
-                            </div>
-                        </div>
-
-<div class="mb-4">
-  <label class="form-label"><strong>PERFORMANCE INDICATOR(S) / TARGET(S)</strong> <span class="text-danger">*</span></label>
-  <div id="indicatorTableContainer">
-    <table class="table table-bordered mb-2">
-      <thead>
-        <tr>
-          <th style="width:45%">Performance Indicator</th>
-          <th style="width:45%">Target</th>
-          <th style="width:10%">Action</th>
-        </tr>
-      </thead>
-      <tbody id="indicatorTableBody">
-        <tr id="indicatorRow_0">
-          <td>
-            <textarea class="form-control" name="indicators[0][indicator]" rows="2" placeholder="Enter performance indicator..." required></textarea>
-          </td>
-          <td>
-            <textarea class="form-control" name="indicators[0][target]" rows="2" placeholder="Enter target..." required></textarea>
-          </td>
-          <td class="text-center">
-            <button type="button" class="btn btn-danger btn-sm" onclick="removeIndicatorRow(0)">
-              <i class="bi bi-trash"></i>
-            </button>
-          </td>
-        </tr>
-      </tbody>
-    </table>
-  </div>
-  <button type="button" class="btn btn-secondary btn-sm" onclick="addIndicatorRow()">
-    <i class="bi bi-plus-circle"></i> Add Another
-  </button>
-</div>
-
-                        <div class="row g-3 mb-4">
-                            <div class="col-md-6">
-                                <label for="startDate" class="form-label"><strong>START DATE</strong> <span class="text-danger">*</span></label>
-                                <input type="date" class="form-control <?php echo (isset($validation) && $validation->hasError('startDate')) ? 'is-invalid' : ''; ?>" id="startDate" name="startDate" value="<?php echo set_value('startDate'); ?>" required>
-                                <div class="invalid-feedback">
-                                    <?php echo (isset($validation) && $validation->hasError('startDate')) ? $validation->getError('startDate') : ''; ?>
-                                </div>
-                            </div>
-                            <div class="col-md-6">
-                                <label for="endDate" class="form-label"><strong>END DATE</strong> <span class="text-danger">*</span></label>
-                                <input type="date" class="form-control <?php echo (isset($validation) && $validation->hasError('endDate')) ? 'is-invalid' : ''; ?>" id="endDate" name="endDate" value="<?php echo set_value('endDate'); ?>" required>
-                                <div class="invalid-feedback">
-                                    <?php echo (isset($validation) && $validation->hasError('endDate')) ? $validation->getError('endDate') : ''; ?>
-                                </div>
-                            </div>
-                        </div>
-
-                        <div class="mb-4" id="responsibleUnitsContainer">
-                            <label for="responsibleUnits" class="form-label"><strong>RESPONSIBLE UNIT(S)/OFFICE(S)</strong> <span class="text-danger">*</span></label>
-                            <div class="responsible-unit-row">
-                                <select class="form-select <?php echo (isset($validation) && $validation->hasError('responsibleUnits')) ? 'is-invalid' : ''; ?>" name="responsibleUnits[]" required>
-                                    <option value="">Select Responsible Unit</option>
-                                    <?php if (isset($divisions) && !empty($divisions)): ?>
-                                        <?php foreach ($divisions as $division): ?>
-                                            <option value="<?= esc($division->division) ?>" <?= set_select('responsibleUnits[]', $division->division) ?>>
-                                                <?= esc($division->division) ?>
-                                            </option>
-                                        <?php endforeach; ?>
-                                    <?php else: ?>
-                                        <option value="">No divisions available</option>
-                                    <?php endif; ?>
-                                </select>
-                                <div class="invalid-feedback">
-                                    <?php echo (isset($validation) && $validation->hasError('responsibleUnits')) ? $validation->getError('responsibleUnits') : 'Please select a responsible unit.'; ?>
-                                </div>
-                            </div>
-                            <button type="button" class="btn btn-secondary btn-sm mt-2" onclick="addResponsibleUnitRow()">Add Another</button>
-                        </div>
-
-                        <div class="mb-4">
-                            <label for="budgetAmount" class="form-label"><strong>TOTAL BUDGET</strong> <span class="text-danger">*</span></label>
-                            <div class="input-group">
-                                <span class="input-group-text">₱</span>
-                                <input type="number" class="form-control <?php echo (isset($validation) && $validation->hasError('budgetAmount')) ? 'is-invalid' : ''; ?>" id="budgetAmount" name="budgetAmount" step="0.01" min="0" value="<?php echo set_value('budgetAmount'); ?>" required>
-                                <button class="btn btn-outline-secondary" type="button" onclick="linkToBudgetCrafting()">
-                                    <i class="bi bi-link-45deg"></i> Link to Budget Crafting
-                                </button>
-                            </div>
-                            <div class="form-text">
-                                <i class="bi bi-info-circle"></i> Budget will be linked to the GAD Budget Crafting module.
-                            </div>
-                            <div class="invalid-feedback">
-                                <?php echo (isset($validation) && $validation->hasError('budgetAmount')) ? $validation->getError('budgetAmount') : ''; ?>
-                            </div>
-                        </div>
-
-                        <div class="mb-4">
-                            <label for="hgdgScore" class="form-label"><strong>HGDG SCORE</strong> <span class="text-danger">*</span></label>
-                            <input type="number" class="form-control <?php echo (isset($validation) && $validation->hasError('hgdgScore')) ? 'is-invalid' : ''; ?>" id="hgdgScore" name="hgdgScore" step="0.01" min="0" max="100" value="<?php echo set_value('hgdgScore'); ?>" required>
-                            <div class="form-text">Enter the HGDG score (0.00 to 100.00).</div>
-                            <div class="invalid-feedback">
-                                <?php echo (isset($validation) && $validation->hasError('hgdgScore')) ? $validation->getError('hgdgScore') : 'Please enter a valid HGDG score between 0 and 100.'; ?>
-                            </div>
-                        </div>
-
-    <div class="mb-4">
-      <label for="fileAttachments" class="form-label">
-        <strong>FILE ATTACHMENT(S) (Approved Projects/Programs)</strong>
-      </label>
-      <input
-        type="file"
-        class="form-control <?= (isset($validation) && $validation->hasError('fileAttachments')) ? 'is-invalid' : ''; ?>"
-        id="fileAttachments"
-        name="fileAttachments[]"
-        multiple
-        accept=".pdf,.doc,.docx,.jpg,.png"
-      >
-      <div class="form-text">
-        Upload approved project/program documents (PDF, DOC, DOCX, JPG, PNG).
+        <div class="modal-body" id="successModalBody">
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-primary" data-bs-dismiss="modal">OK</button>
+        </div>
       </div>
-      <div class="invalid-feedback">
-        <?= (isset($validation) && $validation->hasError('fileAttachments'))
+    </div>
+  </div>
+
+  <!-- Sidebar -->
+  <nav id="sidebar" class="sidebar">
+    <div class="sidebar-header">
+      <h4 class="text-white mb-0">
+        <i class="bi bi-clipboard-data"></i> GAD System
+      </h4>
+    </div>
+
+    <div class="sidebar-content">
+      <!-- User Info -->
+      <div class="user-info mb-4">
+        <div class="text-white d-flex align-items-center">
+          <i class="bi bi-person-circle fs-4 me-2"></i>
+          <div>
+            <div class="fw-bold"><?php echo esc(session()->get('first_name') . ' ' . session()->get('last_name')); ?>
+            </div>
+            <small class="text-light">Secretariat</small>
+            <br><small class="text-light">Executive Division</small>
+          </div>
+        </div>
+      </div>
+
+      <!-- Navigation Menu -->
+      <ul class="nav nav-pills flex-column">
+        <li class="nav-item">
+          <a class="nav-link" href="<?= base_url('FocalDashboard') ?>">
+            <i class="bi bi-house-door me-2"></i>Dashboard
+          </a>
+        </li>
+        <li class="nav-item">
+          <a class="nav-link active" href="<?= base_url('Focal/PlanPreparation') ?>">
+            <i class="bi bi-clipboard-plus me-2"></i>Preparation of GAD Plan
+          </a>
+        </li>
+        <li class="nav-item">
+          <a class="nav-link" href="<?= base_url('Focal/BudgetCrafting') ?>">
+            <i class="bi bi-calculator me-2"></i>Budget Crafting
+          </a>
+        </li>
+        <li class="nav-item">
+          <a class="nav-link" href="<?= base_url('Focal/PlanReview') ?>">
+            <i class="bi bi-check-circle me-2"></i>Review & Approval of GAD Plan
+          </a>
+        </li>
+        <li class="nav-item">
+          <a class="nav-link" href="<?= base_url('Focal/ConsolidatedPlan') ?>">
+            <i class="bi bi-file-earmark-text me-2"></i>Consolidated Plan & Budget
+          </a>
+        </li>
+        <li class="nav-item">
+          <a class="nav-link" href="<?= base_url('Focal/AccomplishmentSubmission') ?>">
+            <i class="bi bi-send me-2"></i>Submission of GAD Accomplishment
+          </a>
+        </li>
+        <li class="nav-item">
+          <a class="nav-link" href="<?= base_url('Focal/ReviewApproval') ?>">
+            <i class="bi bi-clipboard-check me-2"></i>Review & Approval of Accomplishment
+          </a>
+        </li>
+        <li class="nav-item">
+          <a class="nav-link" href="<?= base_url('Focal/ConsolidatedAccomplishment') ?>">
+            <i class="bi bi-collection me-2"></i>Consolidated GAD Accomplishment
+          </a>
+        </li>
+      </ul>
+    </div>
+
+    <!-- Logout Button -->
+    <div class="sidebar-footer">
+      <a href="<?= site_url('login/logout') ?>" class="btn btn-outline-light w-100">
+        <i class="bi bi-box-arrow-right"></i> Logout
+      </a>
+    </div>
+  </nav>
+
+  <!-- Main Content -->
+  <div class="main-content">
+    <div class="container-fluid py-4">
+      <div class="row">
+        <div class="col-12">
+          <div class="d-flex justify-content-between align-items-center mb-4">
+            <h1 class="h3 mb-0">
+              <i class="bi bi-clipboard-data text-primary"></i> GAD Plan Preparation
+            </h1>
+            <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#gadPlanModal"
+              onclick="resetGadPlanModal()">
+              <i class="bi bi-plus-circle"></i> Create GAD Plan
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <div class="row">
+        <div class="col-12">
+          <div class="row">
+            <div class="col-12">
+              <div class="card shadow-lg">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                  <h5 class="mb-0">GAD Plan Activities</h5>
+                  <div class="input-group w-25">
+                    <input type="text" class="form-control" placeholder="Search GAD plans..." id="searchInput"
+                      aria-label="Search GAD plans">
+                    <button class="btn btn-outline-secondary" type="button" id="searchButton">
+                      <i class="bi bi-search"></i>
+                    </button>
+                  </div>
+                </div>
+                <div class="card-body p-0">
+                  <div class="table-container">
+                    <div class="table-responsive">
+                      <table class="table table-hover">
+                        <thead>
+                          <tr>
+                            <th style="width: 6%;">Activity ID</th>
+                            <th style="width: 12%;">Gender Issue / GAD Mandate</th>
+                            <th style="width: 10%;">Cause of Gender Issue</th>
+                            <th style="width: 10%;">GAD Objective</th>
+                            <th style="width: 8%;">Relevant MFO/PAP</th>
+                            <th style="width: 22%;">Performance Targets</th>
+                            <th style="width: 6%;">Timeline</th>
+                            <th style="width: 8%;">Responsible Units</th>
+                            <th style="width: 5%;">Budget</th>
+                            <th style="width: 4%;">HGDG Score</th>
+                            <th style="width: 5%;">Attachments</th>
+                            <th style="width: 6%;">Submitted by</th>
+                            <th style="width: 4%;">Status</th>
+                            <th style="width: 6%;">Actions</th>
+                        </tr>
+                      </thead>
+                      <tbody id="gadPlanTableBody">
+                        <?php if (!isset($gadPlans) || empty($gadPlans)): ?>
+                        <tr>
+                          <td colspan="14" class="text-center">No GAD plans found.</td>
+                        </tr>
+                        <?php else: ?>
+                        <?php foreach ($gadPlans as $plan): ?>
+                        <tr data-plan-id="<?php echo esc($plan['plan_id'] ?? ''); ?>">
+                          <td class="activity-id"><?php echo esc('GAD-ACT-' . str_pad($plan['plan_id'] ?? '0', 3, '0', STR_PAD_LEFT)); ?>
+                          </td>
+                          <td class="text-content">
+                            <?php echo esc($plan['issue_mandate'] ?? ''); ?>
+                          </td>
+                          <td class="text-content">
+                            <?php
+                            $causeData = !empty($plan['cause']) ? json_decode($plan['cause'], true) : [];
+                            if (is_array($causeData) && !empty($causeData)) {
+                                $causes = array_map(function($cause) {
+                                    return is_string($cause) ? esc(strip_tags($cause)) : esc($cause);
+                                }, $causeData);
+                                echo implode('<br>', $causes);
+                            } else {
+                                echo esc($plan['cause'] ?? 'N/A');
+                            }
+                            ?>
+                          </td>
+                          <td class="text-content">
+                            <?php
+                            $objectiveData = !empty($plan['gad_objective']) ? json_decode($plan['gad_objective'], true) : [];
+                            if (is_array($objectiveData) && !empty($objectiveData)) {
+                                $objectives = array_map(function($objective) {
+                                    return is_string($objective) ? esc(strip_tags($objective)) : esc($objective);
+                                }, $objectiveData);
+                                echo implode('<br>', $objectives);
+                            } else {
+                                echo esc($plan['gad_objective'] ?? 'N/A');
+                            }
+                            ?>
+                          </td>
+                          <td class="text-content">
+                            <?php
+                            $mfoPapData = !empty($plan['mfoPapData']) ? json_decode($plan['mfoPapData'], true) : [];
+                            if (!empty($mfoPapData)) {
+                                $mfoPapStrings = array_map(function($item) {
+                                    return '<strong>' . esc($item['type']) . ':</strong> ' . esc($item['statement']);
+                                }, $mfoPapData);
+                                echo implode('<br>', $mfoPapStrings);
+                            } else {
+                                echo 'N/A';
+                            }
+                            ?>
+                          </td>
+                          <td class="performance-targets">
+                            <?php
+                            $indicators = json_decode($plan['indicator_text'] ?? '[]', true) ?: [];
+                            $targets    = json_decode($plan['target_text']    ?? '[]', true) ?: [];
+
+                            if (empty($indicators)) {
+                                echo 'N/A';
+                            } else {
+                                foreach ($indicators as $i => $indicator) {
+                                    echo '<strong>Indicator:</strong> ' . esc($indicator);
+
+                                    if (isset($targets[$i]) && $targets[$i] !== '') {
+                                        echo '<br><strong>Target:</strong> ' . esc($targets[$i]);
+                                    }
+
+                                    if ($i < count($indicators) - 1) echo '<hr style="margin: 0.5rem 0;">';
+                                }
+                            }
+                            ?>
+                          </td>
+                          <td class="timeline-cell">
+                            <?php
+                            $startDate = !empty($plan['startDate']) ? date('M d, Y', strtotime($plan['startDate'])) : 'N/A';
+                            $endDate = !empty($plan['endDate']) ? date('M d, Y', strtotime($plan['endDate'])) : 'N/A';
+                            echo $startDate . ' - ' . $endDate;
+                            ?>
+                          </td>
+                          <td class="responsible-unit">
+                            <?php
+                            $responsibleUnits = !empty($plan['responsible_units']) ? json_decode($plan['responsible_units'], true) : [];
+                            if (is_array($responsibleUnits) && !empty($responsibleUnits)) {
+                                echo implode('<br>', array_map('esc', $responsibleUnits));
+                            } else {
+                                echo esc($plan['responsible_units'] ?? 'N/A');
+                            }
+                            ?>
+                          </td>
+
+                          <td class="budget-cell">
+                            <a href="<?= base_url('Focal/BudgetCrafting') ?>?plan=<?= esc($plan['plan_id']) ?>"
+                              class="btn btn-sm btn-outline-info" style="font-size: 0.85rem;">
+                              ₱<?= number_format($plan['amount'], 0, '.', ',') ?>
+                            </a>
+                          </td>
+                          <td class="score-cell">
+                            <span class="badge bg-info">
+                              <?php echo isset($plan['hgdg_score']) ? number_format($plan['hgdg_score'], 1) : 'N/A'; ?>
+                            </span>
+                          </td>
+                          <td class="attachment-cell">
+                            <?php
+                            $fileAttachments = !empty($plan['file_attachments']) ? json_decode($plan['file_attachments'], true) : [];
+                            if (is_array($fileAttachments) && !empty($fileAttachments)) {
+                                if (count($fileAttachments) == 1) {
+                                    // Single file - open directly
+                                    $fileName = basename($fileAttachments[0]);
+                                    echo '<a href="' . base_url('Uploads/' . esc($fileName)) . '" target="_blank" class="btn btn-sm btn-view" title="View File">';
+                                    echo '<i class="bi bi-eye"></i> View';
+                                    echo '</a>';
+                                } else {
+                                    // Multiple files - show selection modal
+                                    echo '<button class="btn btn-sm btn-view" onclick="viewMultipleAttachments(' . esc($plan['plan_id']) . ')" title="View Attachments">';
+                                    echo '<i class="bi bi-eye"></i> View (' . count($fileAttachments) . ')';
+                                    echo '</button>';
+                                }
+                            } else {
+                                echo '<span class="text-muted">No files</span>';
+                            }
+                            ?>
+                          </td>
+
+                          <td class="division-cell">
+                            <?php echo esc($plan['submitted_by_name'] ?? 'N/A'); ?>
+                          </td>
+
+                          <td class="status-cell">
+                            <?php if (($plan['status'] ?? 'Pending') === 'Draft'): ?>
+                            <span class="badge bg-warning text-dark">Draft</span>
+                            <?php else: ?>
+                            <span class="badge bg-success">Submitted</span>
+                            <?php endif; ?>
+                          </td>
+                          <td class="actions-cell">
+                            <button class="btn btn-sm btn-outline-primary me-1"
+                              onclick="editGadPlan(this, '<?php echo esc($plan['plan_id'] ?? ''); ?>')"
+                              title="Edit Plan">
+                              <i class="bi bi-pencil"></i>
+                            </button>
+                            <button class="btn btn-sm btn-outline-danger"
+                              onclick="deleteGadPlan(this, '<?php echo esc($plan['plan_id'] ?? ''); ?>')"
+                              title="Delete Plan">
+                              <i class="bi bi-trash"></i>
+                            </button>
+                          </td>
+                        </tr>
+                        <?php endforeach; endif?>
+                      </tbody>
+                    </table>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Creation of GAD Plan -->
+      <div class="modal fade" id="gadPlanModal" tabindex="-1" aria-labelledby="gadPlanModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-xl">
+          <div class="modal-content">
+            <div class="modal-header">
+              <h5 class="modal-title" id="gadPlanModalLabel">
+                <i class="bi bi-clipboard-data"></i> Create New GAD Plan
+              </h5>
+              <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+              <?php if (session()->getFlashdata('error')): ?>
+              <div class="alert alert-danger"><?php echo session()->getFlashdata('error'); ?></div>
+              <?php endif; ?>
+              <?php echo form_open_multipart('GadPlanController/save', ['id' => 'gadPlanForm', 'class' => 'needs-validation', 'novalidate' => 'novalidate']); ?>
+              <input type="hidden" name="indicator_text" id="indicator_text">
+              <input type="hidden" name="target_text" id="target_text">
+              <input type="hidden" name="is_draft" id="is_draft" value="0">
+              <input type="hidden" name="status" id="status" value="">
+              <div class="row g-3 mb-4">
+                <div class="col-md-6">
+                  <label for="displayPlanId" class="form-label"><strong>PLAN ID</strong></label>
+                  <input type="text" class="form-control" id="displayPlanId" readonly>
+                  <div class="form-text">Plan ID is automatically assigned and cannot be edited.</div>
+                </div>
+
+
+                <div class="mb-4 position-relative">
+                  <label for="issue_mandate" class="form-label"><strong>INDICATE THE GAD MANDATE / GENDER ISSUE BEING
+                      ADDRESSED BY THE ACTIVITY</strong> <span class="text-danger">*</span></label>
+                  <div class="input-group">
+                    <textarea
+                      class="form-control <?php echo (isset($validation) && $validation->hasError('issue_mandate')) ? 'is-invalid' : ''; ?>"
+                      id="issue_mandate" name="issue_mandate" rows="3"
+                      placeholder="Describe the gender issue or GAD mandate to be addressed..."
+                      required><?php echo set_value('issue_mandate'); ?></textarea>
+                    <button type="button" class="btn btn-outline-primary mandate-icon" data-bs-toggle="modal"
+                      data-bs-target="#mandateModal" onclick="loadMandates()">
+                      <i class="bi bi-search"></i>
+                    </button>
+                  </div>
+                  <div class="invalid-feedback">
+                    <?php echo (isset($validation) && $validation->hasError('issue_mandate')) ? $validation->getError('issue_mandate') : 'Please provide a gender issue or GAD mandate (min 10 characters).'; ?>
+                  </div>
+                </div>
+
+                <div class="mb-4" id="causeContainer">
+                  <label for="cause" class="form-label"><strong>INDICATE THE CAUSE OF GENDER ISSUE</strong> <span
+                      class="text-danger">*</span></label>
+                  <input type="text"
+                    class="form-control <?php echo (isset($validation) && $validation->hasError('cause')) ? 'is-invalid' : ''; ?>"
+                    id="cause" name="cause" placeholder="Identify the root cause..." required
+                    value="<?php echo set_value('cause'); ?>">
+                  <div class="invalid-feedback">
+                    <?php echo (isset($validation) && $validation->hasError('cause')) ? $validation->getError('cause') : 'Please provide a cause of the gender issue.'; ?>
+                  </div>
+                </div>
+
+                <div class="mb-4">
+                  <label for="gad_objective" class="form-label"><strong>GAD RESULT/STATEMENT OR GAD OBJECTIVE</strong>
+                    <span class="text-danger">*</span></label>
+                  <textarea
+                    class="form-control <?php echo (isset($validation) && $validation->hasError('gad_objective')) ? 'is-invalid' : ''; ?>"
+                    id="gad_objective" name="gad_objective" rows="3" placeholder="Define the expected GAD result..."
+                    required><?php echo set_value('gad_objective'); ?></textarea>
+                  <div class="invalid-feedback">
+                    <?php echo (isset($validation) && $validation->hasError('gad_objective')) ? $validation->getError('gad_objective') : ''; ?>
+                  </div>
+                </div>
+
+                <div class="mb-4">
+                  <label><strong>RELEVANT ORGANIZATION/MFO/PAP</strong></label>
+                  <div id="mfoPapTableContainer">
+                    <table class="table table-bordered mb-2" id="mfoPapTable_0">
+                      <thead>
+                        <tr>
+                          <th style="width: 25%;">Type</th>
+                          <th style="width: 60%;">MFO / PAP Statement</th>
+                          <th style="width: 15%;">Action</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        <tr>
+                          <td>
+                            <select
+                              class="form-select <?php echo (isset($validation) && $validation->hasError('mfoPapType_0')) ? 'is-invalid' : ''; ?>"
+                              name="mfoPapType_0">
+                              <option value="" <?php echo set_select('mfoPapType_0', '', true); ?>>Select Type</option>
+                              <option value="MFO" <?php echo set_select('mfoPapType_0', 'MFO'); ?>>MFO</option>
+                              <option value="MFA" <?php echo set_select('mfoPapType_0', 'MFA'); ?>>MFA</option>
+                            </select>
+                          </td>
+                          <td><input type="text"
+                              class="form-control <?php echo (isset($validation) && $validation->hasError('mfoPapStatement_0')) ? 'is-invalid' : ''; ?>"
+                              name="mfoPapStatement_0" placeholder="Enter MFO / PAP statement..."
+                              value="<?php echo set_value('mfoPapStatement_0'); ?>"></td>
+                          <td><button type="button" class="btn btn-danger btn-sm"
+                              onclick="removeMfoPapRow(this)">Delete</button></td>
+                        </tr>
+                      </tbody>
+                    </table>
+                  </div>
+                  <button type="button" class="btn btn-secondary btn-sm mt-2" onclick="addMfoPapRow()">Add
+                    Another</button>
+                  <?php if (isset($validation) && $validation->hasError('mfoPap')): ?>
+                  <div class="invalid-feedback d-block"><?php echo $validation->getError('mfoPap'); ?></div>
+                  <?php endif; ?>
+                </div>
+
+                <div class="mb-4">
+                  <label for="activity" class="form-label"><strong>GAD ACTIVITY</strong> <span
+                      class="text-danger">*</span></label>
+                  <textarea
+                    class="form-control <?php echo (isset($validation) && $validation->hasError('activity')) ? 'is-invalid' : ''; ?>"
+                    id="activity" name="activity" rows="3" placeholder="Describe the specific GAD activity..."
+                    required><?php echo set_value('activity'); ?></textarea>
+                  <div class="invalid-feedback">
+                    <?php echo (isset($validation) && $validation->hasError('activity')) ? $validation->getError('activity') : ''; ?>
+                  </div>
+                </div>
+
+                <div class="mb-4">
+                  <label class="form-label"><strong>PERFORMANCE INDICATOR(S) / TARGET(S)</strong> <span
+                      class="text-danger">*</span></label>
+                  <div id="indicatorTableContainer">
+                    <table class="table table-bordered mb-2">
+                      <thead>
+                        <tr>
+                          <th style="width:45%">Performance Indicator</th>
+                          <th style="width:45%">Target</th>
+                          <th style="width:10%">Action</th>
+                        </tr>
+                      </thead>
+                      <tbody id="indicatorTableBody">
+                        <tr id="indicatorRow_0">
+                          <td>
+                            <textarea class="form-control" name="indicators[0][indicator]" rows="2"
+                              placeholder="Enter performance indicator..." required></textarea>
+                          </td>
+                          <td>
+                            <textarea class="form-control" name="indicators[0][target]" rows="2"
+                              placeholder="Enter target..." required></textarea>
+                          </td>
+                          <td class="text-center">
+                            <button type="button" class="btn btn-danger btn-sm" onclick="removeIndicatorRow(0)">
+                              <i class="bi bi-trash"></i>
+                            </button>
+                          </td>
+                        </tr>
+                      </tbody>
+                    </table>
+                  </div>
+                  <button type="button" class="btn btn-secondary btn-sm" onclick="addIndicatorRow()">
+                    <i class="bi bi-plus-circle"></i> Add Another
+                  </button>
+                </div>
+
+                <div class="row g-3 mb-4">
+                  <div class="col-md-6">
+                    <label for="startDate" class="form-label"><strong>START DATE</strong> <span
+                        class="text-danger">*</span></label>
+                    <input type="date"
+                      class="form-control <?php echo (isset($validation) && $validation->hasError('startDate')) ? 'is-invalid' : ''; ?>"
+                      id="startDate" name="startDate" value="<?php echo set_value('startDate'); ?>" required>
+                    <div class="invalid-feedback">
+                      <?php echo (isset($validation) && $validation->hasError('startDate')) ? $validation->getError('startDate') : ''; ?>
+                    </div>
+                  </div>
+                  <div class="col-md-6">
+                    <label for="endDate" class="form-label"><strong>END DATE</strong> <span
+                        class="text-danger">*</span></label>
+                    <input type="date"
+                      class="form-control <?php echo (isset($validation) && $validation->hasError('endDate')) ? 'is-invalid' : ''; ?>"
+                      id="endDate" name="endDate" value="<?php echo set_value('endDate'); ?>" required>
+                    <div class="invalid-feedback">
+                      <?php echo (isset($validation) && $validation->hasError('endDate')) ? $validation->getError('endDate') : ''; ?>
+                    </div>
+                  </div>
+                </div>
+
+                <div class="mb-4" id="responsibleUnitsContainer">
+                  <label for="responsibleUnits" class="form-label"><strong>RESPONSIBLE UNIT(S)/OFFICE(S)</strong> <span
+                      class="text-danger">*</span></label>
+                  <div class="responsible-unit-row">
+                    <select
+                      class="form-select <?php echo (isset($validation) && $validation->hasError('responsibleUnits')) ? 'is-invalid' : ''; ?>"
+                      name="responsibleUnits[]" required>
+                      <option value="">Select Responsible Unit</option>
+                      <?php if (isset($divisions) && !empty($divisions)): ?>
+                      <?php foreach ($divisions as $division): ?>
+                      <option value="<?= esc($division->division) ?>"
+                        <?= set_select('responsibleUnits[]', $division->division) ?>>
+                        <?= esc($division->division) ?>
+                      </option>
+                      <?php endforeach; ?>
+                      <?php else: ?>
+                      <option value="">No divisions available</option>
+                      <?php endif; ?>
+                    </select>
+                    <div class="invalid-feedback">
+                      <?php echo (isset($validation) && $validation->hasError('responsibleUnits')) ? $validation->getError('responsibleUnits') : 'Please select a responsible unit.'; ?>
+                    </div>
+                  </div>
+                  <button type="button" class="btn btn-secondary btn-sm mt-2" onclick="addResponsibleUnitRow()">Add
+                    Another</button>
+                </div>
+
+
+                <div class="mb-4">
+                  <label for="budgetAmount" class="form-label"><strong>TOTAL BUDGET</strong> <span
+                      class="text-danger">*</span></label>
+                  <div class="input-group">
+                    <span class="input-group-text">₱</span>
+                    <input type="number"
+                      class="form-control <?php echo (isset($validation) && $validation->hasError('budgetAmount')) ? 'is-invalid' : ''; ?>"
+                      id="budgetAmount" name="budgetAmount" step="0.01" min="0"
+                      value="<?php echo set_value('budgetAmount'); ?>" required>
+                    <button class="btn btn-outline-secondary" type="button" onclick="linkToBudgetCrafting()">
+                      <i class="bi bi-link-45deg"></i> Link to Budget Crafting
+                    </button>
+                  </div>
+                  <div class="form-text">
+                    <i class="bi bi-info-circle"></i> Budget will be linked to the GAD Budget Crafting module.
+                  </div>
+                  <div class="invalid-feedback">
+                    <?php echo (isset($validation) && $validation->hasError('budgetAmount')) ? $validation->getError('budgetAmount') : ''; ?>
+                  </div>
+                </div>
+
+                <div class="mb-4">
+                  <label for="hgdgScore" class="form-label"><strong>HGDG SCORE</strong> <span
+                      class="text-danger">*</span></label>
+                  <input type="number"
+                    class="form-control <?php echo (isset($validation) && $validation->hasError('hgdgScore')) ? 'is-invalid' : ''; ?>"
+                    id="hgdgScore" name="hgdgScore" step="0.01" min="0" max="100"
+                    value="<?php echo set_value('hgdgScore'); ?>" required>
+                  <div class="form-text">Enter the HGDG score (0.00 to 100.00).</div>
+                  <div class="invalid-feedback">
+                    <?php echo (isset($validation) && $validation->hasError('hgdgScore')) ? $validation->getError('hgdgScore') : 'Please enter a valid HGDG score between 0 and 100.'; ?>
+                  </div>
+                </div>
+
+                <div class="mb-4">
+                  <label for="fileAttachments" class="form-label">
+                    <strong>FILE ATTACHMENT(S) (Approved Projects/Programs)</strong>
+                  </label>
+                  <input type="file"
+                    class="form-control <?= (isset($validation) && $validation->hasError('fileAttachments')) ? 'is-invalid' : ''; ?>"
+                    id="fileAttachments" name="fileAttachments[]" multiple accept=".pdf,.doc,.docx,.jpg,.png">
+                  <div class="form-text">
+                    Upload approved project/program documents (PDF, DOC, DOCX, JPG, PNG).
+                  </div>
+                  <div class="invalid-feedback">
+                    <?= (isset($validation) && $validation->hasError('fileAttachments'))
             ? $validation->getError('fileAttachments')
             : '' ?>
+                  </div>
+
+                </div>
+
+
+                <input type="hidden" name="planId" id="planId">
+                <?php echo form_close(); ?>
+              </div>
+              <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                  <i class="bi bi-x-circle"></i> Cancel
+                </button>
+                <button type="button" class="btn btn-outline-secondary" onclick="submitGadPlan(true)">
+                  <i class="bi bi-save"></i> Save as Draft
+                </button>
+
+                <button type="button" class="btn btn-primary" onclick="submitGadPlan(false)">
+                  <i class="bi bi-check-circle"></i> Save GAD Plan
+                </button>
+              </div>
+
+            </div>
+          </div>
+        </div>
       </div>
-    </div>
 
-    
-                        <input type="hidden" name="planId" id="planId">
-<?php echo form_close(); ?>
-</div>
-<div class="modal-footer">
-    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
-        <i class="bi bi-x-circle"></i> Cancel
-    </button>
-      <button type="button" class="btn btn-outline-secondary"
-        onclick="submitGadPlan(true)">
-  <i class="bi bi-save"></i> Save as Draft
-</button>
-
-<button type="button" class="btn btn-primary"
-        onclick="submitGadPlan(false)">
-  <i class="bi bi-check-circle"></i> Save GAD Plan
-</button>
-</div>
-
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <!-- Mandate Selection Modal -->
-    <div class="modal fade" id="mandateModal" tabindex="-1" aria-labelledby="mandateModalLabel" aria-hidden="true">
+      <!-- Mandate Selection Modal -->
+      <div class="modal fade" id="mandateModal" tabindex="-1" aria-labelledby="mandateModalLabel" aria-hidden="true">
         <div class="modal-dialog modal-lg">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <h5 class="modal-title" id="mandateModalLabel">
-                        <i class="bi bi-search"></i> Select GAD Mandate
-                    </h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-                </div>
-                <div class="modal-body">
-                    <div class="row mb-3">
-                        <div class="col-md-4">
-                            <label for="filterYear" class="form-label">Filter by Year</label>
-                            <select class="form-select" id="filterYear" onchange="loadMandates()">
-                                <option value="">All Years</option>
-                            </select>
-                        </div>
-                    </div>
-                    <button type="button" class="btn btn-success mb-3" onclick="showAddMandateForm()">
-                        <i class="bi bi-plus-circle"></i> Add New GAD Mandate
-                    </button>
-                    <div class="table-responsive">
-                        <table class="table table-hover">
-                            <thead>
-                                <tr>
-                                    <th style="width: 10%;"></th>
-                                    <th style="width: 15%;">Year</th>
-                                    <th style="width: 60%;">Description</th>
-                                    <th style="width: 15%;">Action</th>
-                                </tr>
-                            </thead>
-                            <tbody id="mandateTableBody">
-                                <tr>
-                                    <td colspan="4" class="text-center">Loading mandates...</td>
-                                </tr>
-                            </tbody>
-                        </table>
-                    </div>
-                </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
-                        <i class="bi bi-x-circle"></i> Close
-                    </button>
-                </div>
+          <div class="modal-content">
+            <div class="modal-header">
+              <h5 class="modal-title" id="mandateModalLabel">
+                <i class="bi bi-search"></i> Select GAD Mandate
+              </h5>
+              <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
+            <div class="modal-body">
+              <div class="row mb-3">
+                <div class="col-md-4">
+                  <label for="filterYear" class="form-label">Filter by Year</label>
+                  <select class="form-select" id="filterYear" onchange="loadMandates()">
+                    <option value="">All Years</option>
+                  </select>
+                </div>
+              </div>
+              <button type="button" class="btn btn-success mb-3" onclick="showAddMandateForm()">
+                <i class="bi bi-plus-circle"></i> Add New GAD Mandate
+              </button>
+              <div class="table-responsive">
+                <table class="table table-hover">
+                  <thead>
+                    <tr>
+                      <th style="width: 10%;"></th>
+                      <th style="width: 15%;">Year</th>
+                      <th style="width: 60%;">Description</th>
+                      <th style="width: 15%;">Action</th>
+                    </tr>
+                  </thead>
+                  <tbody id="mandateTableBody">
+                    <tr>
+                      <td colspan="4" class="text-center">Loading mandates...</td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+            </div>
+            <div class="modal-footer">
+              <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                <i class="bi bi-x-circle"></i> Close
+              </button>
+            </div>
+          </div>
         </div>
-    </div>
+      </div>
 
-    <!-- Create Mandate Modal -->
-    <div class="modal fade" id="createMandateModal" tabindex="-1" aria-labelledby="createMandateModalLabel" aria-hidden="true">
+      <!-- Create Mandate Modal -->
+      <div class="modal fade" id="createMandateModal" tabindex="-1" aria-labelledby="createMandateModalLabel"
+        aria-hidden="true">
         <div class="modal-dialog">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <h5 class="modal-title" id="createMandateModalLabel">
-                        <i class="bi bi-plus-circle"></i> Add New GAD Mandate
-                    </h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-                </div>
-                <div class="modal-body">
-                    <form id="createMandateForm" class="needs-validation" novalidate>
-                        <div class="mb-3">
-                            <label for="newMandateDescription" class="form-label">Description <span class="text-danger">*</span></label>
-                            <textarea class="form-control" id="newMandateDescription" name="newMandateDescription" rows="3" required></textarea>
-                            <div class="invalid-feedback">Please provide a description.</div>
-                        </div>
-                    </form>
-                </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
-                        <i class="bi bi-x-circle"></i> Cancel
-                    </button>
-                    <button type="button" class="btn btn-primary" onclick="saveNewMandate()">
-                        <i class="bi bi-check-circle"></i> Save
-                    </button>
-
-                </div>
+          <div class="modal-content">
+            <div class="modal-header">
+              <h5 class="modal-title" id="createMandateModalLabel">
+                <i class="bi bi-plus-circle"></i> Add New GAD Mandate
+              </h5>
+              <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
+            <div class="modal-body">
+              <form id="createMandateForm" class="needs-validation" novalidate>
+                <div class="mb-3">
+                  <label for="newMandateDescription" class="form-label">Description <span
+                      class="text-danger">*</span></label>
+                  <textarea class="form-control" id="newMandateDescription" name="newMandateDescription" rows="3"
+                    required></textarea>
+                  <div class="invalid-feedback">Please provide a description.</div>
+                </div>
+              </form>
+            </div>
+            <div class="modal-footer">
+              <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                <i class="bi bi-x-circle"></i> Cancel
+              </button>
+              <button type="button" class="btn btn-primary" onclick="saveNewMandate()">
+                <i class="bi bi-check-circle"></i> Save
+              </button>
+
+            </div>
+          </div>
         </div>
-    </div>
-<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
-<script>
-function esc(s){
-  return String(s).replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":"&#39;"}[m]));
-}
+      </div>
+      <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+      <script>
+        function esc(s) {
+          return String(s).replace(/[&<>"']/g, m => ({
+            '&': '&amp;',
+            '<': '&lt;',
+            '>': '&gt;',
+            '"': '&quot;',
+            "'": "&#39;"
+          } [m]));
+        }
 
-function formatPlanId(planId){
-  return `GAD-ACT-${String(planId).padStart(3,'0')}`;
-}
+        function formatPlanId(planId) {
+          return `GAD-ACT-${String(planId).padStart(3,'0')}`;
+        }
 
-function resetGadPlanModal(){
-  const form = document.getElementById('gadPlanForm');
-  form.reset();
-  form.action = '<?= base_url("GadPlanController/save") ?>';
-  form.classList.remove('was-validated');
-  document.getElementById('planId').value = '';
-  document.getElementById('displayPlanId').value = '';
-  document.getElementById('is_draft').value = '0';
-  document.getElementById('status').value   = 'Pending';
+        function resetGadPlanModal() {
+          const form = document.getElementById('gadPlanForm');
+          form.reset();
+          form.action = '<?= base_url("GadPlanController/save") ?>';
+          form.classList.remove('was-validated');
+          document.getElementById('planId').value = '';
+          document.getElementById('displayPlanId').value = '';
+          document.getElementById('is_draft').value = '0';
+          document.getElementById('status').value = 'Pending';
 
-  const mfo = document.getElementById('mfoPapTableContainer');
-  mfo.innerHTML = `
-    <table class="table table-bordered mb-2" id="mfoPapTable_0">
-      <thead><tr>
-        <th style="width:25%">Type</th>
-        <th style="width:60%">MFO / PAP Statement</th>
-        <th style="width:15%">Action</th>
-      </tr></thead>
-      <tbody>
-        <tr>
-          <td>
-            <select class="form-select" name="mfoPapType_0">
-              <option value="">Select Type</option>
-              <option value="MFO">MFO</option>
-              <option value="MFA">MFA</option>
-            </select>
-          </td>
-          <td>
-            <input type="text" class="form-control" name="mfoPapStatement_0" placeholder="Enter MFO / PAP statement...">
-          </td>
-          <td>
-            <button type="button" class="btn btn-danger btn-sm" onclick="removeMfoPapRow(0)">Delete</button>
-          </td>
-        </tr>
-      </tbody>
-    </table>`;
-  window.mfoPapIndex = 1;
+          const units = document.getElementById('responsibleUnitsContainer');
+          units.innerHTML =
+            '<label class="form-label"><strong>RESPONSIBLE UNIT(S)/OFFICE(S)</strong> <span class="text-danger">*</span></label>' +
+            '<div class="responsible-unit-row">' +
+            '<select class="form-select" name="responsibleUnits[]" required>' +
+            '<option value="">Select Responsible Unit</option>' +
+            '<?php foreach($divisions as $d): ?>' +
+            '<option value="<?= esc($d->division) ?>"><?= esc($d->division) ?></option>' +
+            '<?php endforeach; ?>' +
+            '</select>' +
+            '<div class="invalid-feedback">Please select a responsible unit.</div>' +
+            '</div>' +
+            '<button type="button" class="btn btn-secondary btn-sm mt-2" onclick="addResponsibleUnitRow()">Add Another</button>';
+        }
 
-  const units = document.getElementById('responsibleUnitsContainer');
-  units.innerHTML = `
-    <label class="form-label"><strong>RESPONSIBLE UNIT(S)/OFFICE(S)</strong> <span class="text-danger">*</span></label>
-    <div class="responsible-unit-row">
-      <select class="form-select" name="responsibleUnits[]" required>
-        <option value="">Select Responsible Unit</option>
-        <?php foreach($divisions as $d): ?>
-          <option value="<?= esc($d->division) ?>"><?= esc($d->division) ?></option>
-        <?php endforeach; ?>
-      </select>
-      <div class="invalid-feedback">Please select a responsible unit.</div>
-    </div>
-    <button type="button" class="btn btn-secondary btn-sm mt-2" onclick="addResponsibleUnitRow()">Add Another</button>`;
-}
+        function addResponsibleUnitRow() {
+          const container = document.getElementById('responsibleUnitsContainer');
+          const row = document.createElement('div');
+          row.className = 'responsible-unit-row additional-row mt-2';
+          row.innerHTML =
+            '<select class="form-select" name="responsibleUnits[]">' +
+            '<option value="">Select Responsible Unit</option>' +
+            '<?php foreach($divisions as $d): ?>' +
+            '<option value="<?= esc($d->division) ?>"><?= esc($d->division) ?></option>' +
+            '<?php endforeach; ?>' +
+            '</select>' +
+            '<div class="invalid-feedback">Please select a responsible unit.</div>' +
+            '<span class="remove-row" onclick="this.parentNode.remove()">Remove</span>';
+          container.insertBefore(row, container.querySelector('button'));
+        }
 
-function addResponsibleUnitRow(){
-  const container = document.getElementById('responsibleUnitsContainer');
-  const row = document.createElement('div');
-  row.className = 'responsible-unit-row additional-row mt-2';
-  row.innerHTML = `
-    <select class="form-select" name="responsibleUnits[]">
-      <option value="">Select Responsible Unit</option>
-      <?php foreach($divisions as $d): ?>
-        <option value="<?= esc($d->division) ?>"><?= esc($d->division) ?></option>
-      <?php endforeach; ?>
-    </select>
-    <div class="invalid-feedback">Please select a responsible unit.</div>
-    <span class="remove-row" onclick="this.parentNode.remove()">Remove</span>`;
-  container.insertBefore(row, container.querySelector('button'));
-}
-
-function addMfoPapRow(){
-  const idx = window.mfoPapIndex++;
-  const container = document.getElementById('mfoPapTableContainer');
-  const tbl = document.createElement('table');
-  tbl.className = 'table table-bordered mb-2';
-  tbl.id = `mfoPapTable_${idx}`;
-  tbl.innerHTML = `
+        function addMfoPapRow() {
+          const idx = window.mfoPapIndex++;
+          const container = document.getElementById('mfoPapTableContainer');
+          const tbl = document.createElement('table');
+          tbl.className = 'table table-bordered mb-2';
+          tbl.id = `mfoPapTable_${idx}`;
+          tbl.innerHTML = `
     <thead><tr>
       <th style="width:25%">Type</th>
       <th style="width:60%">MFO / PAP Statement</th>
@@ -885,63 +1213,65 @@ function addMfoPapRow(){
         </td>
       </tr>
     </tbody>`;
-  container.appendChild(tbl);
-}
+          container.appendChild(tbl);
+        }
 
-function removeMfoPapRow(idx){
-  const tbl = document.getElementById(`mfoPapTable_${idx}`);
-  if(tbl) tbl.remove();
-}
+        function removeMfoPapRow(idx) {
+          const tbl = document.getElementById(`mfoPapTable_${idx}`);
+          if (tbl) tbl.remove();
+        }
 
-document.getElementById('startDate').addEventListener('change',e=>
-  document.getElementById('endDate').min = e.target.value
-);
-document.getElementById('endDate').addEventListener('change',e=>
-  document.getElementById('startDate').max = e.target.value
-);
+        document.getElementById('startDate').addEventListener('change', e =>
+          document.getElementById('endDate').min = e.target.value
+        );
+        document.getElementById('endDate').addEventListener('change', e =>
+          document.getElementById('startDate').max = e.target.value
+        );
 
-(function(){
-  'use strict';
-  window.addEventListener('load',function(){
-    Array.from(document.getElementsByClassName('needs-validation')).forEach(form=>{
-      form.addEventListener('submit',function(e){
-        e.preventDefault();
-        form.classList.add('was-validated');
-        saveGadPlan();
-      },false);
-    });
-  },false);
-})();
+        (function () {
+          'use strict';
+          window.addEventListener('load', function () {
+            Array.from(document.getElementsByClassName('needs-validation')).forEach(form => {
+              form.addEventListener('submit', function (e) {
+                e.preventDefault();
+                form.classList.add('was-validated');
+                saveGadPlan();
+              }, false);
+            });
+          }, false);
+        })();
 
-document.addEventListener('DOMContentLoaded',function(){
-  new bootstrap.Modal(document.getElementById('gadPlanModal'));
-  new bootstrap.Modal(document.getElementById('mandateModal'));
-  new bootstrap.Modal(document.getElementById('createMandateModal'));
-  new bootstrap.Modal(document.getElementById('successModal'));
-  loadMandates();
-});
+        document.addEventListener('DOMContentLoaded', function () {
+          new bootstrap.Modal(document.getElementById('gadPlanModal'));
+          new bootstrap.Modal(document.getElementById('mandateModal'));
+          new bootstrap.Modal(document.getElementById('createMandateModal'));
+          new bootstrap.Modal(document.getElementById('successModal'));
+          loadMandates();
+        });
 
-function loadMandates(){
-  const year = document.getElementById('filterYear').value;
-  const tb = document.getElementById('mandateTableBody');
-  tb.innerHTML = `<tr><td colspan="4" class="text-center">Loading mandates...</td></tr>`;
-  fetch('<?= base_url("GadMandateController/getMandates") ?>',{
-    method:'POST',
-    headers:{
-      'Content-Type':'application/x-www-form-urlencoded',
-      'X-Requested-With':'XMLHttpRequest',
-      '<?php echo csrf_header(); ?>':'<?php echo csrf_token(); ?>'
-    },
-    body:new URLSearchParams({year})
-  })
-  .then(r=>r.json())
-  .then(d=>{
-    tb.innerHTML = '';
-    if(d.success && d.mandates.length){
-      d.mandates.forEach(m=>{
-        const desc = m.description.replace(/'/g,"\\'");
-        const tr = document.createElement('tr');
-        tr.innerHTML=`
+        function loadMandates() {
+          const year = document.getElementById('filterYear').value;
+          const tb = document.getElementById('mandateTableBody');
+          tb.innerHTML = `<tr><td colspan="4" class="text-center">Loading mandates...</td></tr>`;
+          fetch('<?= base_url("GadMandateController/getMandates") ?>', {
+              method: 'POST',
+              headers: {
+                'Content-Type': 'application/x-www-form-urlencoded',
+                'X-Requested-With': 'XMLHttpRequest',
+                '<?php echo csrf_header(); ?>': '<?php echo csrf_token(); ?>'
+              },
+              body: new URLSearchParams({
+                year
+              })
+            })
+            .then(r => r.json())
+            .then(d => {
+              tb.innerHTML = '';
+              if (d.success && d.mandates.length) {
+                d.mandates.forEach(m => {
+                  const desc = m.description.replace(/'/g, "\\'");
+                  const tr = document.createElement('tr');
+                  tr.innerHTML = `
           <td><input type="radio" name="mandateSelect" onclick="selectMandate('${m.year}','${desc}',${m.id})"></td>
           <td>${m.year}</td>
           <td>${m.description}</td>
@@ -955,50 +1285,52 @@ function loadMandates(){
               </button>
             </div>
           </td>`;
-        tb.appendChild(tr);
-      });
-      const years = [...new Set(d.mandates.map(m=>m.year))].sort((a,b)=>b-a);
-      const sel = document.getElementById('filterYear');
-      sel.innerHTML = '<option value="">All Years</option>';
-      years.forEach(y=>{
-        const o=document.createElement('option');
-        o.value=o.textContent=y;
-        if(o.value===year) o.selected=true;
-        sel.appendChild(o);
-      });
-    } else {
-      tb.innerHTML=`<tr><td colspan="4" class="text-center">No GAD mandates found.</td></tr>`;
-    }
-  })
-  .catch(()=>tb.innerHTML=`<tr><td colspan="4" class="text-center">Failed to load mandates.</td></tr>`);
-}
+                  tb.appendChild(tr);
+                });
+                const years = [...new Set(d.mandates.map(m => m.year))].sort((a, b) => b - a);
+                const sel = document.getElementById('filterYear');
+                sel.innerHTML = '<option value="">All Years</option>';
+                years.forEach(y => {
+                  const o = document.createElement('option');
+                  o.value = o.textContent = y;
+                  if (o.value === year) o.selected = true;
+                  sel.appendChild(o);
+                });
+              } else {
+                tb.innerHTML = `<tr><td colspan="4" class="text-center">No GAD mandates found.</td></tr>`;
+              }
+            })
+            .catch(() => tb.innerHTML = `<tr><td colspan="4" class="text-center">Failed to load mandates.</td></tr>`);
+        }
 
-function selectMandate(year,desc,id){
-  document.getElementById('issue_mandate').value = desc;
-  bootstrap.Modal.getInstance(document.getElementById('mandateModal')).hide();
-  new bootstrap.Modal(document.getElementById('gadPlanModal')).show();
-}
+        function selectMandate(year, desc, id) {
+          document.getElementById('issue_mandate').value = desc;
+          bootstrap.Modal.getInstance(document.getElementById('mandateModal')).hide();
+          new bootstrap.Modal(document.getElementById('gadPlanModal')).show();
+        }
 
-function showAddMandateForm(){
-  const mm = document.getElementById('mandateModal');
-  const cm = document.getElementById('createMandateModal');
-  bootstrap.Modal.getInstance(mm).hide();
-  mm.addEventListener('hidden.bs.modal',function h(){
-    document.querySelectorAll('.modal-backdrop').forEach(n=>n.remove());
-    document.body.classList.remove('modal-open');
-    new bootstrap.Modal(cm).show();
-    mm.removeEventListener('hidden.bs.modal',h);
-  },{once:true});
-}
+        function showAddMandateForm() {
+          const mm = document.getElementById('mandateModal');
+          const cm = document.getElementById('createMandateModal');
+          bootstrap.Modal.getInstance(mm).hide();
+          mm.addEventListener('hidden.bs.modal', function h() {
+            document.querySelectorAll('.modal-backdrop').forEach(n => n.remove());
+            document.body.classList.remove('modal-open');
+            new bootstrap.Modal(cm).show();
+            mm.removeEventListener('hidden.bs.modal', h);
+          }, {
+            once: true
+          });
+        }
 
-let indicatorIndex = 1;
+        let indicatorIndex = 1;
 
-function addIndicatorRow() {
-  const tbody = document.getElementById('indicatorTableBody');
-  const idx = indicatorIndex++;
-  const tr = document.createElement('tr');
-  tr.id = `indicatorRow_${idx}`;
-  tr.innerHTML = `
+        function addIndicatorRow() {
+          const tbody = document.getElementById('indicatorTableBody');
+          const idx = indicatorIndex++;
+          const tr = document.createElement('tr');
+          tr.id = `indicatorRow_${idx}`;
+          tr.innerHTML = `
     <td>
       <textarea class="form-control" 
                 name="indicators[${idx}][indicator]" 
@@ -1020,123 +1352,154 @@ function addIndicatorRow() {
         <i class="bi bi-trash"></i>
       </button>
     </td>`;
-  tbody.appendChild(tr);
-}
+          tbody.appendChild(tr);
+        }
 
-function removeIndicatorRow(idx) {
-  const row = document.getElementById(`indicatorRow_${idx}`);
-  if (row) row.remove();
-}
+        function removeIndicatorRow(idx) {
+          const row = document.getElementById(`indicatorRow_${idx}`);
+          if (row) row.remove();
+        }
 
-function saveNewMandate(){
-  const f=document.getElementById('createMandateForm');
-  if(!f.checkValidity()){f.classList.add('was-validated');return}
-  const desc=document.getElementById('newMandateDescription').value;
-  const id=document.getElementById('newMandateDescription').dataset.id||'';
-  const yr=new Date().getFullYear().toString();
-  fetch('<?= base_url("GadMandateController/save") ?>',{
-    method:'POST',
-    headers:{
-      'Content-Type':'application/x-www-form-urlencoded',
-      'X-Requested-With':'XMLHttpRequest',
-      '<?php echo csrf_header(); ?>':'<?php echo csrf_token(); ?>'
-    },
-    body:new URLSearchParams({id,year:yr,description:desc})
-  })
-  .then(r=>r.json())
-  .then(d=>{
-    if(d.success){
-      Swal.fire({icon:'success',title:id?'Updated!':'Added!',text:d.message,timer:1500,showConfirmButton:false});
-      const cm=document.getElementById('createMandateModal');
-      bootstrap.Modal.getInstance(cm).hide();
-      cm.addEventListener('hidden.bs.modal',function h(){
-        new bootstrap.Modal(document.getElementById('mandateModal')).show();
-        loadMandates();
-        cm.removeEventListener('hidden.bs.modal',h);
-      },{once:true});
-    } else {
-      Swal.fire('Error',d.message+ (d.errors?': '+Object.values(d.errors).join(', '):''),'error');
-    }
-  })
-  .catch(e=>Swal.fire('Error','Unexpected: '+e.message,'error'));
-}
+        function saveNewMandate() {
+          const f = document.getElementById('createMandateForm');
+          if (!f.checkValidity()) {
+            f.classList.add('was-validated');
+            return
+          }
+          const desc = document.getElementById('newMandateDescription').value;
+          const id = document.getElementById('newMandateDescription').dataset.id || '';
+          const yr = new Date().getFullYear().toString();
+          fetch('<?= base_url("GadMandateController/save") ?>', {
+              method: 'POST',
+              headers: {
+                'Content-Type': 'application/x-www-form-urlencoded',
+                'X-Requested-With': 'XMLHttpRequest',
+                '<?php echo csrf_header(); ?>': '<?php echo csrf_token(); ?>'
+              },
+              body: new URLSearchParams({
+                id,
+                year: yr,
+                description: desc
+              })
+            })
+            .then(r => r.json())
+            .then(d => {
+              if (d.success) {
+                Swal.fire({
+                  icon: 'success',
+                  title: id ? 'Updated!' : 'Added!',
+                  text: d.message,
+                  timer: 1500,
+                  showConfirmButton: false
+                });
+                // Reset modal textarea and id
+                document.getElementById('newMandateDescription').value = '';
+                document.getElementById('newMandateDescription').dataset.id = '';
+                const cm = document.getElementById('createMandateModal');
+                bootstrap.Modal.getInstance(cm).hide();
+                cm.addEventListener('hidden.bs.modal', function h() {
+                  new bootstrap.Modal(document.getElementById('mandateModal')).show();
+                  loadMandates();
+                  cm.removeEventListener('hidden.bs.modal', h);
+                }, {
+                  once: true
+                });
+              } else {
+                Swal.fire('Error', d.message + (d.errors ? ': ' + Object.values(d.errors).join(', ') : ''), 'error');
+              }
+            })
+            .catch(e => Swal.fire('Error', 'Unexpected: ' + e.message, 'error'));
+        }
 
-function submitGadPlan(isDraft) {
-  // 1. Gather indicator/target rows, and serialize to hidden fields
-  const indicatorRows = document.querySelectorAll('#indicatorTableBody tr');
-  const indicators = [];
-  const targets = [];
-  indicatorRows.forEach(row => {
-    const indEl = row.querySelector('textarea[name*="[indicator]"]');
-    const tgtEl = row.querySelector('textarea[name*="[target]"]');
-    if (indEl && tgtEl) {
-      indicators.push(indEl.value.trim());
-      targets.push(tgtEl.value.trim());
-    }
-  });
-  document.getElementById('indicator_text').value = JSON.stringify(indicators);
-  document.getElementById('target_text').value    = JSON.stringify(targets);
+        function submitGadPlan(isDraft) {
+          const indicatorRows = document.querySelectorAll('#indicatorTableBody tr');
+          const indicators = [];
+          const targets = [];
+          indicatorRows.forEach(row => {
+            const indEl = row.querySelector('textarea[name*="[indicator]"]');
+            const tgtEl = row.querySelector('textarea[name*="[target]"]');
+            if (indEl && tgtEl) {
+              indicators.push(indEl.value.trim());
+              targets.push(tgtEl.value.trim());
+            }
+          });
+          document.getElementById('indicator_text').value = JSON.stringify(indicators);
+          document.getElementById('target_text').value = JSON.stringify(targets);
 
-  // 2. Build FormData and continue as before
-  const form = document.getElementById('gadPlanForm');
-  const fd = new FormData(form);
-  fd.set('is_draft', isDraft ? '1' : '0');
-  fd.set('status', isDraft ? 'Draft' : 'Pending');
+          const form = document.getElementById('gadPlanForm');
+          const fd = new FormData(form);
+          fd.set('is_draft', isDraft ? '1' : '0');
+          fd.set('status', isDraft ? 'Draft' : 'Pending');
 
-  const start = new Date(fd.get('startDate')), end = new Date(fd.get('endDate'));
-  if (!isDraft && end <= start) {
-    return Swal.fire('Invalid Date', 'End date must be after start date.', 'error');
-  }
-  const budget = parseFloat(fd.get('budgetAmount') || 0);
-  if (!isDraft && budget <= 0) {
-    return Swal.fire('Validation', 'Total budget must be greater than 0.', 'error');
-  }
+          const start = new Date(fd.get('startDate')),
+            end = new Date(fd.get('endDate'));
+          if (!isDraft && end <= start) {
+            return Swal.fire('Invalid Date', 'End date must be after start date.', 'error');
+          }
+          const budget = parseFloat(fd.get('budgetAmount') || 0);
+          if (!isDraft && budget <= 0) {
+            return Swal.fire('Validation', 'Total budget must be greater than 0.', 'error');
+          }
 
-  // 3. Collect MFO/PAP rows
-  const mfoArr = [];
-  document.querySelectorAll('[id^="mfoPapTable_"]').forEach(tbl => {
-    const idx = tbl.id.split('_')[1];
-    const t = tbl.querySelector(`[name="mfoPapType_${idx}"]`).value;
-    const s = tbl.querySelector(`[name="mfoPapStatement_${idx}"]`).value.trim();
-    if (t && s) mfoArr.push({ type: t, statement: s });
-  });
-  fd.set('mfoPapData', JSON.stringify(mfoArr));
+          const mfoArr = [];
+          document.querySelectorAll('[id^="mfoPapTable_"]').forEach(tbl => {
+            const idx = tbl.id.split('_')[1];
+            const t = tbl.querySelector(`[name="mfoPapType_${idx}"]`).value;
+            const s = tbl.querySelector(`[name="mfoPapStatement_${idx}"]`).value.trim();
+            if (t && s) mfoArr.push({
+              type: t,
+              statement: s
+            });
+          });
+          fd.set('mfoPapData', JSON.stringify(mfoArr));
 
-  // 4. Submit via AJAX
-  fetch(form.action, {
-    method: 'POST',
-    headers: {
-      'X-Requested-With': 'XMLHttpRequest',
-      '<?php echo csrf_header(); ?>': '<?php echo csrf_token(); ?>'
-    },
-    body: fd
-  })
-  .then(r => r.json())
-  .then(d => {
-    if (!d.success) {
-      return Swal.fire('Error', d.message + (d.errors ? ': ' + Object.values(d.errors).join(', ') : ''), 'error');
-    }
-    const planId = d.planId;
-    const trSel = `tr[data-plan-id="${planId}"]`;
-    const tbody = document.getElementById('gadPlanTableBody');
-    const isUpdate = !!document.getElementById('planId').value;
-    const formatted = formatPlanId(planId);
-    const cause = esc(fd.get('cause') || 'N/A');
-    const objs = Array.from(form.querySelectorAll('textarea[name="gad_objective"],textarea[name^="objectives"]'))
-                 .map(el => esc(el.value)).filter(v => v).join('<br>') || 'N/A';
-    const mfoDisp = mfoArr.length ? mfoArr.map(o => `${esc(o.type)}: ${esc(o.statement)}`).join('<br>') : 'N/A';
-    const startFmt = new Date(fd.get('startDate')).toLocaleDateString('en-US', { month: 'short', day: '2-digit', year: 'numeric' });
-    const endFmt = new Date(fd.get('endDate')).toLocaleDateString('en-US', { month: 'short', day: '2-digit', year: 'numeric' });
-    const units = Array.from(form.querySelectorAll('select[name="responsibleUnits[]"]'))
-                  .map(s => esc(s.value)).filter(v => v).join(', ');
-    const budgetFmt = budget.toLocaleString('en-US', { minimumFractionDigits: 0 });
-    const score = parseFloat(fd.get('hgdgScore') || 0).toFixed(2);
-    const attachLinks = (d.fileAttachments || []).map(f => {
-      const fn = f.split('/').pop();
-      return `<a href="<?= base_url() ?>${f}" target="_blank">${esc(fn)}</a>`;
-    }).join('<br>') || 'No attachments';
-    const status = esc(fd.get('status'));
-    const cells = `
+          fetch(form.action, {
+              method: 'POST',
+              headers: {
+                'X-Requested-With': 'XMLHttpRequest',
+                '<?php echo csrf_header(); ?>': '<?php echo csrf_token(); ?>'
+              },
+              body: fd
+            })
+            .then(r => r.json())
+            .then(d => {
+              if (!d.success) {
+                return Swal.fire('Error', d.message + (d.errors ? ': ' + Object.values(d.errors).join(', ') : ''),
+                  'error');
+              }
+              const planId = d.planId;
+              const trSel = `tr[data-plan-id="${planId}"]`;
+              const tbody = document.getElementById('gadPlanTableBody');
+              const isUpdate = !!document.getElementById('planId').value;
+              const formatted = formatPlanId(planId);
+              const cause = esc(fd.get('cause') || 'N/A');
+              const objs = Array.from(form.querySelectorAll(
+                  'textarea[name="gad_objective"],textarea[name^="objectives"]'))
+                .map(el => esc(el.value)).filter(v => v).join('<br>') || 'N/A';
+              const mfoDisp = mfoArr.length ? mfoArr.map(o => `${esc(o.type)}: ${esc(o.statement)}`).join('<br>') :
+                'N/A';
+              const startFmt = new Date(fd.get('startDate')).toLocaleDateString('en-US', {
+                month: 'short',
+                day: '2-digit',
+                year: 'numeric'
+              });
+              const endFmt = new Date(fd.get('endDate')).toLocaleDateString('en-US', {
+                month: 'short',
+                day: '2-digit',
+                year: 'numeric'
+              });
+              const units = Array.from(form.querySelectorAll('select[name="responsibleUnits[]"]'))
+                .map(s => esc(s.value)).filter(v => v).join(', ');
+              const budgetFmt = budget.toLocaleString('en-US', {
+                minimumFractionDigits: 0
+              });
+              const score = parseFloat(fd.get('hgdgScore') || 0).toFixed(2);
+              const attachLinks = (d.fileAttachments || []).map(f => {
+                const fn = f.split('/').pop();
+                return `<a href="<?= base_url() ?>${f}" target="_blank">${esc(fn)}</a>`;
+              }).join('<br>') || 'No attachments';
+              const status = esc(fd.get('status'));
+              const cells = `
       <td>${formatted}</td>
       <td>${esc(fd.get('issue_mandate'))}</td>
       <td>${cause}</td>
@@ -1164,246 +1527,397 @@ function submitGadPlan(isDraft) {
         </div>
       </td>`;
 
-    if (isUpdate) {
-      const row = tbody.querySelector(trSel);
-      if (row) row.innerHTML = cells;
-    } else {
-      const tr = document.createElement('tr');
-      tr.setAttribute('data-plan-id', planId);
-      tr.innerHTML = cells;
-      if (tbody.querySelector('td[colspan]')) tbody.innerHTML = '';
-      tbody.appendChild(tr);
-    }
-    document.getElementById('successModalBody').textContent = d.message;
-    bootstrap.Modal.getInstance(document.getElementById('gadPlanModal')).hide();
-    new bootstrap.Modal(document.getElementById('successModal')).show();
-    resetGadPlanModal();
-  })
-  .catch(e => Swal.fire('Error', 'Unexpected: ' + e.message, 'error'));
-}
+              if (isUpdate) {
+                const row = tbody.querySelector(trSel);
+                if (row) row.innerHTML = cells;
+              } else {
+                const tr = document.createElement('tr');
+                tr.setAttribute('data-plan-id', planId);
+                tr.innerHTML = cells;
+                if (tbody.querySelector('td[colspan]')) tbody.innerHTML = '';
+                tbody.appendChild(tr);
+              }
+              document.getElementById('successModalBody').textContent = d.message;
+              bootstrap.Modal.getInstance(document.getElementById('gadPlanModal')).hide();
+              new bootstrap.Modal(document.getElementById('successModal')).show();
+              resetGadPlanModal();
+            })
+            .catch(e => Swal.fire('Error', 'Unexpected: ' + e.message, 'error'));
+        }
 
 
 
-function saveAsDraft(){ submitGadPlan(true) }
-function saveGadPlan(){ submitGadPlan(false) }
+        function saveAsDraft() {
+          submitGadPlan(true)
+        }
+
+        function saveGadPlan() {
+          submitGadPlan(false)
+        }
 
 function editGadPlan(button, planId) {
-  fetch(`<?= base_url("GadPlanController/getGadPlan/") ?>${planId}`, {
-    headers: { 'X-Requested-With': 'XMLHttpRequest' }
-  })
-  .then(r => r.json())
-  .then(resp => {
-    if (!resp.success) {
-      return Swal.fire('Error', resp.message, 'error');
-    }
+    fetch(`<?= base_url("GadPlanController/getGadPlan/") ?>${planId}`, {
+        headers: {
+            'X-Requested-With': 'XMLHttpRequest'
+        }
+    })
+    .then(r => r.json())
+    .then(resp => {
+        if (!resp.success) {
+            return Swal.fire('Error', resp.message, 'error');
+        }
 
-    const plan = resp.plan;
-    resetGadPlanModal();
+        const plan = resp.plan;
+        resetGadPlanModal();
 
-    // ---- Basic fields ----
-    document.getElementById('gadPlanModalLabel').innerText   = 'Edit GAD Plan';
-    document.getElementById('planId').value                  = planId;
-    document.getElementById('displayPlanId').value           = formatPlanId(planId);
-    document.getElementById('issue_mandate').value           = plan.issue_mandate || '';
-    document.getElementById('cause').value                   = plan.cause || '';
-    document.getElementById('gad_objective').value           = (plan.gad_objective[0] || '');
-    document.getElementById('activity').value                = plan.activity || '';
-    document.getElementById('startDate').value               = plan.startDate || '';
-    document.getElementById('endDate').value                 = plan.endDate || '';
-    document.getElementById('status').value                  = plan.status || 'Pending';
-    document.getElementById('budgetAmount').value            = plan.total_budget || '';
-    document.getElementById('hgdgScore').value               = plan.hgdg_score || '';
+        // ---- Basic fields ----
+        document.getElementById('gadPlanModalLabel').innerText = 'Edit GAD Plan';
+        document.getElementById('planId').value = planId;
+        document.getElementById('displayPlanId').value = formatPlanId(planId);
+        document.getElementById('issue_mandate').value = plan.issue_mandate || '';
+        document.getElementById('cause').value = plan.cause || '';
+        document.getElementById('gad_objective').value = (plan.gad_objective[0] || '');
+        document.getElementById('activity').value = plan.activity || '';
+        document.getElementById('startDate').value = plan.startDate || '';
+        document.getElementById('endDate').value = plan.endDate || '';
+        document.getElementById('status').value = plan.status || 'Pending';
+        document.getElementById('budgetAmount').value = plan.total_budget || '';
+        document.getElementById('hgdgScore').value = plan.hgdg_score || '';
 
-    // ---- Populate hidden JSON fields ----
-    document.getElementById('indicator_text').value = plan.indicator_text || '[]';
-    document.getElementById('target_text').value    = plan.target_text    || '[]';
+        // ---- Populate hidden JSON fields ----
+        document.getElementById('indicator_text').value = plan.indicator_text || '[]';
+        document.getElementById('target_text').value = plan.target_text || '[]';
 
-    // ---- Rebuild Performance Indicator / Target rows ----
-    const indicatorBody = document.getElementById('indicatorTableBody');
-    if (indicatorBody) {
-      // clear existing
-      indicatorBody.innerHTML = '';
-      const indicators = JSON.parse(plan.indicator_text || '[]');
-      const targets    = JSON.parse(plan.target_text    || '[]');
-      for (let i = 0; i < Math.max(indicators.length, targets.length, 1); i++) {
-        const ind = indicators[i] || '';
-        const tgt = targets[i]    || '';
-        const row = document.createElement('tr');
-        row.id = `indicatorRow_${i}`;
-        row.innerHTML = `
-          <td>
-            <textarea class="form-control"
-                      name="indicators[${i}][indicator]"
-                      rows="2"
-                      placeholder="Enter performance indicator..."
-                      required>${ind}</textarea>
-          </td>
-          <td>
-            <textarea class="form-control"
-                      name="indicators[${i}][target]"
-                      rows="2"
-                      placeholder="Enter target..."
-                      required>${tgt}</textarea>
-          </td>
-          <td class="text-center">
-            <button type="button"
-                    class="btn btn-danger btn-sm"
-                    onclick="removeIndicatorRow(${i})">
-              <i class="bi bi-trash"></i>
-            </button>
-          </td>`;
-        indicatorBody.appendChild(row);
-      }
-      // reset your indicatorIndex so addIndicatorRow continues correctly
-      indicatorIndex = indicators.length + 1;
-    }
+        // ---- Rebuild Performance Indicator / Target rows ----
+        const indicatorBody = document.getElementById('indicatorTableBody');
+        if (indicatorBody) {
+            indicatorBody.innerHTML = '';
+            const indicators = JSON.parse(plan.indicator_text || '[]');
+            const targets = JSON.parse(plan.target_text || '[]');
+            for (let i = 0; i < Math.max(indicators.length, targets.length, 1); i++) {
+                const ind = indicators[i] || '';
+                const tgt = targets[i] || '';
+                const row = document.createElement('tr');
+                row.id = `indicatorRow_${i}`;
+                row.innerHTML = `
+                    <td>
+                        <textarea class="form-control"
+                                  name="indicators[${i}][indicator]"
+                                  rows="2"
+                                  placeholder="Enter performance indicator..."
+                                  required>${ind}</textarea>
+                    </td>
+                    <td>
+                        <textarea class="form-control"
+                                  name="indicators[${i}][target]"
+                                  rows="2"
+                                  placeholder="Enter target..."
+                                  required>${tgt}</textarea>
+                    </td>
+                    <td class="text-center">
+                        <button type="button"
+                                class="btn btn-danger btn-sm"
+                                onclick="removeIndicatorRow(${i})">
+                            <i class="bi bi-trash"></i>
+                        </button>
+                    </td>`;
+                indicatorBody.appendChild(row);
+            }
+            indicatorIndex = indicators.length + 1;
+        }
 
-    // ---- Rebuild MFO/PAP rows ----
-    const mfoContainer = document.getElementById('mfoPapTableContainer');
-    if (mfoContainer) {
-      mfoContainer.innerHTML = '';
-      plan.mfoPapData.forEach((item, idx) => {
-        const tbl = document.createElement('table');
-        tbl.className = 'table table-bordered mb-2';
-        tbl.id        = `mfoPapTable_${idx}`;
-        tbl.innerHTML = `
-          <thead>
-            <tr><th>Type</th><th>MFO / PAP Statement</th><th>Action</th></tr>
-          </thead>
-          <tbody>
-            <tr>
-              <td>
-                <select class="form-select" name="mfoPapType_${idx}">
-                  <option value="">Select</option>
-                  <option value="MFO" ${item.type === 'MFO' ? 'selected' : ''}>MFO</option>
-                  <option value="MFA" ${item.type === 'MFA' ? 'selected' : ''}>MFA</option>
-                </select>
-              </td>
-              <td>
-                <input type="text"
-                       class="form-control"
-                       name="mfoPapStatement_${idx}"
-                       value="${item.statement || ''}">
-              </td>
-              <td>
-                <button type="button"
-                        class="btn btn-danger btn-sm"
-                        onclick="removeMfoPapRow(${idx})">
-                  Delete
-                </button>
-              </td>
-            </tr>
-          </tbody>`;
-        mfoContainer.appendChild(tbl);
-      });
-      window.mfoPapIndex = plan.mfoPapData.length;
-    }
+        // ---- Rebuild MFO/PAP rows ----
+        const mfoContainer = document.getElementById('mfoPapTableContainer');
+        if (mfoContainer) {
+            mfoContainer.innerHTML = '';
+            plan.mfoPapData.forEach((item, idx) => {
+                const tbl = document.createElement('table');
+                tbl.className = 'table table-bordered mb-2';
+                tbl.id = `mfoPapTable_${idx}`;
+                tbl.innerHTML = `
+                    <thead>
+                        <tr><th>Type</th><th>MFO / PAP Statement</th><th>Action</th></tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>
+                                <select class="form-select" name="mfoPapType_${idx}">
+                                    <option value="">Select</option>
+                                    <option value="MFO" ${item.type === 'MFO' ? 'selected' : ''}>MFO</option>
+                                    <option value="MFA" ${item.type === 'MFA' ? 'selected' : ''}>MFA</option>
+                                </select>
+                            </td>
+                            <td>
+                                <input type="text"
+                                       class="form-control"
+                                       name="mfoPapStatement_${idx}"
+                                       value="${item.statement || ''}">
+                            </td>
+                            <td>
+                                <button type="button"
+                                        class="btn btn-danger btn-sm"
+                                        onclick="removeMfoPapRow(${idx})">
+                                    Delete
+                                </button>
+                            </td>
+                        </tr>
+                    </tbody>`;
+                mfoContainer.appendChild(tbl);
+            });
+            window.mfoPapIndex = plan.mfoPapData.length;
+        }
 
-    const unitContainer = document.getElementById('responsibleUnitsContainer');
-    if (unitContainer) {
-      // clear all then re-add
-      unitContainer.querySelectorAll('.responsible-unit-row').forEach(n => n.remove());
-      plan.authors_division.forEach((div, idx) => {
-        const row = document.createElement('div');
-        row.className = 'responsible-unit-row additional-row';
-        row.innerHTML = `
-          <select class="form-select" name="responsibleUnits[]" required>
-            <option value="">Select Responsible Unit</option>
-            <?php foreach($divisions as $d): ?>
-              <option value="<?= esc($d->division) ?>" ${div === '<?= esc($d->division) ?>' ? 'selected' : ''}>
-                <?= esc($d->division) ?>
-              </option>
-            <?php endforeach; ?>
-          </select>
-          <span class="remove-row" onclick="this.parentNode.remove()">Remove</span>`;
-        unitContainer.insertBefore(row, unitContainer.querySelector('button'));
-      });
-    }
+        // ---- Rebuild Responsible Units rows ----
+        const unitContainer = document.getElementById('responsibleUnitsContainer');
+        if (unitContainer) {
+            unitContainer.innerHTML = ''; 
+            let responsibleUnits = [];
+            if (plan.responsible_units) {
+                try {
+                    responsibleUnits = JSON.parse(plan.responsible_units);
+                } catch (e) {
+                    responsibleUnits = [];
+                }
+            }
+            if (!Array.isArray(responsibleUnits) || responsibleUnits.length === 0) responsibleUnits = [''];
 
-    // ---- Show the modal ----
-    new bootstrap.Modal(document.getElementById('gadPlanModal')).show();
-  })
-  .catch(e => Swal.fire('Error', 'Could not load plan: ' + e.message, 'error'));
+            responsibleUnits.forEach((selectedValue, idx) => {
+                let options = `<option value="">Select Responsible Unit</option>`;
+                <?php foreach($divisions as $d): ?>
+                    options += `<option value="<?= esc($d->division) ?>" ${selectedValue === "<?= esc($d->division) ?>" ? "selected" : ""}><?= esc($d->division) ?></option>`;
+                <?php endforeach; ?>
+                let row = document.createElement('div');
+                row.className = 'responsible-unit-row additional-row mt-2';
+                row.innerHTML = `
+                    <select class="form-select" name="responsibleUnits[]" required>
+                        ${options}
+                    </select>
+                    <div class="invalid-feedback">Please select a responsible unit.</div>
+                    <span class="remove-row" onclick="this.parentNode.remove()">Remove</span>
+                `;
+                unitContainer.appendChild(row);
+            });
+
+            const addBtn = document.createElement('button');
+            addBtn.type = 'button';
+            addBtn.className = 'btn btn-secondary btn-sm mt-2';
+            addBtn.onclick = addResponsibleUnitRow;
+            addBtn.textContent = 'Add Another';
+            unitContainer.appendChild(addBtn);
+        }
+
+        new bootstrap.Modal(document.getElementById('gadPlanModal')).show();
+    })
+    .catch(e => Swal.fire('Error', 'Could not load plan: ' + e.message, 'error'));
 }
 
 
+        function editMandate(id, year, desc) {
+          fetch('<?= base_url("GadMandateController/getMandate/") ?>' + id, {
+              method: 'GET',
+              headers: {
+                'X-Requested-With': 'XMLHttpRequest'
+              }
+            })
+            .then(r => r.json())
+            .then(d => {
+              if (d.success && d.mandate) {
+                const mandate = d.mandate;
+                const ta = document.getElementById('newMandateDescription');
+                ta.value = mandate.description || '';
+                ta.dataset.id = id;
+                bootstrap.Modal.getInstance(document.getElementById('mandateModal')).hide();
+                setTimeout(() => {
+                  new bootstrap.Modal(document.getElementById('createMandateModal')).show();
+                }, 400);
+              } else {
+                Swal.fire('Error', d.message || 'Failed to load mandate.', 'error');
+              }
+            })
+            .catch(e => Swal.fire('Error', 'Unexpected: ' + e.message, 'error'));
+        }
 
-function deleteGadPlan(button,planId){
+       function deleteGadPlan(button, planId) {
   Swal.fire({
-    title:'Are you sure?',
-    text:'This action cannot be undone!',
-    icon:'warning',
-    showCancelButton:true,
-    confirmButtonColor:'#d33',
-    cancelButtonColor:'#3085d6',
-    confirmButtonText:'Yes, delete it!'
-  }).then(r=>{
-    if(r.isConfirmed){
-      fetch('<?= base_url("GadPlanController/deleteGadPlan/") ?>'+planId,{
-        method:'POST',
-        headers:{
-          'X-Requested-With':'XMLHttpRequest',
-          '<?php echo csrf_header(); ?>':'<?php echo csrf_token(); ?>'
+    title: 'Are you sure?',
+    text: 'This action cannot be undone!',
+    icon: 'warning',
+    showCancelButton: true,
+    confirmButtonColor: '#d33',
+    cancelButtonColor: '#3085d6',
+    confirmButtonText: 'Yes, delete it!'
+  }).then(r => {
+    if (r.isConfirmed) {
+      console.log("Sending delete request for planId:", planId); // Debugging line
+      fetch('<?= base_url("GadPlanController/deleteGadPlan/") ?>' + planId, {
+        method: 'POST',
+        headers: {
+          'X-Requested-With': 'XMLHttpRequest',
+          '<?php echo csrf_header(); ?>': '<?php echo csrf_token(); ?>' // Ensure CSRF token is sent
         }
       })
-      .then(r=>r.json())
-      .then(d=>{
-        if(d.success){
-          button.closest('tr').remove();
-          Swal.fire('Deleted!','GAD Plan deleted.','success');
+      .then(response => {
+        return response.json();
+      })
+      .then(d => {
+        if (d.success) {
+          console.log("Plan deleted successfully:", d.message); // Debugging line
+          button.closest('tr').remove(); // Remove the row from the table
+          Swal.fire('Deleted!', 'GAD Plan deleted.', 'success');
         } else {
-          Swal.fire('Error',d.message||'Failed to delete.','error');
+          console.error("Error deleting plan:", d.message); // Debugging line
+          Swal.fire('Error', d.message || 'Failed to delete.', 'error');
         }
+      })
+      .catch(err => {
+        console.error("Error during fetch:", err); // Debugging line
+        Swal.fire('Error', 'An unexpected error occurred: ' + err.message, 'error');
       });
     }
   });
 }
 
-function linkToBudgetCrafting(){
-  Swal.fire({
-    icon:'info',
-    title:'Budget Crafting',
-    text:'This will open Budget Crafting.',
-    showCancelButton:true,
-    confirmButtonText:'Go'
-  }).then(r=>{ if(r.isConfirmed) window.location.href='<?= base_url("Focal/BudgetCrafting") ?>' });
-}
 
-document.getElementById('searchInput').addEventListener('input',function(){
-  const t=this.value.toLowerCase();
-  document.querySelectorAll('#gadPlanTableBody tr').forEach(r=>{
-    r.style.display=r.textContent.toLowerCase().includes(t)?'':'none';
-  });
-});
+        function viewMultipleAttachments(planId) {
+          // Fetch attachments for the specific plan
+          fetch(`<?= base_url("Focal/getAttachments") ?>?plan=${planId}`, {
+            method: 'GET',
+            headers: {
+              'X-Requested-With': 'XMLHttpRequest',
+              '<?php echo csrf_header(); ?>': '<?php echo csrf_token(); ?>'
+            }
+          })
+          .then(response => response.json())
+          .then(data => {
+            if (data.success && data.attachments && data.attachments.length > 0) {
+              let attachmentsList = '';
+              data.attachments.forEach((file, index) => {
+                const fileName = file.split('/').pop();
+                attachmentsList += `
+                  <div class="d-flex justify-content-between align-items-center mb-2 p-2 border rounded">
+                    <div class="d-flex align-items-center">
+                      <i class="bi bi-file-earmark text-primary me-2"></i>
+                      <span>${fileName}</span>
+                    </div>
+                    <div>
+                      <button onclick="window.open('<?= base_url('Uploads/') ?>${fileName}', '_blank')" class="btn btn-sm btn-view me-1">
+                        <i class="bi bi-eye"></i> View
+                      </button>
+                    </div>
+                  </div>
+                `;
+              });
 
-let objectiveIndex=1;
-function addGadObjectiveRow(){
-  const c=document.querySelector('.mb-4:nth-child(4)');
-  const nr=document.createElement('div');
-  nr.className='mb-4 additional-row objective-row';
-  nr.id=`objectiveRow_${objectiveIndex}`;
-  nr.innerHTML=`
+              Swal.fire({
+                title: 'Select File to View',
+                html: `
+                  <div class="text-start">
+                    <h6 class="mb-3">Plan ID: GAD-ACT-${String(planId).padStart(3, '0')}</h6>
+                    <p class="mb-3 text-muted">Click "View" to open any file in a new tab:</p>
+                    ${attachmentsList}
+                  </div>
+                `,
+                width: '500px',
+                showCloseButton: true,
+                showConfirmButton: false,
+                footer: '<button onclick="openAllAttachments(' + planId + ')" class="btn btn-outline-primary btn-sm">Open All Files</button>',
+                customClass: {
+                  popup: 'text-start'
+                }
+              });
+            } else {
+              Swal.fire({
+                icon: 'info',
+                title: 'No Attachments',
+                text: 'No files are attached to this GAD plan.',
+                confirmButtonText: 'OK'
+              });
+            }
+          })
+          .catch(error => {
+            console.error('Error fetching attachments:', error);
+            Swal.fire({
+              icon: 'error',
+              title: 'Error',
+              text: 'Failed to load attachments. Please try again.',
+              confirmButtonText: 'OK'
+            });
+          });
+        }
+
+        function openAllAttachments(planId) {
+          // Fetch attachments and open all in new tabs
+          fetch(`<?= base_url("Focal/getAttachments") ?>?plan=${planId}`, {
+            method: 'GET',
+            headers: {
+              'X-Requested-With': 'XMLHttpRequest',
+              '<?php echo csrf_header(); ?>': '<?php echo csrf_token(); ?>'
+            }
+          })
+          .then(response => response.json())
+          .then(data => {
+            if (data.success && data.attachments && data.attachments.length > 0) {
+              data.attachments.forEach(file => {
+                const fileName = file.split('/').pop();
+                window.open(`<?= base_url('Uploads/') ?>${fileName}`, '_blank');
+              });
+              Swal.close();
+            }
+          })
+          .catch(error => {
+            console.error('Error opening attachments:', error);
+          });
+        }
+
+        function linkToBudgetCrafting() {
+          Swal.fire({
+            icon: 'info',
+            title: 'Budget Crafting',
+            text: 'This will open Budget Crafting.',
+            showCancelButton: true,
+            confirmButtonText: 'Go'
+          }).then(r => {
+            if (r.isConfirmed) window.location.href = '<?= base_url("Focal/BudgetCrafting") ?>'
+          });
+        }
+
+        document.getElementById('searchInput').addEventListener('input', function () {
+          const t = this.value.toLowerCase();
+          document.querySelectorAll('#gadPlanTableBody tr').forEach(r => {
+            r.style.display = r.textContent.toLowerCase().includes(t) ? '' : 'none';
+          });
+        });
+
+        let objectiveIndex = 1;
+
+        function addGadObjectiveRow() {
+          const c = document.querySelector('.mb-4:nth-child(4)');
+          const nr = document.createElement('div');
+          nr.className = 'mb-4 additional-row objective-row';
+          nr.id = `objectiveRow_${objectiveIndex}`;
+          nr.innerHTML = `
     <textarea class="form-control" name="objectives[${objectiveIndex}]" rows="3" placeholder="Define the expected GAD result..."></textarea>
     <div class="invalid-feedback">Please provide a GAD objective.</div>
     <span class="remove-row" onclick="removeGadObjectiveRow(this,${objectiveIndex})">Remove</span>`;
-  c.parentNode.insertBefore(nr,c.nextSibling);
-  objectiveIndex++;
-}
+          c.parentNode.insertBefore(nr, c.nextSibling);
+          objectiveIndex++;
+        }
 
-function removeGadObjectiveRow(btn,idx){
-  const row=document.getElementById(`objectiveRow_${idx}`);
-  if(row) row.remove();
-  Array.from(document.querySelectorAll('.objective-row')).forEach((row,i)=>{
-    row.id=`objectiveRow_${i+1}`;
-    const ta=row.querySelector('textarea');
-    const sp=row.querySelector('.remove-row');
-    if(ta) ta.name=`objectives[${i+1}]`;
-    if(sp) sp.setAttribute('onclick',`removeGadObjectiveRow(this,${i+1})`);
-  });
-  objectiveIndex=document.querySelectorAll('.objective-row').length+1;
-}
-</script>
+        function removeGadObjectiveRow(btn, idx) {
+          const row = document.getElementById(`objectiveRow_${idx}`);
+          if (row) row.remove();
+          Array.from(document.querySelectorAll('.objective-row')).forEach((row, i) => {
+            row.id = `objectiveRow_${i+1}`;
+            const ta = row.querySelector('textarea');
+            const sp = row.querySelector('.remove-row');
+            if (ta) ta.name = `objectives[${i+1}]`;
+            if (sp) sp.setAttribute('onclick', `removeGadObjectiveRow(this,${i+1})`);
+          });
+          objectiveIndex = document.querySelectorAll('.objective-row').length + 1;
+        }
+      </script>
 
 
 </body>
+
 </html>

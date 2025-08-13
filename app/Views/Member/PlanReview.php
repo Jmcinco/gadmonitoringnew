@@ -1,75 +1,257 @@
+<?php
+// Check if user is logged in and has the correct role (Member = role_id 2)
+$session = session();
+$isLoggedIn = $session->get('isLoggedIn');
+$roleId = $session->get('role_id');
+$userId = $session->get('user_id');
+
+// Debug session data
+log_message('debug', 'Member PlanReview - Session data: ' . json_encode([
+    'isLoggedIn' => $isLoggedIn,
+    'role_id' => $roleId,
+    'user_id' => $userId,
+    'first_name' => $session->get('first_name'),
+    'last_name' => $session->get('last_name')
+]));
+
+if (!$isLoggedIn) {
+    $session->setFlashdata('error', 'Please log in to access this page.');
+    header('Location: ' . base_url('/login'));
+    exit;
+}
+
+if ($roleId != 2) {
+    $session->setFlashdata('error', 'Access denied. This page is for Members only.');
+    // Redirect based on role
+    switch ($roleId) {
+        case 1: // Focal
+            header('Location: ' . base_url('/FocalDashboard'));
+            break;
+        case 3: // Secretariat
+            header('Location: ' . base_url('/SecretariatDashboard'));
+            break;
+        case 4: // Administrator
+            header('Location: ' . base_url('/AdminDashboard'));
+            break;
+        default:
+            header('Location: ' . base_url('/login'));
+            break;
+    }
+    exit;
+}
+
+// Get GAD plans data (this will be passed from controller)
+$gadPlans = $gadPlans ?? [];
+?>
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>GAD Plan Review & Approval - GAD Management System</title>
+    <title>View Submitted GAD Plans - GAD Management System</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600&display=swap" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <style>
+        :root {
+            --sidebar-width: 280px;
+            --sidebar-bg: #2c3e50;
+            --sidebar-hover: #34495e;
+        }
+        body {
+            font-family: 'Poppins', Arial, sans-serif;
+            background-color: #f4f6f9;
+            margin: 0;
+            padding: 0;
+        }
+        .sidebar {
+            position: fixed;
+            top: 0;
+            left: 0;
+            height: 100vh;
+            width: var(--sidebar-width);
+            background: linear-gradient(180deg, var(--sidebar-bg) 0%, #1a252f 100%);
+            color: white;
+            z-index: 1000;
+            display: flex;
+            flex-direction: column;
+            box-shadow: 0 1rem 3rem rgba(0, 0, 0, 0.175);
+            transform: translateX(0) !important;
+        }
+        .sidebar-header {
+            padding: 1.5rem 1rem;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+            text-align: center;
+        }
+        .sidebar-content {
+            flex: 1;
+            padding: 1rem;
+            overflow-y: auto;
+        }
+        .sidebar-footer {
+            padding: 1rem;
+            border-top: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        .user-info {
+            padding: 1rem;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 0.5rem;
+            margin-bottom: 1rem;
+            display: flex;
+            align-items: center;
+        }
+        .sidebar .nav-link {
+            color: rgba(255, 255, 255, 0.8);
+            padding: 0.75rem 1rem;
+            margin-bottom: 0.25rem;
+            border-radius: 0.5rem;
+            transition: all 0.2s ease;
+            text-decoration: none;
+            display: flex;
+            align-items: center;
+        }
+        .sidebar .nav-link:hover {
+            background-color: var(--sidebar-hover);
+            color: white;
+            transform: translateX(3px);
+        }
+        .sidebar .nav-link.active {
+            background-color: #3498db;
+            color: white;
+        }
+        .main-content {
+            margin-left: var(--sidebar-width);
+            min-height: 100vh;
+            padding: 2rem;
+            background-color: #fafbfe;
+        }
+        .card {
+            border: none;
+            border-radius: 0.5rem;
+            box-shadow: 0 0.15rem 1.75rem 0 rgba(58, 59, 69, 0.15);
+        }
+        .card-header {
+            background-color: #f8f9fc;
+            border-bottom: 1px solid #e3e6f0;
+        }
+        .table th, .table td {
+            vertical-align: middle;
+            padding: 0.75rem;
+        }
+        @media (max-width: 768px) {
+            .sidebar {
+                transform: translateX(-100%);
+                transition: transform 0.3s ease;
+            }
+            .sidebar.show {
+                transform: translateX(0);
+            }
+            .main-content {
+                margin-left: 0;
+                padding: 1rem;
+            }
+            .table-responsive {
+                font-size: 0.85rem;
+            }
+            .table th, .table td {
+                padding: 0.5rem;
+            }
+        }
+    </style>
 </head>
 <body>
-    <!-- Navigation -->
-    <nav class="navbar navbar-expand-lg navbar-dark bg-primary">
-        <div class="container-fluid">
-            <a class="navbar-brand" href="dashboard.html">
+    <!-- Sidebar -->
+    <nav id="sidebar" class="sidebar">
+        <div class="sidebar-header">
+            <h4 class="text-white mb-0">
                 <i class="bi bi-shield-check"></i> GAD Management System
-            </a>
-            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
-                <span class="navbar-toggler-icon"></span>
-            </button>
-            <div class="collapse navbar-collapse" id="navbarNav">
-                <ul class="navbar-nav me-auto">
-                    <li class="nav-item">
-                        <a class="nav-link" href="dashboard.html">
-                            <i class="bi bi-house-door"></i> Dashboard
-                        </a>
-                    </li>
-                    <li class="nav-item dropdown">
-                        <a class="nav-link dropdown-toggle active" href="#" role="button" data-bs-toggle="dropdown">
-                            <i class="bi bi-gear"></i> GAD Workflow
-                        </a>
-                        <ul class="dropdown-menu">
-                            <li><a class="dropdown-item" href="gad_budget_preparation.html">Budget Preparation</a></li>
-                            <li><a class="dropdown-item" href="gad_budget_crafting.html">Budget Crafting</a></li>
-                            <li><a class="dropdown-item active" href="gad_plan_review.html">Plan Review</a></li>
-                            <li><a class="dropdown-item" href="consolidated_plan.html">Consolidated Plan</a></li>
-                        </ul>
-                    </li>
-                </ul>
-                <ul class="navbar-nav">
-                    <li class="nav-item dropdown">
-                        <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown">
-                            <i class="bi bi-person-circle"></i> Admin User
-                        </a>
-                        <ul class="dropdown-menu">
-                            <li><a class="dropdown-item" href="index.html"><i class="bi bi-box-arrow-right"></i> Logout</a></li>
-                        </ul>
-                    </li>
-                </ul>
-            </div>
+            </h4>
         </div>
-    </nav>
-
-    <!-- Breadcrumb -->
-    <nav aria-label="breadcrumb" class="bg-light">
-        <div class="container-fluid">
-            <ol class="breadcrumb py-2 mb-0">
-                <li class="breadcrumb-item"><a href="dashboard.html">Dashboard</a></li>
-                <li class="breadcrumb-item active">GAD Plan Review & Approval</li>
-            </ol>
+        <div class="sidebar-content">
+            <div class="user-info mb-4">
+                <div class="text-white d-flex align-items-center">
+                    <i class="bi bi-person-circle fs-4 me-2"></i>
+                    <div>
+                        <div class="fw-bold"><?php echo esc(($first_name ?? 'Admin') . ' ' . ($last_name ?? 'User')); ?></div>
+                        <small class="text-light">Administrator</small>
+                    </div>
+                </div>
+            </div>
+           <!-- Navigation Menu -->
+            <ul class="nav nav-pills flex-column">
+                <li class="nav-item">
+                    <a class="nav-link" href="<?= base_url('FocalDashboard') ?>">
+                        <i class="bi bi-house-door me-2"></i>Dashboard
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" href="<?= base_url('Focal/PlanPreparation') ?>">
+                        <i class="bi bi-clipboard-plus me-2"></i>Preparation of GAD Plan
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" href="<?= base_url('Focal/BudgetCrafting') ?>">
+                        <i class="bi bi-calculator me-2"></i>Budget Crafting
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link active" href="<?= base_url('Focal/PlanReview') ?>">
+                        <i class="bi bi-check-circle me-2"></i>Review & Approval of GAD Plan
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" href="<?= base_url('Focal/ConsolidatedPlan') ?>">
+                        <i class="bi bi-file-earmark-text me-2"></i>Consolidated Plan & Budget
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" href="<?= base_url('Focal/AccomplishmentSubmission') ?>">
+                        <i class="bi bi-send me-2"></i>Submission of GAD Accomplishment
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" href="<?= base_url('Focal/ReviewApproval') ?>">
+                        <i class="bi bi-clipboard-check me-2"></i>Review & Approval of Accomplishment
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" href="<?= base_url('Focal/ConsolidatedAccomplishment') ?>">
+                        <i class="bi bi-collection me-2"></i>Consolidated GAD Accomplishment
+                    </a>
+                </li>
+            </ul>
+        </div>
+<div class="sidebar-footer">
+            <a href="<?= base_url('/login/logout') ?>" class="btn btn-outline-light w-100">
+                <i class="bi bi-box-arrow-right"></i> Logout
+            </a>
         </div>
     </nav>
 
     <!-- Main Content -->
-    <div class="container-fluid py-4">
-        <div class="row">
-            <div class="col-12">
-                <div class="d-flex justify-content-between align-items-center mb-4">
-                    <h1 class="h3 mb-0">
-                        <i class="bi bi-clipboard-check text-primary"></i> GAD Plan Review & Approval
-                    </h1>
-                    <div class="btn-group">
-                        <button class="btn btn-outline-primary" onclick="filterByStatus('all')">
+    <div class="main-content">
+        <div class="container-fluid py-4">
+            <!-- Breadcrumb -->
+            <nav aria-label="breadcrumb" class="bg-light">
+                <div class="container-fluid">
+                    <ol class="breadcrumb py-2 mb-4">
+                        <li class="breadcrumb-item"><a href="<?php echo base_url('Focal/dashboard'); ?>">Dashboard</a></li>
+                        <li class="breadcrumb-item active">GAD Plan Review & Approval</li>
+                    </ol>
+                </div>
+            </nav>
+
+            <div class="container-fluid py-4"></div>
+            <div class="row">
+                <div class="col-12">
+                    <div class="d-flex justify-content-between align-items-center mb-4">
+                        <h1 class="h3 mb-0">
+                            <i class="bi bi-clipboard-check text-primary"></i> GAD Plan Review & Approval
+                        </h1>
+                        <div class="btn-group">
+                            <button class="btn btn-outline-primary" onclick="filterByStatus('all')">
                             <i class="bi bi-funnel"></i> All
                         </button>
                         <button class="btn btn-outline-warning" onclick="filterByStatus('pending')">
@@ -81,115 +263,128 @@
                         <button class="btn btn-outline-danger" onclick="filterByStatus('returned')">
                             <i class="bi bi-arrow-left-circle"></i> Returned
                         </button>
+                        </div>
                     </div>
                 </div>
             </div>
-        </div>
 
-        <!-- Review Table -->
-        <div class="row">
-            <div class="col-12">
-                <div class="card shadow">
-                    <div class="card-header">
-                        <div class="row align-items-center">
-                            <div class="col">
-                                <h5 class="mb-0">Submitted GAD Plans</h5>
-                            </div>
-                            <div class="col-auto">
-                                <div class="input-group">
-                                    <input type="text" class="form-control" placeholder="Search plans..." id="searchInput">
+            <!-- Review Table -->
+            <div class="row">
+                <div class="col-12">
+                    <div class="card shadow">
+                        <div class="card-header">
+                            <div class="row align-items-center">
+                                <div class="col">
+                                    <h5 class="mb-0">GAD Plans for Review & Approval</h5>
+                                </div>
+                                <div class="col-auto">
+                                    <div class="input-group">
+                                       <input type="text" class="form-control" placeholder="Search plans..." id="searchInput">
                                     <button class="btn btn-outline-secondary" type="button">
                                         <i class="bi bi-search"></i>
-                                    </button>
+                                        </button>
+                                    </div>
                                 </div>
                             </div>
                         </div>
-                    </div>
-                    <div class="card-body">
+ <div class="card-body">
                         <div class="table-responsive">
                             <table class="table table-hover table-striped">
                                 <thead class="table-dark">
                                     <tr>
                                         <th>GAD Activity ID</th>
                                         <th>Plan Title</th>
-                                        <th>Submitted By</th>
-                                        <th>Submission Date</th>
+                                        <th>Division</th>
                                         <th>Status</th>
+                                        <th>Review Date</th>
+                                        <th>Reviewed By</th>
                                         <th>Remarks</th>
                                         <th>Actions</th>
                                     </tr>
                                 </thead>
                                 <tbody id="reviewTableBody">
-                                    <tr data-status="pending">
-                                        <td>GAD001</td>
-                                        <td>Gender Sensitivity Training Program</td>
-                                        <td>Human Resources Division</td>
-                                        <td>2024-01-15</td>
-                                        <td><span class="badge bg-warning">Pending</span></td>
-                                        <td>-</td>
+                                    <?php if (!isset($gadPlans) || empty($gadPlans)): ?>
+                                    <tr>
+                                        <td colspan="8" class="text-center">No GAD plans found.</td>
+                                    </tr>
+                                    <?php else: ?>
+                                    <?php foreach ($gadPlans as $plan): ?>
+                                    <tr data-status="<?php echo strtolower($plan['status'] ?? 'pending'); ?>" data-plan-id="<?php echo esc($plan['plan_id']); ?>">
+                                        <td><?php echo esc('GAD-' . str_pad($plan['plan_id'], 3, '0', STR_PAD_LEFT)); ?></td>
+                                        <td><?php echo esc($plan['activity'] ?? 'N/A'); ?></td>
                                         <td>
-                                            <button class="btn btn-sm btn-outline-primary" onclick="reviewPlan('GAD001')">
-                                                <i class="bi bi-eye"></i> Review
-                                            </button>
-                                            <button class="btn btn-sm btn-outline-success" onclick="updateStatus('GAD001', 'approved')">
-                                                <i class="bi bi-check"></i> Approve
-                                            </button>
-                                            <button class="btn btn-sm btn-outline-danger" onclick="updateStatus('GAD001', 'returned')">
-                                                <i class="bi bi-x"></i> Return
-                                            </button>
+                                            <?php echo esc($plan['division'] ?? 'Unknown Division'); ?>
+                                        </td>
+                                        <td>
+                                            <?php
+                                            $status = $plan['status'] ?? 'pending';
+                                            $badgeClass = match(strtolower($status)) {
+                                                'approved' => 'bg-success',
+                                                'returned' => 'bg-danger',
+                                                'finalized' => 'bg-info',
+                                                'draft' => 'bg-secondary',
+                                                'in review' => 'bg-primary',
+                                                default => 'bg-warning'
+                                            };
+                                            ?>
+                                            <span class="badge <?php echo $badgeClass; ?>"><?php echo esc(ucfirst($status)); ?></span>
+                                        </td>
+                                        <td class="text-center">
+                                            <?php
+                                            // Show the most recent review date
+                                            $reviewDate = null;
+                                            if (!empty($plan['returned_at'])) {
+                                                $reviewDate = $plan['returned_at'];
+                                            } elseif (!empty($plan['approved_at'])) {
+                                                $reviewDate = $plan['approved_at'];
+                                            } elseif (!empty($plan['reviewed_at'])) {
+                                                $reviewDate = $plan['reviewed_at'];
+                                            }
+                                            echo $reviewDate ? date('Y-m-d', strtotime($reviewDate)) : '-';
+                                            ?>
+                                        </td>
+                                        <td class="text-center">
+                                            <?php
+                                            // Show who performed the most recent action
+                                            $reviewerName = '';
+                                            if (!empty($plan['returned_by_name'])) {
+                                                $reviewerName = $plan['returned_by_name'] . ' ' . $plan['returned_by_lastname'];
+                                            } elseif (!empty($plan['approved_by_name'])) {
+                                                $reviewerName = $plan['approved_by_name'] . ' ' . $plan['approved_by_lastname'];
+                                            } elseif (!empty($plan['reviewed_by_name'])) {
+                                                $reviewerName = $plan['reviewed_by_name'] . ' ' . $plan['reviewed_by_lastname'];
+                                            }
+                                            echo $reviewerName ?: '-';
+                                            ?>
+                                        </td>
+                                        <td class="text-truncate" style="max-width: 200px;" title="<?php echo esc($plan['remarks'] ?? ''); ?>">
+                                            <?php echo esc($plan['remarks'] ?? '-'); ?>
+                                        </td>
+                                        <td>
+                                            <div class="btn-group-vertical" role="group">
+                                                <button class="btn btn-sm btn-outline-primary mb-1" onclick="reviewPlan('<?php echo esc($plan['plan_id']); ?>')">
+                                                    <i class="bi bi-clipboard-check"></i> Review
+                                                </button>
+                                                <?php
+                                                $status = strtolower($plan['status'] ?? 'pending');
+                                                if (in_array($status, ['pending', 'draft', 'returned', 'submitted'])):
+                                                ?>
+                                                <button class="btn btn-sm btn-outline-success mb-1" onclick="updateStatus('<?php echo esc($plan['plan_id']); ?>', 'approved')">
+                                                    <i class="bi bi-check"></i> Approve
+                                                </button>
+                                                <button class="btn btn-sm btn-outline-danger" onclick="updateStatus('<?php echo esc($plan['plan_id']); ?>', 'returned')">
+                                                    <i class="bi bi-x"></i> Return
+                                                </button>
+                                                <?php elseif ($status === 'approved'): ?>
+                                                <button class="btn btn-sm btn-outline-warning" onclick="updateStatus('<?php echo esc($plan['plan_id']); ?>', 'pending')">
+                                                    <i class="bi bi-arrow-clockwise"></i> Reopen
+                                                </button>
+                                                <?php endif; ?>
+                                            </div>
                                         </td>
                                     </tr>
-                                    <tr data-status="approved">
-                                        <td>GAD002</td>
-                                        <td>Women's Leadership Development Workshop</td>
-                                        <td>Training Division</td>
-                                        <td>2024-01-20</td>
-                                        <td><span class="badge bg-success">Approved</span></td>
-                                        <td>Well-structured program with clear objectives</td>
-                                        <td>
-                                            <button class="btn btn-sm btn-outline-primary" onclick="reviewPlan('GAD002')">
-                                                <i class="bi bi-eye"></i> View
-                                            </button>
-                                            <button class="btn btn-sm btn-outline-warning" onclick="updateStatus('GAD002', 'pending')">
-                                                <i class="bi bi-arrow-clockwise"></i> Reopen
-                                            </button>
-                                        </td>
-                                    </tr>
-                                    <tr data-status="returned">
-                                        <td>GAD003</td>
-                                        <td>Anti-Sexual Harassment Campaign</td>
-                                        <td>Legal Affairs Division</td>
-                                        <td>2024-01-25</td>
-                                        <td><span class="badge bg-danger">Returned</span></td>
-                                        <td>Need more detailed budget breakdown</td>
-                                        <td>
-                                            <button class="btn btn-sm btn-outline-primary" onclick="reviewPlan('GAD003')">
-                                                <i class="bi bi-eye"></i> View
-                                            </button>
-                                            <button class="btn btn-sm btn-outline-success" onclick="updateStatus('GAD003', 'approved')">
-                                                <i class="bi bi-check"></i> Approve
-                                            </button>
-                                        </td>
-                                    </tr>
-                                    <tr data-status="pending">
-                                        <td>GAD004</td>
-                                        <td>Work-Life Balance Policy Development</td>
-                                        <td>Policy Development Unit</td>
-                                        <td>2024-01-30</td>
-                                        <td><span class="badge bg-warning">Pending</span></td>
-                                        <td>-</td>
-                                        <td>
-                                            <button class="btn btn-sm btn-outline-primary" onclick="reviewPlan('GAD004')">
-                                                <i class="bi bi-eye"></i> Review
-                                            </button>
-                                            <button class="btn btn-sm btn-outline-success" onclick="updateStatus('GAD004', 'approved')">
-                                                <i class="bi bi-check"></i> Approve
-                                            </button>
-                                            <button class="btn btn-sm btn-outline-danger" onclick="updateStatus('GAD004', 'returned')">
-                                                <i class="bi bi-x"></i> Return
-                                            </button>
-                                        </td>
-                                    </tr>
+                                    <?php endforeach; ?>
+                                    <?php endif; ?>
                                 </tbody>
                             </table>
                         </div>
@@ -205,80 +400,115 @@
             <div class="modal-content">
                 <div class="modal-header">
                     <h5 class="modal-title" id="reviewPlanModalLabel">
-                        <i class="bi bi-eye"></i> Review GAD Plan
+                        <i class="bi bi-clipboard-check"></i> Review & Approve GAD Plan
                     </h5>
                     <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                 </div>
                 <div class="modal-body">
-                    <form id="reviewPlanForm" class="needs-validation" novalidate>
+                    <div id="planDetailsContainer">
                         <input type="hidden" id="reviewPlanId" name="reviewPlanId">
-                        
-                        <!-- Plan Details -->
+
+                        <!-- Plan Information -->
                         <div class="card mb-4">
-                            <div class="card-header">
-                                <h6 class="mb-0">Plan Details</h6>
+                            <div class="card-header bg-primary text-white">
+                                <h6 class="mb-0"><i class="bi bi-info-circle"></i> Plan Information</h6>
                             </div>
                             <div class="card-body">
                                 <div class="row">
                                     <div class="col-md-6">
-                                        <strong>GAD Activity ID:</strong> <span id="displayPlanId"></span>
+                                        <div class="mb-3">
+                                            <label class="form-label fw-bold text-primary">GAD Activity ID</label>
+                                            <div class="border rounded p-2 bg-light" id="displayPlanId">-</div>
+                                        </div>
                                     </div>
                                     <div class="col-md-6">
-                                        <strong>Plan Title:</strong> <span id="displayPlanTitle"></span>
+                                        <div class="mb-3">
+                                            <label class="form-label fw-bold text-primary">Division</label>
+                                            <div class="border rounded p-2 bg-light" id="displayDivision">-</div>
+                                        </div>
                                     </div>
                                 </div>
-                                <div class="row mt-2">
+                                <div class="mb-3">
+                                    <label class="form-label fw-bold text-primary">Plan Title/Activity</label>
+                                    <div class="border rounded p-2 bg-light" id="displayPlanTitle">-</div>
+                                </div>
+                                <div class="row">
                                     <div class="col-md-6">
-                                        <strong>Submitted By:</strong> <span id="displaySubmittedBy"></span>
+                                        <div class="mb-3">
+                                            <label class="form-label fw-bold text-primary">Budget</label>
+                                            <div class="border rounded p-2 bg-light" id="displayBudget">-</div>
+                                        </div>
                                     </div>
                                     <div class="col-md-6">
-                                        <strong>Submission Date:</strong> <span id="displaySubmissionDate"></span>
+                                        <div class="mb-3">
+                                            <label class="form-label fw-bold text-primary">HGDG Score</label>
+                                            <div class="border rounded p-2 bg-light" id="displayHGDG">-</div>
+                                        </div>
                                     </div>
                                 </div>
                             </div>
                         </div>
 
-                        <!-- Review Form -->
-                        <div class="row">
-                            <div class="col-md-6">
-                                <div class="mb-3">
-                                    <label for="reviewStatus" class="form-label">Status *</label>
-                                    <select class="form-select" id="reviewStatus" name="reviewStatus" required>
-                                        <option value="">Select Status</option>
-                                        <option value="approved">Approved</option>
-                                        <option value="returned">Returned</option>
-                                        <option value="pending">Pending</option>
-                                    </select>
-                                    <div class="invalid-feedback">
-                                        Please select a status.
+                        <!-- Review Information -->
+                        <div class="card mb-4">
+                            <div class="card-header bg-success text-white">
+                                <h6 class="mb-0"><i class="bi bi-clipboard-check"></i> Review Information</h6>
+                            </div>
+                            <div class="card-body">
+                                <div class="row">
+                                    <div class="col-md-4">
+                                        <div class="mb-3">
+                                            <label class="form-label fw-bold text-success">Current Status</label>
+                                            <div class="border rounded p-2 bg-light" id="displayCurrentStatus">-</div>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-4">
+                                        <div class="mb-3">
+                                            <label class="form-label fw-bold text-success">Review Date</label>
+                                            <div class="border rounded p-2 bg-light" id="displayReviewDate">-</div>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-4">
+                                        <div class="mb-3">
+                                            <label class="form-label fw-bold text-success">Reviewed By</label>
+                                            <div class="border rounded p-2 bg-light" id="displayReviewedBy">-</div>
+                                        </div>
                                     </div>
                                 </div>
-                            </div>
-                            <div class="col-md-6">
                                 <div class="mb-3">
-                                    <label for="reviewDate" class="form-label">Review Date</label>
-                                    <input type="date" class="form-control" id="reviewDate" name="reviewDate" readonly>
+                                    <label class="form-label fw-bold text-success">Review Remarks/Comments</label>
+                                    <div class="border rounded p-3 bg-light" id="displayRemarks" style="min-height: 120px; white-space: pre-wrap;">No remarks available</div>
                                 </div>
                             </div>
                         </div>
-                        
-                        <div class="mb-3">
-                            <label for="reviewRemarks" class="form-label">Remarks *</label>
-                            <textarea class="form-control" id="reviewRemarks" name="reviewRemarks" rows="4" required></textarea>
-                            <div class="invalid-feedback">
-                                Please provide review remarks.
+
+                        <!-- Additional Details -->
+                        <div class="card">
+                            <div class="card-header bg-info text-white">
+                                <h6 class="mb-0"><i class="bi bi-list-ul"></i> Additional Details</h6>
+                            </div>
+                            <div class="card-body">
+                                <div class="mb-3">
+                                    <label class="form-label fw-bold text-info">Gender Issue/GAD Mandate</label>
+                                    <div class="border rounded p-2 bg-light" id="displayIssueMandate">-</div>
+                                </div>
+                                <div class="mb-3">
+                                    <label class="form-label fw-bold text-info">Cause of Gender Issue</label>
+                                    <div class="border rounded p-2 bg-light" id="displayCause">-</div>
+                                </div>
+                                <div class="mb-3">
+                                    <label class="form-label fw-bold text-info">GAD Objective</label>
+                                    <div class="border rounded p-2 bg-light" id="displayObjective">-</div>
+                                </div>
                             </div>
                         </div>
-                        
-                        <div class="mb-3">
-                            <label for="reviewedBy" class="form-label">Reviewed By</label>
-                            <input type="text" class="form-control" id="reviewedBy" name="reviewedBy" value="Admin User" readonly>
-                        </div>
-                    </form>
+                    </div>
                 </div>
                 <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
-                    <button type="submit" form="reviewPlanForm" class="btn btn-primary">Save Review</button>
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="button" class="btn btn-primary" onclick="submitReview()">
+                        <i class="bi bi-check-circle"></i> Submit Review
+                    </button>
                 </div>
             </div>
         </div>
@@ -286,7 +516,7 @@
 
     <!-- Bootstrap JavaScript -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
-    
+
     <script>
         // Bootstrap form validation
         (function() {
@@ -314,66 +544,349 @@
             const planId = formData.get('reviewPlanId');
             const status = formData.get('reviewStatus');
             const remarks = formData.get('reviewRemarks');
-            
-            updatePlanStatus(planId, status, remarks);
-            
-            // Close modal
-            const modal = form.closest('.modal');
-            bootstrap.Modal.getInstance(modal).hide();
-            
-            // Reset form
-            form.reset();
-            form.classList.remove('was-validated');
-        }
 
-        // Review plan
-        function reviewPlan(planId) {
-            const modal = new bootstrap.Modal(document.getElementById('reviewPlanModal'));
-            const rows = document.querySelectorAll('#reviewTableBody tr');
-            
-            rows.forEach(row => {
-                if (row.cells[0].textContent === planId) {
-                    document.getElementById('reviewPlanId').value = planId;
-                    document.getElementById('displayPlanId').textContent = row.cells[0].textContent;
-                    document.getElementById('displayPlanTitle').textContent = row.cells[1].textContent;
-                    document.getElementById('displaySubmittedBy').textContent = row.cells[2].textContent;
-                    document.getElementById('displaySubmissionDate').textContent = row.cells[3].textContent;
-                    
-                    // Set current status
-                    const statusText = row.cells[4].textContent.trim().toLowerCase();
-                    document.getElementById('reviewStatus').value = statusText;
-                    
-                    // Set current remarks
-                    document.getElementById('reviewRemarks').value = row.cells[5].textContent === '-' ? '' : row.cells[5].textContent;
-                    
-                    // Set review date to today
-                    document.getElementById('reviewDate').value = new Date().toISOString().split('T')[0];
+            // Show loading state
+            Swal.fire({
+                title: 'Updating Plan...',
+                text: 'Please wait while we save your review.',
+                allowOutsideClick: false,
+                didOpen: () => {
+                    Swal.showLoading();
                 }
             });
-            
-            modal.show();
+
+            // Send AJAX request to update plan
+            fetch('<?= base_url('Member/updateStatus') ?>', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/x-www-form-urlencoded',
+                    'X-Requested-With': 'XMLHttpRequest'
+                },
+                body: new URLSearchParams({
+                    planId: planId,
+                    status: status,
+                    remarks: remarks
+                })
+            })
+            .then(response => response.json())
+            .then(data => {
+                Swal.close();
+
+                if (data.success) {
+                    // Update the table row with new data
+                    updatePlanStatusInTable(planId, status, remarks);
+
+                    // Close modal
+                    const modal = form.closest('.modal');
+                    bootstrap.Modal.getInstance(modal).hide();
+
+                    // Reset form
+                    form.reset();
+                    form.classList.remove('was-validated');
+
+                    Swal.fire({
+                        icon: 'success',
+                        title: 'Success!',
+                        text: data.message,
+                        timer: 2000,
+                        showConfirmButton: false
+                    });
+                } else {
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'Error!',
+                        text: data.message || 'Failed to update plan.'
+                    });
+                }
+            })
+            .catch(error => {
+                Swal.close();
+                console.error('Error:', error);
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Error!',
+                    text: 'An error occurred while updating the plan.'
+                });
+            });
         }
 
-        // Update status directly
+        // Review plan function for Members
+        function reviewPlan(planId) {
+            // Show loading state
+            Swal.fire({
+                title: 'Loading Plan Details...',
+                text: 'Please wait while we fetch the plan information.',
+                allowOutsideClick: false,
+                didOpen: () => {
+                    Swal.showLoading();
+                }
+            });
+
+            // Fetch plan details from database
+            fetch(`<?= base_url('Member/getPlanDetails') ?>/${planId}`, {
+                method: 'GET',
+                headers: {
+                    'X-Requested-With': 'XMLHttpRequest'
+                }
+            })
+            .then(response => response.json())
+            .then(data => {
+                Swal.close();
+
+                if (data.success) {
+                    const plan = data.plan;
+
+                    // Populate modal with plan details
+                    document.getElementById('reviewPlanId').value = planId;
+                    document.getElementById('displayPlanId').textContent = `GAD-${String(planId).padStart(3, '0')}`;
+                    document.getElementById('displayPlanTitle').textContent = plan.activity || 'N/A';
+                    document.getElementById('displayDivision').textContent = plan.division_name || 'Unknown Division';
+
+                    // Budget and HGDG information
+                    const budgetElement = document.getElementById('displayBudget');
+                    if (budgetElement) {
+                        const budget = plan.budget ? parseFloat(plan.budget) : 0;
+                        budgetElement.textContent = budget > 0 ? `₱${budget.toLocaleString()}` : 'N/A';
+                    }
+
+                    const hgdgElement = document.getElementById('displayHGDG');
+                    if (hgdgElement) {
+                        const hgdg = plan.hgdg_score ? parseFloat(plan.hgdg_score) : 0;
+                        hgdgElement.textContent = hgdg > 0 ? `${hgdg}%` : 'N/A';
+                    }
+
+                    // Review information
+                    document.getElementById('displayCurrentStatus').innerHTML = `<span class="badge bg-${getStatusBadgeClass(plan.status)}">${plan.status || 'Pending'}</span>`;
+
+                    // Review date - show the most recent action date
+                    let reviewDate = 'Not reviewed yet';
+                    let reviewAction = '';
+
+                    if (plan.returned_at) {
+                        reviewDate = new Date(plan.returned_at).toLocaleDateString();
+                        reviewAction = ' (Returned)';
+                    } else if (plan.approved_at) {
+                        reviewDate = new Date(plan.approved_at).toLocaleDateString();
+                        reviewAction = ' (Approved)';
+                    } else if (plan.reviewed_at) {
+                        reviewDate = new Date(plan.reviewed_at).toLocaleDateString();
+                        reviewAction = ' (Reviewed)';
+                    }
+
+                    document.getElementById('displayReviewDate').textContent = reviewDate + reviewAction;
+
+                    // Reviewed by - show the person who performed the most recent action
+                    let reviewedBy = 'Not reviewed yet';
+
+                    if (plan.returned_by_name) {
+                        reviewedBy = `${plan.returned_by_name} ${plan.returned_by_lastname} (Returned)`;
+                    } else if (plan.approved_by_name) {
+                        reviewedBy = `${plan.approved_by_name} ${plan.approved_by_lastname} (Approved)`;
+                    } else if (plan.reviewed_by_name) {
+                        reviewedBy = `${plan.reviewed_by_name} ${plan.reviewed_by_lastname} (Reviewed)`;
+                    }
+
+                    document.getElementById('displayReviewedBy').textContent = reviewedBy;
+
+                    // Remarks
+                    document.getElementById('displayRemarks').textContent = plan.remarks || 'No remarks available';
+
+                    // Additional details
+                    const issueElement = document.getElementById('displayIssueMandate');
+                    if (issueElement) issueElement.textContent = plan.issue_mandate || 'N/A';
+
+                    const causeElement = document.getElementById('displayCause');
+                    if (causeElement) causeElement.textContent = plan.cause || 'N/A';
+
+                    const objectiveElement = document.getElementById('displayObjective');
+                    if (objectiveElement) {
+                        if (Array.isArray(plan.gad_objective)) {
+                            objectiveElement.textContent = plan.gad_objective.join(', ');
+                        } else {
+                            objectiveElement.textContent = plan.gad_objective || 'N/A';
+                        }
+                    }
+
+                    // Show modal
+                    const modal = new bootstrap.Modal(document.getElementById('reviewPlanModal'));
+                    modal.show();
+                } else {
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'Error!',
+                        text: data.message || 'Failed to load plan details.'
+                    });
+                }
+            })
+            .catch(error => {
+                Swal.close();
+                console.error('Error:', error);
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Error!',
+                    text: 'An error occurred while loading plan details.'
+                });
+            });
+        }
+
+
+
+
+
+        // Submit review function for Members
+        function submitReview() {
+            const form = document.getElementById('reviewPlanForm');
+            if (!form.checkValidity()) {
+                form.classList.add('was-validated');
+                return;
+            }
+
+            const formData = new FormData(form);
+            const planId = formData.get('reviewPlanId');
+            const status = formData.get('reviewStatus');
+            const remarks = formData.get('reviewRemarks');
+
+            // Show loading state
+            Swal.fire({
+                title: 'Submitting Review...',
+                text: 'Please wait while we save your review.',
+                allowOutsideClick: false,
+                didOpen: () => {
+                    Swal.showLoading();
+                }
+            });
+
+            // Send AJAX request to update plan
+            fetch('<?= base_url('Member/updateStatus') ?>', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/x-www-form-urlencoded',
+                    'X-Requested-With': 'XMLHttpRequest'
+                },
+                body: new URLSearchParams({
+                    planId: planId,
+                    status: status,
+                    remarks: remarks
+                })
+            })
+            .then(response => response.json())
+            .then(data => {
+                Swal.close();
+
+                if (data.success) {
+                    // Update the table row with new data
+                    updatePlanStatusInTable(planId, status, remarks);
+
+                    // Close modal
+                    bootstrap.Modal.getInstance(document.getElementById('reviewPlanModal')).hide();
+
+                    // Reset form
+                    form.reset();
+                    form.classList.remove('was-validated');
+
+                    Swal.fire({
+                        icon: 'success',
+                        title: 'Success!',
+                        text: data.message,
+                        timer: 2000,
+                        showConfirmButton: false
+                    });
+                } else {
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'Error!',
+                        text: data.message || 'Failed to update plan.'
+                    });
+                }
+            })
+            .catch(error => {
+                Swal.close();
+                console.error('Error:', error);
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Error!',
+                    text: 'An error occurred while updating the plan.'
+                });
+            });
+        }
+
+        // Update status directly (for quick approve/return buttons)
         function updateStatus(planId, newStatus) {
             let remarks = '';
-            
+
             if (newStatus === 'returned') {
                 remarks = prompt('Please provide reason for returning the plan:');
                 if (!remarks) return;
             } else if (newStatus === 'approved') {
-                remarks = 'Plan approved for implementation';
+                remarks = 'Plan approved for implementation by Member';
+            } else if (newStatus === 'pending') {
+                remarks = 'Plan reopened for review by Member';
             }
-            
-            updatePlanStatus(planId, newStatus, remarks);
+
+            // Show loading state
+            Swal.fire({
+                title: 'Updating Status...',
+                text: 'Please wait while we update the plan status.',
+                allowOutsideClick: false,
+                didOpen: () => {
+                    Swal.showLoading();
+                }
+            });
+
+            // Send AJAX request to update status in database
+            fetch('<?= base_url('Member/updateStatus') ?>', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/x-www-form-urlencoded',
+                    'X-Requested-With': 'XMLHttpRequest'
+                },
+                body: new URLSearchParams({
+                    planId: planId,
+                    status: newStatus,
+                    remarks: remarks
+                })
+            })
+            .then(response => response.json())
+            .then(data => {
+                Swal.close();
+
+                if (data.success) {
+                    // Update the table row with new data
+                    updatePlanStatusInTable(planId, newStatus, remarks);
+
+                    Swal.fire({
+                        icon: 'success',
+                        title: 'Success!',
+                        text: data.message,
+                        timer: 2000,
+                        showConfirmButton: false
+                    });
+                } else {
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'Error!',
+                        text: data.message || 'Failed to update plan status.'
+                    });
+                }
+            })
+            .catch(error => {
+                Swal.close();
+                console.error('Error:', error);
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Error!',
+                    text: 'An error occurred while updating the plan status.'
+                });
+            });
         }
 
         // Update plan status in table
-        function updatePlanStatus(planId, status, remarks) {
+        function updatePlanStatusInTable(planId, status, remarks) {
             const rows = document.querySelectorAll('#reviewTableBody tr');
-            
+
             rows.forEach(row => {
-                if (row.cells[0].textContent === planId) {
+                const planIdCell = row.cells[0];
+                if (planIdCell && planIdCell.textContent.includes(planId)) {
                     // Update status badge
                     let statusBadge = '';
                     if (status === 'pending') {
@@ -386,20 +899,21 @@
                         statusBadge = '<span class="badge bg-danger">Returned</span>';
                         row.dataset.status = 'returned';
                     }
-                    
-                    row.cells[4].innerHTML = statusBadge;
-                    row.cells[5].textContent = remarks || '-';
-                    
+
+                    row.cells[3].innerHTML = statusBadge;
+                    row.cells[6].textContent = remarks || '-';
+
                     // Update action buttons based on status
                     let actionButtons = `
-                        <button class="btn btn-sm btn-outline-primary" onclick="reviewPlan('${planId}')">
-                            <i class="bi bi-eye"></i> ${status === 'pending' ? 'Review' : 'View'}
-                        </button>
+                        <div class="btn-group-vertical" role="group">
+                            <button class="btn btn-sm btn-outline-primary mb-1" onclick="reviewPlan('${planId}')">
+                                <i class="bi bi-clipboard-check"></i> Review
+                            </button>
                     `;
-                    
-                    if (status === 'pending') {
+
+                    if (status === 'pending' || status === 'returned') {
                         actionButtons += `
-                            <button class="btn btn-sm btn-outline-success" onclick="updateStatus('${planId}', 'approved')">
+                            <button class="btn btn-sm btn-outline-success mb-1" onclick="updateStatus('${planId}', 'approved')">
                                 <i class="bi bi-check"></i> Approve
                             </button>
                             <button class="btn btn-sm btn-outline-danger" onclick="updateStatus('${planId}', 'returned')">
@@ -412,23 +926,30 @@
                                 <i class="bi bi-arrow-clockwise"></i> Reopen
                             </button>
                         `;
-                    } else if (status === 'returned') {
-                        actionButtons += `
-                            <button class="btn btn-sm btn-outline-success" onclick="updateStatus('${planId}', 'approved')">
-                                <i class="bi bi-check"></i> Approve
-                            </button>
-                        `;
                     }
-                    
-                    row.cells[6].innerHTML = actionButtons;
+
+                    actionButtons += '</div>';
+                    row.cells[7].innerHTML = actionButtons;
                 }
             });
+        }
+        // Helper function to get status badge class
+        function getStatusBadgeClass(status) {
+            const statusLower = (status || '').toLowerCase();
+            switch(statusLower) {
+                case 'approved': return 'success';
+                case 'returned': return 'danger';
+                case 'finalized': return 'info';
+                case 'draft': return 'secondary';
+                case 'in review': return 'primary';
+                default: return 'warning';
+            }
         }
 
         // Filter by status
         function filterByStatus(status) {
             const rows = document.querySelectorAll('#reviewTableBody tr');
-            
+
             rows.forEach(row => {
                 if (status === 'all' || row.dataset.status === status) {
                     row.style.display = '';
@@ -436,7 +957,7 @@
                     row.style.display = 'none';
                 }
             });
-            
+
             // Update button states
             document.querySelectorAll('.btn-group .btn').forEach(btn => {
                 btn.classList.remove('active');
@@ -448,7 +969,7 @@
         document.getElementById('searchInput').addEventListener('input', function() {
             const searchTerm = this.value.toLowerCase();
             const rows = document.querySelectorAll('#reviewTableBody tr');
-            
+
             rows.forEach(row => {
                 const text = row.textContent.toLowerCase();
                 if (text.includes(searchTerm)) {

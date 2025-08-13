@@ -12,6 +12,9 @@ class EmployeeModel extends Model
     protected $useAutoIncrement = true;
     protected $returnType       = 'array';
     protected $useSoftDeletes   = false;
+    protected $useTimestamps    = true;
+    protected $createdField     = 'created_at';
+    protected $updatedField     = 'updated_at';
 
     protected $allowedFields = [
         'first_name',
@@ -21,15 +24,10 @@ class EmployeeModel extends Model
         'role_id',
         'gender',
         'email',
-        'password',
-        'created_at',
-        'updated_at'
+        'password'
     ];
 
-    protected $useTimestamps = false; // Set true if you want CI to handle created_at/updated_at automatically
-
-    // If you want validation rules, add here
-    protected $validationRules    = [];
+    // Remove validation rules from model since we handle validation in controller
+    protected $validationRules = [];
     protected $validationMessages = [];
-    protected $skipValidation     = false;
 }

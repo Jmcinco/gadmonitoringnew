@@ -6,7 +6,7 @@ use CodeIgniter\Model;
 
 class LoginModel extends Model
 {
-    protected $table = 'Employees';
+    protected $table = 'employees';
     protected $primaryKey = 'emp_id';
     protected $allowedFields = ['first_name', 'last_name', 'role_id', 'div_id', 'gender', 'email', 'password'];
 
@@ -24,9 +24,9 @@ class LoginModel extends Model
 
     public function getUserRole($emp_id)
     {
-        return $this->select('Employees.emp_id, Employees.role_id, Roles.role_name')
-            ->join('Roles', 'Roles.role_id = Employees.role_id')
-            ->where('Employees.emp_id', $emp_id)
+        return $this->select('employees.emp_id, employees.role_id, roles.role_name')
+            ->join('roles', 'roles.role_id = employees.role_id')
+            ->where('employees.emp_id', $emp_id)
             ->first();
     }
 

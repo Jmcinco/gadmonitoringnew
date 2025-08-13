@@ -3,6 +3,7 @@
 namespace App\Controllers;
 
 use App\Models\LoginModel;
+use App\Models\AuditTrailModel;
 
 class LoginController extends BaseController
 {
@@ -29,9 +30,22 @@ class LoginController extends BaseController
                 'role_id' => $user['role_id'],
                 'first_name' => $user['first_name'],
                 'last_name' => $user['last_name'],
+                'div_id' => $user['div_id'],
                 'isLoggedIn' => true
             ]);
             log_message('debug', "Session set for {$email}, role_id: {$user['role_id']}");
+
+            // Log successful login
+            $auditModel = new AuditTrailModel();
+            $auditModel->logActivity([
+                'user_id' => $user['emp_id'],
+                'action' => 'LOGIN',
+                'table_name' => 'employees',
+                'record_id' => $user['emp_id'],
+                'employee_name' => $user['first_name'] . ' ' . $user['last_name'],
+                'employee_email' => $user['email'],
+                'details' => 'User logged in successfully'
+            ]);
             switch ($user['role_id']) {
                 case 1: // Focal
                     log_message('debug', "Redirecting {$email} to /FocalDashboard");
@@ -78,6 +92,20 @@ class LoginController extends BaseController
 
     public function logout()
     {
+        // Log logout before destroying session
+        if (session()->get('isLoggedIn')) {
+            $auditModel = new AuditTrailModel();
+            $auditModel->logActivity([
+                'user_id' => session()->get('user_id'),
+                'action' => 'LOGOUT',
+                'table_name' => 'employees',
+                'record_id' => session()->get('user_id'),
+                'employee_name' => session()->get('first_name') . ' ' . session()->get('last_name'),
+                'employee_email' => session()->get('email'),
+                'details' => 'User logged out'
+            ]);
+        }
+
         session()->destroy();
         log_message('debug', 'User logged out');
         return redirect()->to('/login');

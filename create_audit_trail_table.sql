@@ -1,0 +1,22 @@
+CREATE TABLE IF NOT EXISTS `audit_trail` (
+    `id` int(11) unsigned NOT NULL AUTO_INCREMENT,
+    `user_id` int(11) unsigned DEFAULT NULL,
+    `action` enum('CREATE','UPDATE','DELETE','LOGIN','LOGOUT') NOT NULL,
+    `table_name` varchar(100) NOT NULL,
+    `record_id` int(11) unsigned DEFAULT NULL,
+    `employee_name` varchar(255) DEFAULT NULL,
+    `employee_email` varchar(255) DEFAULT NULL,
+    `details` text NOT NULL,
+    `ip_address` varchar(45) DEFAULT NULL,
+    `user_agent` text DEFAULT NULL,
+    `old_data` json DEFAULT NULL,
+    `new_data` json DEFAULT NULL,
+    `created_at` datetime DEFAULT NULL,
+    `updated_at` datetime DEFAULT NULL,
+    PRIMARY KEY (`id`),
+    KEY `idx_user_id` (`user_id`),
+    KEY `idx_action` (`action`),
+    KEY `idx_table_name` (`table_name`),
+    KEY `idx_created_at` (`created_at`),
+    CONSTRAINT `fk_audit_trail_user_id` FOREIGN KEY (`user_id`) REFERENCES `employees` (`emp_id`) ON DELETE SET NULL ON UPDATE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;

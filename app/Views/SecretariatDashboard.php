@@ -4,7 +4,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>FOCAL DASHBOARD - GAD Monitoring System</title>
+    <title>SECRETARIAT DASHBOARD - GAD Monitoring System</title>
     <!-- Bootstrap CSS -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <!-- Bootstrap Icons -->
@@ -304,19 +304,184 @@
 
             <!-- Dashboard Overview -->
             <div id="dashboard-overview" class="module-content">
+                <!-- Statistics Cards -->
                 <div class="row mb-4">
-                    <div class="col-md-3">
+                    <div class="col-md-3 mb-3">
                         <div class="card text-white bg-primary">
                             <div class="card-body">
                                 <div class="d-flex justify-content-between">
                                     <div>
-                                        <h4 id="totalPlans">0</h4>
+                                        <h4><?php echo esc($totalPlans ?? 0); ?></h4>
                                         <p class="card-text">Total GAD Plans</p>
                                     </div>
                                     <div class="align-self-center">
                                         <i class="bi bi-file-text fs-2"></i>
                                     </div>
                                 </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-3 mb-3">
+                        <div class="card text-white bg-warning">
+                            <div class="card-body">
+                                <div class="d-flex justify-content-between">
+                                    <div>
+                                        <h4><?php echo esc($pendingPlans ?? 0); ?></h4>
+                                        <p class="card-text">Pending Review</p>
+                                    </div>
+                                    <div class="align-self-center">
+                                        <i class="bi bi-clock fs-2"></i>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-3 mb-3">
+                        <div class="card text-white bg-success">
+                            <div class="card-body">
+                                <div class="d-flex justify-content-between">
+                                    <div>
+                                        <h4><?php echo esc($approvedPlans ?? 0); ?></h4>
+                                        <p class="card-text">Approved Plans</p>
+                                    </div>
+                                    <div class="align-self-center">
+                                        <i class="bi bi-check-circle fs-2"></i>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-3 mb-3">
+                        <div class="card text-white bg-info">
+                            <div class="card-body">
+                                <div class="d-flex justify-content-between">
+                                    <div>
+                                        <h4><?php echo esc($finalizedPlans ?? 0); ?></h4>
+                                        <p class="card-text">Finalized Plans</p>
+                                    </div>
+                                    <div class="align-self-center">
+                                        <i class="bi bi-bookmark-check fs-2"></i>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- System Statistics -->
+                <div class="row mb-4">
+                    <div class="col-md-4 mb-3">
+                        <div class="card text-white bg-secondary">
+                            <div class="card-body">
+                                <div class="d-flex justify-content-between">
+                                    <div>
+                                        <h4><?php echo esc($totalDivisions ?? 0); ?></h4>
+                                        <p class="card-text">Total Divisions</p>
+                                    </div>
+                                    <div class="align-self-center">
+                                        <i class="bi bi-building fs-2"></i>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-4 mb-3">
+                        <div class="card text-white bg-dark">
+                            <div class="card-body">
+                                <div class="d-flex justify-content-between">
+                                    <div>
+                                        <h4><?php echo esc($totalEmployees ?? 0); ?></h4>
+                                        <p class="card-text">Total Employees</p>
+                                    </div>
+                                    <div class="align-self-center">
+                                        <i class="bi bi-people fs-2"></i>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-4 mb-3">
+                        <div class="card text-white bg-danger">
+                            <div class="card-body">
+                                <div class="d-flex justify-content-between">
+                                    <div>
+                                        <h4><?php echo esc($returnedPlans ?? 0); ?></h4>
+                                        <p class="card-text">Returned Plans</p>
+                                    </div>
+                                    <div class="align-self-center">
+                                        <i class="bi bi-arrow-return-left fs-2"></i>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Recent Activities -->
+                <div class="row">
+                    <div class="col-12">
+                        <div class="card">
+                            <div class="card-header">
+                                <h5 class="mb-0">
+                                    <i class="bi bi-activity text-primary"></i> Recent System Activities
+                                </h5>
+                            </div>
+                            <div class="card-body">
+                                <?php if (!empty($recentActivities)): ?>
+                                <div class="table-responsive">
+                                    <table class="table table-hover">
+                                        <thead class="table-light">
+                                            <tr>
+                                                <th>Date/Time</th>
+                                                <th>User</th>
+                                                <th>Action</th>
+                                                <th>Details</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            <?php foreach ($recentActivities as $activity): ?>
+                                            <tr>
+                                                <td>
+                                                    <small class="text-muted">
+                                                        <?php echo date('M d, Y H:i', strtotime($activity['created_at'])); ?>
+                                                    </small>
+                                                </td>
+                                                <td>
+                                                    <?php
+                                                    if ($activity['first_name'] && $activity['last_name']) {
+                                                        echo esc($activity['first_name'] . ' ' . $activity['last_name']);
+                                                    } else {
+                                                        echo '<span class="text-muted">System</span>';
+                                                    }
+                                                    ?>
+                                                </td>
+                                                <td>
+                                                    <?php
+                                                    $actionClass = match(strtoupper($activity['action'])) {
+                                                        'CREATE' => 'success',
+                                                        'UPDATE' => 'primary',
+                                                        'DELETE' => 'danger',
+                                                        default => 'secondary'
+                                                    };
+                                                    ?>
+                                                    <span class="badge bg-<?php echo $actionClass; ?>">
+                                                        <?php echo esc($activity['action']); ?>
+                                                    </span>
+                                                </td>
+                                                <td>
+                                                    <small><?php echo esc($activity['details']); ?></small>
+                                                </td>
+                                            </tr>
+                                            <?php endforeach; ?>
+                                        </tbody>
+                                    </table>
+                                </div>
+                                <?php else: ?>
+                                <div class="text-center py-4">
+                                    <i class="bi bi-inbox fs-1 text-muted"></i>
+                                    <p class="text-muted mt-2">No recent activities found.</p>
+                                </div>
+                                <?php endif; ?>
                             </div>
                         </div>
                     </div>

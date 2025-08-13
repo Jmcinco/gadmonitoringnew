@@ -2,6 +2,7 @@
 
 namespace App\Controllers;
 use App\Models\BudgetModel;
+use App\Models\AuditTrailModel;
 use CodeIgniter\Controller;
 
 class GadPlanController extends Controller
@@ -10,7 +11,6 @@ class GadPlanController extends Controller
     protected $session;
     protected $model;
     protected $mandateModel;
-    
 
     public function __construct()
     {
@@ -18,18 +18,47 @@ class GadPlanController extends Controller
         $this->session = \Config\Services::session();
         $this->model = new \App\Models\FocalModel();
         $this->mandateModel = new \App\Models\GadMandateModel();
-        // Load the Form Helper in the constructor
         helper('form');
     }
 
     public function index()
     {
-        // Ensure the Form Helper is available
         helper('form');
-
         $data['gadPlans']  = $this->model->getGadPlansWithAmount();
         $data['mandates'] = $this->mandateModel->findAll();
         $data['divisions'] = $this->getDivisions();
+        $data['currentDivision'] = session()->get('division');
+
+        // Create division lookup array for efficiency
+        $db = \Config\Database::connect();
+        $divisions = $db->table('divisions')->get()->getResultArray();
+        $divisionLookup = [];
+        foreach ($divisions as $div) {
+            $divisionLookup[$div['div_id']] = $div['division'];
+        }
+
+        foreach ($data['gadPlans'] as &$plan) {
+            $responsibleUnits = [];
+            if (!empty($plan['responsible_units'])) {
+                $responsibleUnits = json_decode($plan['responsible_units'], true);
+            }
+            $plan['responsible_units_display'] = (is_array($responsibleUnits) && !empty($responsibleUnits))
+                ? implode(', ', $responsibleUnits)
+                : 'N/A';
+
+            // Set the submitted by division - try multiple approaches
+            if (!empty($plan['submitted_by_division'])) {
+                // From JOIN query
+                $plan['submitted_by_name'] = $plan['submitted_by_division'];
+            } elseif (!empty($plan['authors_division']) && isset($divisionLookup[$plan['authors_division']])) {
+                // Manual lookup using pre-loaded array
+                $plan['submitted_by_name'] = $divisionLookup[$plan['authors_division']];
+            } else {
+                $plan['submitted_by_name'] = 'N/A';
+            }
+        }
+        unset($plan);
+
         return view('Focal/PlanPreparation', $data);
     }
 
@@ -41,25 +70,23 @@ class GadPlanController extends Controller
 
     public function save($id = null)
     {
-        // auth
-        if (! $this->session->get('isLoggedIn') || $this->session->get('role_id') != 1) {
+        if (!$this->session->get('isLoggedIn') || $this->session->get('role_id') != 1) {
             return $this->response
-                        ->setStatusCode(403)
-                        ->setJSON(['success'=>false,'message'=>'Unauthorized access.']);
+                ->setStatusCode(403)
+                ->setJSON(['success' => false, 'message' => 'Unauthorized access.']);
         }
 
-        $post      = $this->request->getPost();
-        $isDraft   = (isset($post['is_draft']) && $post['is_draft']==='1');
-        $planId    = $post['planId'] ?? $id;
+        $post = $this->request->getPost();
+        $isDraft = isset($post['is_draft']) && $post['is_draft'] === '1';
+        $planId = $post['planId'] ?? $id;
 
-        // validation rules
         $rules = $isDraft ? [] : [
             'issue_mandate'    => 'required|min_length[10]',
             'cause'            => 'required|min_length[10]',
             'gad_objective.*'  => 'permit_empty|min_length[10]',
             'activity'         => 'required|min_length[10]',
-            'indicator_text' => 'required',
-            'target_text'    => 'required',
+            'indicator_text'   => 'required',
+            'target_text'      => 'required',
             'startDate'        => 'required|valid_date',
             'endDate'          => 'required|valid_date',
             'responsibleUnits' => 'required',
@@ -68,194 +95,220 @@ class GadPlanController extends Controller
             'hgdgScore'        => 'required|numeric|greater_than_equal_to[0]|less_than_equal_to[100]',
             'fileAttachments.*'=> 'permit_empty|uploaded[fileAttachments]|max_size[fileAttachments,10240]|ext_in[fileAttachments,pdf,doc,docx,jpg,png]',
         ];
-        
-        $rawIndicators = $this->request->getPost('indicators') ?? [];
-        if (! is_array($rawIndicators)) {
-            $rawIndicators = [$rawIndicators];
-        }
-        $rawTargets = $this->request->getPost('targets') ?? [];
-        if (! is_array($rawTargets)) {
-            $rawTargets = [$rawTargets];
-        }
 
-        if (! $isDraft && ! $this->validate($rules)) {
+        if (!$isDraft && !$this->validate($rules)) {
             return $this->response
-                        ->setStatusCode(400)
-                        ->setJSON([
-                            'success'=>false,
-                            'message'=>'Validation failed',
-                            'errors'=> $this->validator->getErrors()
-                        ]);
+                ->setStatusCode(400)
+                ->setJSON([
+                    'success' => false,
+                    'message' => 'Validation failed',
+                    'errors'  => $this->validator->getErrors()
+                ]);
         }
 
-        // parse objectives
         $objectives = $this->request->getPost('gad_objective') ?? [];
-        if (! is_array($objectives)) {
+        if (!is_array($objectives)) {
             $objectives = [$objectives];
         }
-        $objectives = array_filter($objectives, fn($v)=> is_string($v) && strlen(trim($v))>=10);
+        $objectives = array_filter($objectives, fn($v) => is_string($v) && strlen(trim($v)) >= 10);
 
-        if (! $isDraft && empty($objectives)) {
+        if (!$isDraft && empty($objectives)) {
             return $this->response
-                        ->setStatusCode(400)
-                        ->setJSON([
-                            'success'=>false,
-                            'message'=>'Validation failed',
-                            'errors'=>['gad_objective'=>'At least one valid GAD objective is required.']
-                        ]);
+                ->setStatusCode(400)
+                ->setJSON([
+                    'success' => false,
+                    'message' => 'Validation failed',
+                    'errors'  => ['gad_objective' => 'At least one valid GAD objective is required.']
+                ]);
         }
 
-        // date check
-        if (! $isDraft) {
+        if (!$isDraft) {
             $start = strtotime($post['startDate']);
-            $end   = strtotime($post['endDate']);
+            $end = strtotime($post['endDate']);
             if ($end <= $start) {
                 return $this->response
-                            ->setStatusCode(400)
-                            ->setJSON([
-                                'success'=>false,
-                                'message'=>'Validation failed',
-                                'errors'=>['endDate'=>'End date must be after start date.']
-                            ]);
+                    ->setStatusCode(400)
+                    ->setJSON([
+                        'success' => false,
+                        'message' => 'Validation failed',
+                        'errors'  => ['endDate' => 'End date must be after start date.']
+                    ]);
             }
         }
 
-        // parse MFO/PAP
-        $mfoPapData = json_decode($post['mfoPapData'] ?? '[]', true);
-        if (json_last_error() !== JSON_ERROR_NONE) {
-            $mfoPapData = [];
-        }
-
-        // responsible units
         $units = $this->request->getPost('responsibleUnits') ?? [];
-        if (! is_array($units)) {
+        if (!is_array($units)) {
             $units = [$units];
         }
+        $units = array_filter($units);
 
-        // handle file uploads
-        $attachments = [];
-        foreach ($this->request->getFiles()['fileAttachments'] ?? [] as $file) {
-            if ($file->isValid() && ! $file->hasMoved()) {
-                $name = $file->getRandomName();
-                $file->move(WRITEPATH.'uploads', $name);
-                $attachments[] = 'Uploads/'.$name;
+        $authors_division = $this->session->get('div_id');
+
+        // If div_id is not in session, try to get it from the user's data
+        if (!$authors_division) {
+            $db = \Config\Database::connect();
+            $user = $db->table('employees')
+                       ->where('emp_id', $this->session->get('user_id'))
+                       ->get()
+                       ->getRowArray();
+            if ($user) {
+                $authors_division = $user['div_id'];
+                // Update session with the div_id for future use
+                $this->session->set('div_id', $authors_division);
             }
         }
 
-        // payload
+        $attachments = [];
+        foreach ($this->request->getFiles()['fileAttachments'] ?? [] as $file) {
+            if ($file->isValid() && !$file->hasMoved()) {
+                $name = $file->getRandomName();
+                $file->move(WRITEPATH . 'uploads', $name);
+                $attachments[] = 'Uploads/' . $name;
+            }
+        }
+
+        $mfoPapData = $post['mfoPapData'] ?? json_encode([]);
+
         $saveData = [
-            'plan_id'          => $planId,                // needed by Model->save()
-            'issue_mandate'    => $post['issue_mandate'],
-            'cause'            => $post['cause'],
-            'gad_objective'    => json_encode($objectives),
-            'activity'         => $post['activity'],
-              'indicator_text' => $post['indicator_text'],
-              'target_text'    => $post['target_text'],
-            'startDate'        => $post['startDate'],
-            'endDate'          => $post['endDate'],
-            'authors_division' => json_encode($units),
-            'status'           => $isDraft ? 'Draft' : $post['status'],
-            'budget'           => $post['budgetAmount'],
-            'hgdg_score'       => $post['hgdgScore'],
-            'file_attachments' => json_encode($attachments),
-            'mfoPapData'       => json_encode($mfoPapData),
-            'is_draft'         => $isDraft ? 1 : 0,
+            'plan_id'             => $planId,
+            'issue_mandate'       => $post['issue_mandate'],
+            'cause'               => $post['cause'],
+            'gad_objective'       => json_encode($objectives),
+            'activity'            => $post['activity'],
+            'indicator_text'      => $post['indicator_text'],
+            'target_text'         => $post['target_text'],
+            'startDate'           => $post['startDate'],
+            'endDate'             => $post['endDate'],
+            'responsible_units'   => json_encode($units),
+            'authors_division'    => $authors_division,
+            'status'              => $isDraft ? 'Draft' : $post['status'],
+            'budget'              => $post['budgetAmount'],
+            'hgdg_score'          => $post['hgdgScore'],
+            'file_attachments'    => json_encode($attachments),
+            'is_draft'            => $isDraft ? 1 : 0,
+            'mfoPapData'          => $mfoPapData,
         ];
 
-        // skip built-in model validation since we've done ours
         $this->model->skipValidation(true);
-
-        // save() will INSERT or UPDATE based on presence of plan_id
-        $this->model->save($saveData);
+        $result = $this->model->save($saveData);
         $insertId = $this->model->getInsertID() ?: $planId;
 
+        if ($result) {
+            // Log audit trail for GAD Plan activity
+            $auditModel = new AuditTrailModel();
+            $action = $planId ? 'UPDATE' : 'CREATE';
+            $planTitle = $post['activity'] ?? 'GAD Plan';
+
+            // Get old data for updates
+            $oldData = null;
+            if ($planId) {
+                $oldData = $this->model->find($planId);
+            }
+
+            $auditModel->logActivity([
+                'user_id' => $this->session->get('user_id'),
+                'action' => $action,
+                'table_name' => 'plan',
+                'record_id' => $insertId,
+                'employee_name' => $planTitle,
+                'employee_email' => $this->session->get('email'),
+                'details' => ($isDraft ? 'GAD Plan saved as draft: ' : 'GAD Plan ' . strtolower($action) . 'd: ') . $planTitle,
+                'old_data' => $oldData,
+                'new_data' => $saveData
+            ]);
+        }
+
         return $this->response
-                    ->setJSON([
-                        'success'         => true,
-                        'message'         => $isDraft
-                                               ? 'GAD Plan saved as draft'
-                                               : 'GAD Plan saved successfully',
-                        'planId'          => $insertId,
-                        'fileAttachments' => $attachments,
-                    ]);
+            ->setJSON([
+                'success'         => true,
+                'message'         => $isDraft ? 'GAD Plan saved as draft' : 'GAD Plan saved successfully',
+                'planId'          => $insertId,
+                'fileAttachments' => $attachments,
+            ]);
     }
 
     public function getGadPlan($id)
-{
-    if (! $this->session->get('isLoggedIn') || $this->session->get('role_id') != 1) {
+    {
+        if (! $this->session->get('isLoggedIn') || $this->session->get('role_id') != 1) {
+            return $this->response
+                        ->setStatusCode(403)
+                        ->setJSON(['success'=>false,'message'=>'Unauthorized access.']);
+        }
+
+        $db = \Config\Database::connect();
+        $builder = $db->table('plan')
+                      ->select('plan.*, COALESCE(SUM(b.amount),0) AS total_budget')
+                      ->join('budget b', 'b.plan_id = plan.plan_id', 'left')
+                      ->where('plan.plan_id', $id)
+                      ->groupBy('plan.plan_id');
+        $plan = $builder->get()->getRowArray();
+
+        if (! $plan) {
+            return $this->response
+                        ->setStatusCode(404)
+                        ->setJSON(['success'=>false,'message'=>'GAD Plan not found']);
+        }
+
+        $plan['gad_objective']    = json_decode($plan['gad_objective'], true)    ?: [];
+        $plan['file_attachments'] = json_decode($plan['file_attachments'], true) ?: [];
+        $plan['mfoPapData']       = json_decode($plan['mfoPapData'], true)       ?: [];
+        $plan['indicators'] = json_decode($plan['indicator_text'], true) ?: [];
+        $plan['targets']    = json_decode($plan['target_text'],    true) ?: [];
+
         return $this->response
-                    ->setStatusCode(403)
-                    ->setJSON(['success'=>false,'message'=>'Unauthorized access.']);
+                    ->setJSON(['success'=>true,'plan'=>$plan]);
     }
-
-    $db = \Config\Database::connect();
-    $builder = $db->table('plan')
-                  ->select('plan.*, COALESCE(SUM(b.amount),0) AS total_budget')
-                  ->join('budget b', 'b.plan_id = plan.plan_id', 'left')
-                  ->where('plan.plan_id', $id)
-                  ->groupBy('plan.plan_id');
-    $plan = $builder->get()->getRowArray();
-
-    if (! $plan) {
-        return $this->response
-                    ->setStatusCode(404)
-                    ->setJSON(['success'=>false,'message'=>'GAD Plan not found']);
-    }
-
-    // decode JSON fields
-    $plan['gad_objective']    = json_decode($plan['gad_objective'], true)    ?: [];
-    $plan['authors_division'] = json_decode($plan['authors_division'], true) ?: [];
-    $plan['file_attachments'] = json_decode($plan['file_attachments'], true) ?: [];
-    $plan['mfoPapData']       = json_decode($plan['mfoPapData'], true)       ?: [];
-
-    // leave indicators/targets as strings
-    $plan['indicators'] = json_decode($plan['indicator_text'], true) ?: [];
-    $plan['targets']    = json_decode($plan['target_text'],    true) ?: [];
-
-
-    return $this->response
-                ->setJSON(['success'=>true,'plan'=>$plan]);
-}
-
 
     public function deleteGadPlan($id)
-{
-    // authorization
-    if (! $this->session->get('isLoggedIn') || $this->session->get('role_id') != 1) {
-        return $this->response
-                    ->setStatusCode(403)
-                    ->setJSON(['success' => false, 'message' => 'Unauthorized access.']);
-    }
-
-    // ensure plan exists
-    $plan = $this->model->find($id);
-    if (! $plan) {
-        return $this->response
-                    ->setStatusCode(404)
-                    ->setJSON(['success' => false, 'message' => 'GAD Plan not found']);
-    }
-
-    // 1) delete all budgets for this plan
-    $budgetModel = new BudgetModel();
-    $budgetModel->where('plan_id', $id)->delete();
-
-    // 2) delete any uploaded attachments
-    foreach (json_decode($plan['file_attachments'], true) ?: [] as $file) {
-        $path = WRITEPATH . $file;
-        if (is_file($path)) {
-            unlink($path);
+    {
+        if (! $this->session->get('isLoggedIn') || $this->session->get('role_id') != 1) {
+            return $this->response
+                        ->setStatusCode(403)
+                        ->setJSON(['success' => false, 'message' => 'Unauthorized access.']);
         }
+
+        $plan = $this->model->find($id);
+        if (! $plan) {
+            return $this->response
+                        ->setStatusCode(404)
+                        ->setJSON(['success' => false, 'message' => 'GAD Plan not found']);
+        }
+
+        $budgetModel = new BudgetModel();
+        $budgetModel->where('plan_id', $id)->delete();
+
+        foreach (json_decode($plan['file_attachments'], true) ?: [] as $file) {
+            $path = WRITEPATH . $file;
+            if (is_file($path)) {
+                unlink($path);
+            }
+        }
+
+        $result = $this->model->delete($id);
+
+        if ($result) {
+            // Log audit trail for GAD Plan deletion
+            $auditModel = new AuditTrailModel();
+            $planTitle = $plan['activity'] ?? 'GAD Plan';
+
+            $auditModel->logActivity([
+                'user_id' => $this->session->get('user_id'),
+                'action' => 'DELETE',
+                'table_name' => 'plan',
+                'record_id' => $id,
+                'employee_name' => $planTitle,
+                'employee_email' => $this->session->get('email'),
+                'details' => 'GAD Plan deleted: ' . $planTitle,
+                'old_data' => $plan
+            ]);
+        }
+
+        return $this->response
+                    ->setJSON([
+                      'success' => true,
+                      'message' => 'GAD Plan and its budget items deleted successfully'
+                    ]);
     }
-
-    // 3) delete the plan itself
-    $this->model->delete($id);
-
-    return $this->response
-                ->setJSON([
-                  'success' => true,
-                  'message' => 'GAD Plan and its budget items deleted successfully'
-                ]);
-}
 
     public function saveMandate()
     {
@@ -301,6 +354,12 @@ class GadPlanController extends Controller
             ]);
         }
     }
+
+
+
+
+
+
 
     public function getMandates()
     {

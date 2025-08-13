@@ -13,14 +13,28 @@ class GadMandateController extends Controller
     public function __construct()
     {
         $this->mandateModel = new \App\Models\GadMandateModel();
-        $this->validation = \Config\Services::validation();
-        $this->session = \Config\Services::session();
+        $this->validation   = \Config\Services::validation();
+        $this->session      = \Config\Services::session();
     }
-    
+
+    public function index()
+    {
+        $role = (int) $this->session->get('role_id');
+        if (!$this->session->get('isLoggedIn') || !in_array($role, [1, 3], true)) {
+            return redirect()->to('/login')->with('error', 'Unauthorized access.');
+        }
+
+        $year = $this->request->getGet('year');
+        $data['mandates'] = $this->mandateModel->getMandates($year);
+
+        // NOTE: use the correct view filename you mentioned earlier
+        return view('Secretariat/GadMandateManagement', $data);
+    }
 
     public function getMandates()
     {
-        if (!$this->session->get('isLoggedIn') || $this->session->get('role_id') != 1) {
+        $role = (int) $this->session->get('role_id');
+        if (!$this->session->get('isLoggedIn') || !in_array($role, [1, 3], true)) {
             return $this->response->setJSON([
                 'success' => false,
                 'message' => 'Unauthorized access.'
@@ -42,10 +56,49 @@ class GadMandateController extends Controller
             ])->setStatusCode(500);
         }
     }
+    public function getMandate($id)
+{
+    $role = (int) $this->session->get('role_id');
+    if (!$this->session->get('isLoggedIn') || !in_array($role, [1, 3], true)) {
+        return $this->response->setJSON([
+            'success' => false,
+            'message' => 'Unauthorized access.'
+        ])->setStatusCode(403);
+    }
+
+    if (!$id || !is_numeric($id)) {
+        return $this->response->setJSON([
+            'success' => false,
+            'message' => 'Invalid mandate ID'
+        ])->setStatusCode(400);
+    }
+
+    try {
+        $mandate = $this->mandateModel->find($id);
+        if ($mandate) {
+            return $this->response->setJSON([
+                'success' => true,
+                'mandate' => $mandate
+            ]);
+        } else {
+            return $this->response->setJSON([
+                'success' => false,
+                'message' => 'Mandate not found'
+            ])->setStatusCode(404);
+        }
+    } catch (\Exception $e) {
+        log_message('error', 'Error in GadMandateController/getMandate: ' . $e->getMessage());
+        return $this->response->setJSON([
+            'success' => false,
+            'message' => 'An unexpected error occurred: ' . $e->getMessage()
+        ])->setStatusCode(500);
+    }
+}
 
     public function save()
     {
-        if (!$this->session->get('isLoggedIn') || $this->session->get('role_id') != 1) {
+        $role = (int) $this->session->get('role_id');
+        if (!$this->session->get('isLoggedIn') || !in_array($role, [1, 3], true)) {
             return $this->response->setJSON([
                 'success' => false,
                 'message' => 'Unauthorized access.'
@@ -62,8 +115,8 @@ class GadMandateController extends Controller
 
         try {
             $data = [
-                'id' => $this->request->getPost('id'),
-                'year' => $this->request->getPost('year'),
+                'id'          => $this->request->getPost('id'),
+                'year'        => $this->request->getPost('year'),
                 'description' => $this->request->getPost('description')
             ];
 
@@ -87,7 +140,7 @@ class GadMandateController extends Controller
                 return $this->response->setJSON([
                     'success' => true,
                     'message' => 'GAD Mandate saved successfully',
-                    'id' => $this->mandateModel->getInsertID()
+                    'id'      => $this->mandateModel->getInsertID()
                 ]);
             }
             throw new \Exception('Failed to save GAD Mandate');
@@ -102,7 +155,8 @@ class GadMandateController extends Controller
 
     public function delete($id)
     {
-        if (!$this->session->get('isLoggedIn') || $this->session->get('role_id') != 1) {
+        $role = (int) $this->session->get('role_id');
+        if (!$this->session->get('isLoggedIn') || !in_array($role, [1, 3], true)) {
             return $this->response->setJSON([
                 'success' => false,
                 'message' => 'Unauthorized access.'

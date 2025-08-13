@@ -4,7 +4,7 @@ namespace App\Models;
 
 use CodeIgniter\Model;
 
-class FocalModel extends Model
+class MemberModel extends Model
 {
     protected $table = 'plan';
     protected $primaryKey = 'plan_id';

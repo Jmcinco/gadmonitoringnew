@@ -165,7 +165,7 @@
                     </a>
                 </li>
                 <li class="nav-item">
-                    <a class="nav-link" href="#">
+                    <a class="nav-link" href="<?= base_url('/AuditTrail') ?>">
                         <i class="bi bi-clock-history me-2"></i>Audit Trail
                     </a>
                 </li>
@@ -191,6 +191,33 @@
                             <i class="bi bi-person-plus"></i> Add New Employee
                         </button>
                     </div>
+
+                    <!-- Flash Messages -->
+                    <?php if (session()->getFlashdata('success')): ?>
+                        <div class="alert alert-success alert-dismissible fade show" role="alert">
+                            <i class="bi bi-check-circle"></i> <?= session()->getFlashdata('success') ?>
+                            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                        </div>
+                    <?php endif; ?>
+
+                    <?php if (session()->getFlashdata('error')): ?>
+                        <div class="alert alert-danger alert-dismissible fade show" role="alert">
+                            <i class="bi bi-exclamation-triangle"></i> <?= session()->getFlashdata('error') ?>
+                            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                        </div>
+                    <?php endif; ?>
+
+                    <?php if (session()->getFlashdata('errors')): ?>
+                        <div class="alert alert-danger alert-dismissible fade show" role="alert">
+                            <i class="bi bi-exclamation-triangle"></i> <strong>Validation Errors:</strong>
+                            <ul class="mb-0 mt-2">
+                                <?php foreach (session()->getFlashdata('errors') as $error): ?>
+                                    <li><?= esc($error) ?></li>
+                                <?php endforeach; ?>
+                            </ul>
+                            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                        </div>
+                    <?php endif; ?>
 
                     <div class="card">
                         <div class="card-header">
@@ -261,11 +288,19 @@
             <div class="modal-body bg-light">
                 <div class="mb-3">
                     <label class="form-label fw-semibold"><i class="bi bi-person"></i> First Name</label>
-                    <input type="text" class="form-control rounded-pill" name="first_name" required>
+                    <input type="text" class="form-control rounded-pill <?= session()->getFlashdata('errors') && isset(session()->getFlashdata('errors')['first_name']) ? 'is-invalid' : '' ?>"
+                           name="first_name" value="<?= old('first_name') ?>" required>
+                    <?php if (session()->getFlashdata('errors') && isset(session()->getFlashdata('errors')['first_name'])): ?>
+                        <div class="invalid-feedback"><?= session()->getFlashdata('errors')['first_name'] ?></div>
+                    <?php endif; ?>
                 </div>
                 <div class="mb-3">
                     <label class="form-label fw-semibold"><i class="bi bi-person"></i> Last Name</label>
-                    <input type="text" class="form-control rounded-pill" name="last_name" required>
+                    <input type="text" class="form-control rounded-pill <?= session()->getFlashdata('errors') && isset(session()->getFlashdata('errors')['last_name']) ? 'is-invalid' : '' ?>"
+                           name="last_name" value="<?= old('last_name') ?>" required>
+                    <?php if (session()->getFlashdata('errors') && isset(session()->getFlashdata('errors')['last_name'])): ?>
+                        <div class="invalid-feedback"><?= session()->getFlashdata('errors')['last_name'] ?></div>
+                    <?php endif; ?>
                 </div>
                 <div class="mb-3">
                     <label class="form-label fw-semibold"><i class="bi bi-diagram-3"></i> Division</label>
@@ -298,18 +333,27 @@
                     <label class="form-label fw-semibold"><i class="bi bi-gender-ambiguous"></i> Gender</label>
                     <select name="gender" class="form-select rounded-pill" required>
                         <option value="">-- Select Gender --</option>
-                        <option value="Male">Male</option>
-                        <option value="Female">Female</option>
-                        <option value="Other">Other</option>
+                        <option value="male">Male</option>
+                        <option value="female">Female</option>
+                        <option value="other">Other</option>
                     </select>
                 </div>
                 <div class="mb-3">
                     <label class="form-label fw-semibold"><i class="bi bi-envelope"></i> Email</label>
-                    <input type="email" class="form-control rounded-pill" name="email" required>
+                    <input type="email" class="form-control rounded-pill <?= session()->getFlashdata('errors') && isset(session()->getFlashdata('errors')['email']) ? 'is-invalid' : '' ?>"
+                           name="email" value="<?= old('email') ?>" required>
+                    <?php if (session()->getFlashdata('errors') && isset(session()->getFlashdata('errors')['email'])): ?>
+                        <div class="invalid-feedback"><?= session()->getFlashdata('errors')['email'] ?></div>
+                    <?php endif; ?>
                 </div>
                 <div class="mb-3">
                     <label class="form-label fw-semibold"><i class="bi bi-key"></i> Password</label>
-                    <input type="password" class="form-control rounded-pill" name="password" required>
+                    <input type="password" class="form-control rounded-pill <?= session()->getFlashdata('errors') && isset(session()->getFlashdata('errors')['password']) ? 'is-invalid' : '' ?>"
+                           name="password" required>
+                    <?php if (session()->getFlashdata('errors') && isset(session()->getFlashdata('errors')['password'])): ?>
+                        <div class="invalid-feedback"><?= session()->getFlashdata('errors')['password'] ?></div>
+                    <?php endif; ?>
+                    <div class="form-text">Password must be at least 8 characters long.</div>
                 </div>
             </div>
             <div class="modal-footer bg-light border-0">
@@ -374,9 +418,9 @@
                             <label class="form-label fw-semibold"><i class="bi bi-gender-ambiguous"></i> Gender</label>
                             <select name="gender" class="form-select rounded-pill" required>
                                 <option value="">-- Select Gender --</option>
-                                <option value="Male" <?= $emp['gender']=='Male'?'selected':'' ?>>Male</option>
-                                <option value="Female" <?= $emp['gender']=='Female'?'selected':'' ?>>Female</option>
-                                <option value="Other" <?= $emp['gender']=='Other'?'selected':'' ?>>Other</option>
+                                <option value="male" <?= strtolower($emp['gender'])=='male'?'selected':'' ?>>Male</option>
+                                <option value="female" <?= strtolower($emp['gender'])=='female'?'selected':'' ?>>Female</option>
+                                <option value="other" <?= strtolower($emp['gender'])=='other'?'selected':'' ?>>Other</option>
                             </select>
                         </div>
                         <div class="mb-3">
