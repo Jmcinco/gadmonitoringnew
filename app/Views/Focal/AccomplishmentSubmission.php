@@ -213,9 +213,61 @@
                         <h1 class="h3 mb-0">
                             <i class="bi bi-cloud-upload text-primary"></i> GAD Accomplishment Submission
                         </h1>
-                        <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#addAccomplishmentModal">
+                        <button type="button" class="btn btn-primary" onclick="openAccomplishmentModal()">
                             <i class="bi bi-plus-circle"></i> Submit New Accomplishment
                         </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Statistics Cards -->
+            <div class="row mb-4">
+                <div class="col-md-2">
+                    <div class="card bg-primary text-white">
+                        <div class="card-body text-center">
+                            <h4 class="card-title"><?php echo esc($statistics['Total'] ?? 0); ?></h4>
+                            <p class="card-text">Total</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-2">
+                    <div class="card bg-secondary text-white">
+                        <div class="card-body text-center">
+                            <h4 class="card-title"><?php echo esc($statistics['Draft'] ?? 0); ?></h4>
+                            <p class="card-text">Draft</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-2">
+                    <div class="card bg-info text-white">
+                        <div class="card-body text-center">
+                            <h4 class="card-title"><?php echo esc($statistics['Submitted'] ?? 0); ?></h4>
+                            <p class="card-text">Submitted</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-2">
+                    <div class="card bg-warning text-white">
+                        <div class="card-body text-center">
+                            <h4 class="card-title"><?php echo esc($statistics['Under Review'] ?? 0); ?></h4>
+                            <p class="card-text">Under Review</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-2">
+                    <div class="card bg-success text-white">
+                        <div class="card-body text-center">
+                            <h4 class="card-title"><?php echo esc($statistics['Accepted'] ?? 0); ?></h4>
+                            <p class="card-text">Accepted</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-2">
+                    <div class="card bg-danger text-white">
+                        <div class="card-body text-center">
+                            <h4 class="card-title"><?php echo esc($statistics['Returned'] ?? 0); ?></h4>
+                            <p class="card-text">Returned</p>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -262,73 +314,72 @@
                                         </tr>
                                     </thead>
                                     <tbody id="accomplishmentTableBody">
-                                        <tr data-status="submitted">
-                                            <td>GAD001</td>
-                                            <td>Human Resources Division</td>
-                                            <td>Completed Gender Sensitivity Training for 120 employees (exceeded target of 100)</td>
-                                            <td>2024-03-15</td>
-                                            <td><a href="#" class="btn btn-sm btn-outline-info"><i class="bi bi-file-earmark-pdf"></i> View</a></td>
-                                            <td><span class="badge bg-primary">Submitted</span></td>
-                                            <td>
-                                                <button class="btn btn-sm btn-outline-primary" onclick="editAccomplishment('GAD001')">
-                                                    <i class="bi bi-pencil"></i>
-                                                </button>
-                                                <button class="btn btn-sm btn-outline-danger" onclick="deleteAccomplishment('GAD001')">
-                                                    <i class="bi bi-trash"></i>
-                                                </button>
-                                            </td>
-                                        </tr>
-                                        <tr data-status="under review">
-                                            <td>GAD002</td>
-                                            <td>Training Division</td>
-                                            <td>Conducted Women's Leadership Workshop with 45 participants</td>
-                                            <td>2024-04-10</td>
-                                            <td><a href="#" class="btn btn-sm btn-outline-info"><i class="bi bi-file-earmark-pdf"></i> View</a></td>
-                                            <td><span class="badge bg-warning">Under Review</span></td>
-                                            <td>
-                                                <button class="btn btn-sm btn-outline-primary" onclick="editAccomplishment('GAD002')">
-                                                    <i class="bi bi-pencil"></i>
-                                                </button>
-                                                <button class="btn btn-sm btn-outline-danger" onclick="deleteAccomplishment('GAD002')">
-                                                    <i class="bi bi-trash"></i>
-                                                </button>
-                                            </td>
-                                        </tr>
-                                        <tr data-status="accepted">
-                                            <td>GAD003</td>
-                                            <td>Legal Affairs Division</td>
-                                            <td>Launched Anti-Sexual Harassment Campaign agency-wide</td>
-                                            <td>2024-05-20</td>
-                                            <td><a href="#" class="btn btn-sm btn-outline-info"><i class="bi bi-file-earmark-pdf"></i> View</a></td>
-                                            <td><span class="badge bg-success">Accepted</span></td>
-                                            <td>
-                                                <button class="btn btn-sm btn-outline-primary" onclick="editAccomplishment('GAD003')">
-                                                    <i class="bi bi-pencil"></i>
-                                                </button>
-                                                <button class="btn btn-sm btn-outline-info" onclick="viewAccomplishment('GAD003')">
-                                                    <i class="bi bi-eye"></i>
-                                                </button>
-                                            </td>
-                                        </tr>
-                                        <tr data-status="draft">
-                                            <td>GAD004</td>
-                                            <td>Policy Development Unit</td>
-                                            <td>Drafted Work-Life Balance Policy Framework</td>
-                                            <td>2024-06-15</td>
-                                            <td><span class="text-muted">No file</span></td>
-                                            <td><span class="badge bg-secondary">Draft</span></td>
-                                            <td>
-                                                <button class="btn btn-sm btn-outline-primary" onclick="editAccomplishment('GAD004')">
-                                                    <i class="bi bi-pencil"></i>
-                                                </button>
-                                                <button class="btn btn-sm btn-outline-success" onclick="submitAccomplishment('GAD004')">
-                                                    <i class="bi bi-send"></i>
-                                                </button>
-                                                <button class="btn btn-sm btn-outline-danger" onclick="deleteAccomplishment('GAD004')">
-                                                    <i class="bi bi-trash"></i>
-                                                </button>
-                                            </td>
-                                        </tr>
+                                        <?php if (isset($accomplishments) && !empty($accomplishments)): ?>
+                                            <?php foreach ($accomplishments as $accomplishment): ?>
+                                                <tr data-status="<?php echo strtolower($accomplishment['status']); ?>">
+                                                    <td><?php echo esc('GAD-' . str_pad($accomplishment['gad_plan_id'], 3, '0', STR_PAD_LEFT)); ?></td>
+                                                    <td><?php echo esc($accomplishment['division'] ?? 'Unknown Division'); ?></td>
+                                                    <td class="text-content"><?php echo esc(substr($accomplishment['accomplishment'], 0, 100)) . (strlen($accomplishment['accomplishment']) > 100 ? '...' : ''); ?></td>
+                                                    <td><?php echo esc(date('Y-m-d', strtotime($accomplishment['date_accomplished']))); ?></td>
+                                                    <td>
+                                                        <?php if ($accomplishment['file']): ?>
+                                                            <a href="<?php echo base_url($accomplishment['file']); ?>" target="_blank" class="btn btn-sm btn-outline-info">
+                                                                <i class="bi bi-file-earmark-pdf"></i> View
+                                                            </a>
+                                                        <?php else: ?>
+                                                            <span class="text-muted">No file</span>
+                                                        <?php endif; ?>
+                                                    </td>
+                                                    <td>
+                                                        <?php
+                                                        $status = strtolower($accomplishment['status']);
+                                                        $badgeClass = match($status) {
+                                                            'draft' => 'bg-secondary',
+                                                            'submitted' => 'bg-primary',
+                                                            'under review' => 'bg-warning text-dark',
+                                                            'accepted' => 'bg-success',
+                                                            'returned' => 'bg-danger',
+                                                            default => 'bg-info'
+                                                        };
+                                                        ?>
+                                                        <span class="badge <?php echo $badgeClass; ?>"><?php echo ucfirst($accomplishment['status']); ?></span>
+                                                    </td>
+                                                    <td>
+                                                        <div class="btn-group" role="group">
+                                                            <?php if (in_array($accomplishment['status'], ['Draft', 'Returned'])): ?>
+                                                                <button class="btn btn-sm btn-outline-primary" onclick="editAccomplishment(<?php echo $accomplishment['output_id']; ?>)" title="Edit">
+                                                                    <i class="bi bi-pencil"></i>
+                                                                </button>
+                                                                <button class="btn btn-sm btn-outline-success" onclick="submitAccomplishment(<?php echo $accomplishment['output_id']; ?>)" title="Submit">
+                                                                    <i class="bi bi-send"></i>
+                                                                </button>
+                                                                <button class="btn btn-sm btn-outline-danger" onclick="deleteAccomplishment(<?php echo $accomplishment['output_id']; ?>)" title="Delete">
+                                                                    <i class="bi bi-trash"></i>
+                                                                </button>
+                                                            <?php elseif ($accomplishment['status'] === 'Submitted'): ?>
+                                                                <button class="btn btn-sm btn-outline-primary" onclick="editAccomplishment(<?php echo $accomplishment['output_id']; ?>)" title="Edit">
+                                                                    <i class="bi bi-pencil"></i>
+                                                                </button>
+                                                                <button class="btn btn-sm btn-outline-info" onclick="viewAccomplishment(<?php echo $accomplishment['output_id']; ?>)" title="View">
+                                                                    <i class="bi bi-eye"></i>
+                                                                </button>
+                                                            <?php else: ?>
+                                                                <button class="btn btn-sm btn-outline-info" onclick="viewAccomplishment(<?php echo $accomplishment['output_id']; ?>)" title="View">
+                                                                    <i class="bi bi-eye"></i>
+                                                                </button>
+                                                            <?php endif; ?>
+                                                        </div>
+                                                    </td>
+                                                </tr>
+                                            <?php endforeach; ?>
+                                        <?php else: ?>
+                                            <tr>
+                                                <td colspan="7" class="text-center text-muted py-4">
+                                                    <i class="bi bi-inbox fs-1 d-block mb-2"></i>
+                                                    No accomplishments found. Click "Submit New Accomplishment" to get started.
+                                                </td>
+                                            </tr>
+                                        <?php endif; ?>
                                     </tbody>
                                 </table>
                             </div>
@@ -357,11 +408,13 @@
                                     <label for="gadActivityId" class="form-label">GAD Activity ID *</label>
                                     <select class="form-select" id="gadActivityId" name="gadActivityId" required>
                                         <option value="">Select GAD Activity</option>
-                                        <option value="GAD001">GAD001 - Gender Sensitivity Training</option>
-                                        <option value="GAD002">GAD002 - Women's Leadership Workshop</option>
-                                        <option value="GAD003">GAD003 - Anti-Sexual Harassment Campaign</option>
-                                        <option value="GAD004">GAD004 - Work-Life Balance Policy</option>
-                                        <option value="GAD005">GAD005 - Gender Mainstreaming Training</option>
+                                        <?php if (isset($availablePlans) && !empty($availablePlans)): ?>
+                                            <?php foreach ($availablePlans as $plan): ?>
+                                                <option value="<?php echo esc($plan['plan_id']); ?>">
+                                                    GAD-<?php echo str_pad($plan['plan_id'], 3, '0', STR_PAD_LEFT); ?> - <?php echo esc($plan['activity']); ?>
+                                                </option>
+                                            <?php endforeach; ?>
+                                        <?php endif; ?>
                                     </select>
                                     <div class="invalid-feedback">
                                         Please select a GAD Activity.
@@ -373,13 +426,11 @@
                                     <label for="office" class="form-label">Office *</label>
                                     <select class="form-select" id="office" name="office" required>
                                         <option value="">Select Office</option>
-                                        <option value="Human Resources Division">Human Resources Division</option>
-                                        <option value="Training Division">Training Division</option>
-                                        <option value="Legal Affairs Division">Legal Affairs Division</option>
-                                        <option value="Policy Development Unit">Policy Development Unit</option>
-                                        <option value="Information Technology Division">Information Technology Division</option>
-                                        <option value="Finance Division">Finance Division</option>
-                                        <option value="Administration Division">Administration Division</option>
+                                        <?php if (isset($divisions) && !empty($divisions)): ?>
+                                            <?php foreach ($divisions as $division): ?>
+                                                <option value="<?php echo esc($division['division']); ?>"><?php echo esc($division['division']); ?></option>
+                                            <?php endforeach; ?>
+                                        <?php endif; ?>
                                     </select>
                                     <div class="invalid-feedback">
                                         Please select an office.
@@ -551,8 +602,56 @@
 
     <!-- Bootstrap JavaScript -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
-    
+    <!-- SweetAlert2 -->
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
     <script>
+        let currentEditingId = null;
+
+        // Open accomplishment modal
+        function openAccomplishmentModal(outputId = null) {
+            currentEditingId = outputId;
+            const modal = new bootstrap.Modal(document.getElementById('addAccomplishmentModal'));
+            const form = document.getElementById('addAccomplishmentForm');
+
+            if (outputId) {
+                // Edit mode
+                document.getElementById('addAccomplishmentModalLabel').innerHTML = '<i class="bi bi-pencil"></i> Edit Accomplishment';
+                loadAccomplishmentData(outputId);
+            } else {
+                // Add mode
+                document.getElementById('addAccomplishmentModalLabel').innerHTML = '<i class="bi bi-plus-circle"></i> Submit New Accomplishment';
+                form.reset();
+                form.classList.remove('was-validated');
+            }
+
+            modal.show();
+        }
+
+        // Load accomplishment data for editing
+        function loadAccomplishmentData(outputId) {
+            fetch(`<?= base_url("Focal/getAccomplishment/") ?>${outputId}`, {
+                headers: {
+                    'X-Requested-With': 'XMLHttpRequest'
+                }
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    const accomplishment = data.accomplishment;
+                    document.getElementById('gadActivityId').value = accomplishment.plan_id;
+                    document.getElementById('actualAccomplishment').value = accomplishment.accomplishment;
+                    document.getElementById('dateAccomplished').value = accomplishment.date_accomplished;
+                    document.getElementById('additionalRemarks').value = accomplishment.remarks || '';
+                } else {
+                    Swal.fire('Error', 'Could not load accomplishment data: ' + data.message, 'error');
+                }
+            })
+            .catch(error => {
+                Swal.fire('Error', 'Could not load accomplishment data: ' + error.message, 'error');
+            });
+        }
+
         // Bootstrap form validation
         (function() {
             'use strict';
@@ -560,13 +659,13 @@
                 var forms = document.getElementsByClassName('needs-validation');
                 Array.prototype.filter.call(forms, function(form) {
                     form.addEventListener('submit', function(event) {
-                        if (form.checkValidity() === false) {
-                            event.preventDefault();
-                            event.stopPropagation();
-                        } else {
-                            event.preventDefault();
+                        event.preventDefault();
+                        event.stopPropagation();
+
+                        if (form.checkValidity() === true) {
                             handleFormSubmit(form);
                         }
+
                         form.classList.add('was-validated');
                     }, false);
                 });
@@ -575,22 +674,40 @@
 
         // Handle form submission
         function handleFormSubmit(form) {
-            const formData = new FormData(form);
-            const formId = form.id;
-            
-            if (formId === 'addAccomplishmentForm') {
-                addAccomplishmentToTable(formData);
-            } else if (formId === 'editAccomplishmentForm') {
-                updateAccomplishmentInTable(formData);
+            if (form.id === 'addAccomplishmentForm') {
+                const formData = new FormData(form);
+
+                // Add output ID if editing
+                if (currentEditingId) {
+                    formData.append('outputId', currentEditingId);
+                }
+
+                const url = currentEditingId ?
+                    '<?= base_url("Focal/updateAccomplishment") ?>' :
+                    '<?= base_url("Focal/saveAccomplishment") ?>';
+
+                fetch(url, {
+                    method: 'POST',
+                    headers: {
+                        'X-Requested-With': 'XMLHttpRequest',
+                        '<?php echo csrf_header(); ?>': '<?php echo csrf_token(); ?>'
+                    },
+                    body: formData
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        Swal.fire('Success', data.message, 'success').then(() => {
+                            location.reload();
+                        });
+                    } else {
+                        Swal.fire('Error', data.message, 'error');
+                    }
+                })
+                .catch(error => {
+                    Swal.fire('Error', 'An error occurred: ' + error.message, 'error');
+                });
             }
-            
-            // Close modal
-            const modal = form.closest('.modal');
-            bootstrap.Modal.getInstance(modal).hide();
-            
-            // Reset form
-            form.reset();
-            form.classList.remove('was-validated');
         }
 
         // Add accomplishment to table
@@ -693,37 +810,128 @@
         }
 
         // Delete accomplishment
-        function deleteAccomplishment(gadActivityId) {
-            if (confirm('Are you sure you want to delete this accomplishment?')) {
-                const rows = document.querySelectorAll('#accomplishmentTableBody tr');
-                rows.forEach(row => {
-                    if (row.cells[0].textContent === gadActivityId) {
-                        row.remove();
-                    }
-                });
-            }
+        function deleteAccomplishment(outputId) {
+            Swal.fire({
+                title: 'Are you sure?',
+                text: "You won't be able to revert this!",
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonColor: '#d33',
+                cancelButtonColor: '#3085d6',
+                confirmButtonText: 'Yes, delete it!'
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    fetch(`<?= base_url("Focal/deleteAccomplishment/") ?>${outputId}`, {
+                        method: 'DELETE',
+                        headers: {
+                            'X-Requested-With': 'XMLHttpRequest',
+                            '<?php echo csrf_header(); ?>': '<?php echo csrf_token(); ?>'
+                        }
+                    })
+                    .then(response => response.json())
+                    .then(data => {
+                        if (data.success) {
+                            Swal.fire('Deleted!', data.message, 'success').then(() => {
+                                location.reload();
+                            });
+                        } else {
+                            Swal.fire('Error', data.message, 'error');
+                        }
+                    })
+                    .catch(error => {
+                        Swal.fire('Error', 'An error occurred: ' + error.message, 'error');
+                    });
+                }
+            });
         }
 
         // Submit accomplishment
-        function submitAccomplishment(gadActivityId) {
-            const rows = document.querySelectorAll('#accomplishmentTableBody tr');
-            rows.forEach(row => {
-                if (row.cells[0].textContent === gadActivityId) {
-                    row.cells[5].innerHTML = '<span class="badge bg-primary">Submitted</span>';
-                    row.dataset.status = 'submitted';
+        function submitAccomplishment(outputId) {
+            Swal.fire({
+                title: 'Submit Accomplishment',
+                text: "Are you sure you want to submit this accomplishment?",
+                icon: 'question',
+                showCancelButton: true,
+                confirmButtonColor: '#3085d6',
+                cancelButtonColor: '#6c757d',
+                confirmButtonText: 'Yes, submit it!'
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    const formData = new FormData();
+                    formData.append('outputId', outputId);
+                    formData.append('status', 'Submitted');
+
+                    fetch('<?= base_url("Focal/updateAccomplishmentStatus") ?>', {
+                        method: 'POST',
+                        headers: {
+                            'X-Requested-With': 'XMLHttpRequest',
+                            '<?php echo csrf_header(); ?>': '<?php echo csrf_token(); ?>'
+                        },
+                        body: formData
+                    })
+                    .then(response => response.json())
+                    .then(data => {
+                        if (data.success) {
+                            Swal.fire('Submitted!', data.message, 'success').then(() => {
+                                location.reload();
+                            });
+                        } else {
+                            Swal.fire('Error', data.message, 'error');
+                        }
+                    })
+                    .catch(error => {
+                        Swal.fire('Error', 'An error occurred: ' + error.message, 'error');
+                    });
                 }
             });
         }
 
         // Save as draft
         function saveAsDraft() {
-            document.getElementById('status').value = 'Draft';
-            document.getElementById('addAccomplishmentForm').dispatchEvent(new Event('submit'));
+            const form = document.getElementById('addAccomplishmentForm');
+            const statusInput = document.createElement('input');
+            statusInput.type = 'hidden';
+            statusInput.name = 'status';
+            statusInput.value = 'Draft';
+            form.appendChild(statusInput);
+
+            handleFormSubmit(form);
         }
 
         // View accomplishment
-        function viewAccomplishment(gadActivityId) {
-            alert(`View accomplishment details for ${gadActivityId}`);
+        function viewAccomplishment(outputId) {
+            fetch(`<?= base_url("Focal/getAccomplishment/") ?>${outputId}`, {
+                headers: {
+                    'X-Requested-With': 'XMLHttpRequest'
+                }
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    const accomplishment = data.accomplishment;
+                    Swal.fire({
+                        title: 'Accomplishment Details',
+                        html: `
+                            <div class="text-start">
+                                <p><strong>GAD Activity:</strong> GAD-${String(accomplishment.gad_plan_id).padStart(3, '0')} - ${accomplishment.plan_activity}</p>
+                                <p><strong>Division:</strong> ${accomplishment.division}</p>
+                                <p><strong>Date Accomplished:</strong> ${accomplishment.date_accomplished}</p>
+                                <p><strong>Status:</strong> ${accomplishment.status}</p>
+                                <p><strong>Accomplishment:</strong></p>
+                                <p class="text-muted">${accomplishment.accomplishment}</p>
+                                ${accomplishment.remarks ? `<p><strong>Remarks:</strong> ${accomplishment.remarks}</p>` : ''}
+                            </div>
+                        `,
+                        width: '600px',
+                        confirmButtonText: 'Close'
+                    });
+                } else {
+                    Swal.fire('Error', 'Could not load accomplishment details: ' + data.message, 'error');
+                }
+            })
+            .catch(error => {
+                Swal.fire('Error', 'Could not load accomplishment details: ' + error.message, 'error');
+            });
         }
 
         // Filter by status

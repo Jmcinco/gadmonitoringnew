@@ -185,7 +185,6 @@ class GadPlanController extends Controller
             'budget'              => $post['budgetAmount'],
             'hgdg_score'          => $post['hgdgScore'],
             'file_attachments'    => json_encode($attachments),
-            'is_draft'            => $isDraft ? 1 : 0,
             'mfoPapData'          => $mfoPapData,
         ];
 

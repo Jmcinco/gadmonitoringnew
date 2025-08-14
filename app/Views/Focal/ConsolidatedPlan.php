@@ -132,8 +132,8 @@
                 <div class="text-white d-flex align-items-center">
                     <i class="bi bi-person-circle fs-4 me-2"></i>
                     <div>
-                        <div class="fw-bold">Admin User</div>
-                        <small class="text-light">Administrator</small>
+                        <div class="fw-bold"><?php echo esc(($first_name ?? 'Focal') . ' ' . ($last_name ?? 'User')); ?></div>
+                        <small class="text-light">Focal Person</small>
                     </div>
                 </div>
             </div>
@@ -157,7 +157,7 @@
                 </li>
                 <li class="nav-item">
                     <a class="nav-link" href="<?= base_url('Focal/PlanReview') ?>">
-                        <i class="bi bi-check-circle me-2"></i>Review & Approval of GAD Plan
+                        <i class="bi bi-eye me-2"></i>View Submitted GAD Plans
                     </a>
                 </li>
                 <li class="nav-item">
@@ -226,7 +226,7 @@
                         <div class="card-body">
                             <div class="d-flex justify-content-between">
                                 <div>
-                                    <h4 class="card-title">12</h4>
+                                    <h4 class="card-title" id="approvedPlansCount"><?php echo esc($approvedPlansCount ?? 0); ?></h4>
                                     <p class="card-text">Approved Plans</p>
                                 </div>
                                 <div class="align-self-center">
@@ -241,7 +241,7 @@
                         <div class="card-body">
                             <div class="d-flex justify-content-between">
                                 <div>
-                                    <h4 class="card-title">₱2,500,000</h4>
+                                    <h4 class="card-title" id="totalBudget">₱<?php echo number_format($totalBudget ?? 0, 2); ?></h4>
                                     <p class="card-text">Total Budget</p>
                                 </div>
                                 <div class="align-self-center">
@@ -256,7 +256,7 @@
                         <div class="card-body">
                             <div class="d-flex justify-content-between">
                                 <div>
-                                    <h4 class="card-title">8</h4>
+                                    <h4 class="card-title" id="divisionsCount"><?php echo esc($divisionsCount ?? 0); ?></h4>
                                     <p class="card-text">Divisions</p>
                                 </div>
                                 <div class="align-self-center">
@@ -271,7 +271,7 @@
                         <div class="card-body">
                             <div class="d-flex justify-content-between">
                                 <div>
-                                    <h4 class="card-title">2024</h4>
+                                    <h4 class="card-title"><?php echo date('Y'); ?></h4>
                                     <p class="card-text">Target Year</p>
                                 </div>
                                 <div class="align-self-center">
@@ -293,11 +293,32 @@
                                     <h5 class="mb-0">Approved GAD Plans and Budget</h5>
                                 </div>
                                 <div class="col-auto">
-                                    <div class="form-check">
-                                        <input class="form-check-input" type="checkbox" value="" id="selectAll" onchange="toggleSelectAll()">
-                                        <label class="form-check-label" for="selectAll">
-                                            Select All
-                                        </label>
+                                    <div class="d-flex gap-2 align-items-center">
+                                        <!-- Search -->
+                                        <div class="input-group" style="width: 250px;">
+                                            <input type="text" class="form-control form-control-sm" id="searchInput" placeholder="Search plans...">
+                                            <button class="btn btn-outline-secondary btn-sm" type="button" onclick="searchPlans()">
+                                                <i class="bi bi-search"></i>
+                                            </button>
+                                        </div>
+
+                                        <!-- Filter by Division -->
+                                        <select class="form-select form-select-sm" id="divisionFilter" onchange="filterByDivision()" style="width: 200px;">
+                                            <option value="">All Divisions</option>
+                                            <?php if (isset($divisions) && !empty($divisions)): ?>
+                                                <?php foreach ($divisions as $division): ?>
+                                                    <option value="<?php echo esc($division['division']); ?>"><?php echo esc($division['division']); ?></option>
+                                                <?php endforeach; ?>
+                                            <?php endif; ?>
+                                        </select>
+
+                                        <!-- Select All -->
+                                        <div class="form-check">
+                                            <input class="form-check-input" type="checkbox" value="" id="selectAll" onchange="toggleSelectAll()">
+                                            <label class="form-check-label" for="selectAll">
+                                                Select All
+                                            </label>
+                                        </div>
                                     </div>
                                 </div>
                             </div>
@@ -321,91 +342,66 @@
                                         </tr>
                                     </thead>
                                     <tbody id="consolidatedTableBody">
-                                        <tr>
-                                            <td>
-                                                <input type="checkbox" class="form-check-input plan-checkbox" value="GAD001">
-                                            </td>
-                                            <td>GAD001</td>
-                                            <td>Gender Sensitivity Training Program</td>
-                                            <td>Human Resources</td>
-                                            <td>₱250,000</td>
-                                            <td>100 employees</td>
-                                            <td>Jan - Mar 2024</td>
-                                            <td><span class="badge bg-success">Approved</span></td>
-                                            <td>
-                                                <button class="btn btn-sm btn-outline-primary" onclick="viewPlanDetails('GAD001')">
-                                                    <i class="bi bi-eye"></i>
-                                                </button>
-                                                <button class="btn btn-sm btn-outline-warning" onclick="editPlan('GAD001')">
-                                                    <i class="bi bi-pencil"></i>
-                                                </button>
-                                            </td>
-                                        </tr>
-                                        <tr>
-                                            <td>
-                                                <input type="checkbox" class="form-check-input plan-checkbox" value="GAD002">
-                                            </td>
-                                            <td>GAD002</td>
-                                            <td>Women's Leadership Development Workshop</td>
-                                            <td>Training Division</td>
-                                            <td>₱180,000</td>
-                                            <td>50 women employees</td>
-                                            <td>Feb - Apr 2024</td>
-                                            <td><span class="badge bg-success">Approved</span></td>
-                                            <td>
-                                                <button class="btn btn-sm btn-outline-primary" onclick="viewPlanDetails('GAD002')">
-                                                    <i class="bi bi-eye"></i>
-                                                </button>
-                                                <button class="btn btn-sm btn-outline-warning" onclick="editPlan('GAD002')">
-                                                    <i class="bi bi-pencil"></i>
-                                                </button>
-                                            </td>
-                                        </tr>
-                                        <tr>
-                                            <td>
-                                                <input type="checkbox" class="form-check-input plan-checkbox" value="GAD003">
-                                            </td>
-                                            <td>GAD003</td>
-                                            <td>Anti-Sexual Harassment Campaign</td>
-                                            <td>Legal Affairs</td>
-                                            <td>₱150,000</td>
-                                            <td>All employees</td>
-                                            <td>Mar - May 2024</td>
-                                            <td><span class="badge bg-success">Approved</span></td>
-                                            <td>
-                                                <button class="btn btn-sm btn-outline-primary" onclick="viewPlanDetails('GAD003')">
-                                                    <i class="bi bi-eye"></i>
-                                                </button>
-                                                <button class="btn btn-sm btn-outline-warning" onclick="editPlan('GAD003')">
-                                                    <i class="bi bi-pencil"></i>
-                                                </button>
-                                            </td>
-                                        </tr>
-                                        <tr>
-                                            <td>
-                                                <input type="checkbox" class="form-check-input plan-checkbox" value="GAD004">
-                                            </td>
-                                            <td>GAD004</td>
-                                            <td>Work-Life Balance Policy Development</td>
-                                            <td>Policy Development</td>
-                                            <td>₱120,000</td>
-                                            <td>Policy framework</td>
-                                            <td>Apr - Jun 2024</td>
-                                            <td><span class="badge bg-success">Approved</span></td>
-                                            <td>
-                                                <button class="btn btn-sm btn-outline-primary" onclick="viewPlanDetails('GAD004')">
-                                                    <i class="bi bi-eye"></i>
-                                                </button>
-                                                <button class="btn btn-sm btn-outline-warning" onclick="editPlan('GAD004')">
-                                                    <i class="bi bi-pencil"></i>
-                                                </button>
-                                            </td>
-                                        </tr>
+                                        <?php if (isset($approvedPlans) && !empty($approvedPlans)): ?>
+                                            <?php foreach ($approvedPlans as $plan): ?>
+                                                <tr data-division="<?php echo esc($plan['division'] ?? ''); ?>">
+                                                    <td>
+                                                        <input class="form-check-input plan-checkbox" type="checkbox" value="<?php echo esc($plan['plan_id']); ?>" name="selectedPlans[]">
+                                                    </td>
+                                                    <td><?php echo esc('GAD-' . str_pad($plan['plan_id'], 3, '0', STR_PAD_LEFT)); ?></td>
+                                                    <td class="text-content"><?php echo esc($plan['activity'] ?? 'N/A'); ?></td>
+                                                    <td><?php echo esc($plan['division'] ?? 'Unknown Division'); ?></td>
+                                                    <td>₱<?php echo number_format($plan['budget'] ?? 0, 2); ?></td>
+                                                    <td>
+                                                        <?php
+                                                        $responsibleUnits = json_decode($plan['responsible_units'] ?? '[]', true);
+                                                        if (is_array($responsibleUnits) && !empty($responsibleUnits)) {
+                                                            echo esc(implode(', ', $responsibleUnits));
+                                                        } else {
+                                                            echo 'N/A';
+                                                        }
+                                                        ?>
+                                                    </td>
+                                                    <td>
+                                                        <?php
+                                                        $startDate = $plan['startDate'] ? date('M Y', strtotime($plan['startDate'])) : 'N/A';
+                                                        $endDate = $plan['endDate'] ? date('M Y', strtotime($plan['endDate'])) : 'N/A';
+                                                        echo esc($startDate . ' - ' . $endDate);
+                                                        ?>
+                                                    </td>
+                                                    <td>
+                                                        <?php
+                                                        $status = strtolower($plan['status'] ?? 'pending');
+                                                        $badgeClass = match($status) {
+                                                            'approved' => 'bg-success',
+                                                            'pending' => 'bg-warning text-dark',
+                                                            'returned' => 'bg-danger',
+                                                            'draft' => 'bg-secondary',
+                                                            default => 'bg-info'
+                                                        };
+                                                        ?>
+                                                        <span class="badge <?php echo $badgeClass; ?>"><?php echo ucfirst($plan['status'] ?? 'Pending'); ?></span>
+                                                    </td>
+                                                    <td>
+                                                        <button class="btn btn-sm btn-outline-primary" onclick="viewPlanDetails(<?php echo esc($plan['plan_id']); ?>)">
+                                                            <i class="bi bi-eye"></i>
+                                                        </button>
+                                                    </td>
+                                                </tr>
+                                            <?php endforeach; ?>
+                                        <?php else: ?>
+                                            <tr>
+                                                <td colspan="9" class="text-center text-muted py-4">
+                                                    <i class="bi bi-inbox fs-1 d-block mb-2"></i>
+                                                    No approved GAD plans found.
+                                                </td>
+                                            </tr>
+                                        <?php endif; ?>
                                     </tbody>
                                     <tfoot class="table-light">
                                         <tr>
                                             <th colspan="4" class="text-end">Total Approved Budget:</th>
-                                            <th>₱700,000</th>
+                                            <th id="totalBudgetFooter">₱<?php echo number_format($totalBudget ?? 0, 2); ?></th>
                                             <th colspan="4"></th>
                                         </tr>
                                     </tfoot>
@@ -530,6 +526,8 @@
 
     <!-- Bootstrap JavaScript -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <!-- SweetAlert2 -->
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     
     <script>
         // Set current date
@@ -567,34 +565,85 @@
         function toggleSelectAll() {
             const selectAll = document.getElementById('selectAll');
             const checkboxes = document.querySelectorAll('.plan-checkbox');
-            
+
             checkboxes.forEach(checkbox => {
                 checkbox.checked = selectAll.checked;
             });
         }
 
-        // View plan details
-        function viewPlanDetails(planId) {
-            const modal = new bootstrap.Modal(document.getElementById('planDetailsModal'));
-            const rows = document.querySelectorAll('#consolidatedTableBody tr');
-            
-            rows.forEach(row => {
-                if (row.cells[1].textContent === planId) {
-                    document.getElementById('detailPlanId').textContent = row.cells[1].textContent;
-                    document.getElementById('detailPlanTitle').textContent = row.cells[2].textContent;
-                    document.getElementById('detailDivision').textContent = row.cells[3].textContent;
-                    document.getElementById('detailBudget').textContent = row.cells[4].textContent;
-                    document.getElementById('detailBeneficiaries').textContent = row.cells[5].textContent;
-                    document.getElementById('detailTimeline').textContent = row.cells[6].textContent;
+        // Search functionality
+        function searchPlans() {
+            const searchTerm = document.getElementById('searchInput').value.toLowerCase();
+            const tableRows = document.querySelectorAll('#consolidatedTableBody tr[data-division]');
+
+            tableRows.forEach(row => {
+                const text = row.textContent.toLowerCase();
+                if (text.includes(searchTerm)) {
+                    row.style.display = '';
+                } else {
+                    row.style.display = 'none';
                 }
             });
-            
-            modal.show();
         }
 
-        // Edit plan
-        function editPlan(planId) {
-            alert(`Edit functionality for plan ${planId} would be implemented here.`);
+        // Filter by division
+        function filterByDivision() {
+            const selectedDivision = document.getElementById('divisionFilter').value;
+            const tableRows = document.querySelectorAll('#consolidatedTableBody tr[data-division]');
+
+            tableRows.forEach(row => {
+                const rowDivision = row.getAttribute('data-division');
+                if (selectedDivision === '' || rowDivision === selectedDivision) {
+                    row.style.display = '';
+                } else {
+                    row.style.display = 'none';
+                }
+            });
+        }
+
+        // Real-time search
+        document.addEventListener('DOMContentLoaded', function() {
+            const searchInput = document.getElementById('searchInput');
+            if (searchInput) {
+                searchInput.addEventListener('input', searchPlans);
+            }
+        });
+
+        // View plan details with AJAX
+        function viewPlanDetails(planId) {
+            fetch(`<?= base_url("GadPlanController/getGadPlan/") ?>${planId}`, {
+                headers: {
+                    'X-Requested-With': 'XMLHttpRequest'
+                }
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    showPlanDetailsModal(data.plan);
+                } else {
+                    Swal.fire('Error', 'Could not load plan details: ' + data.message, 'error');
+                }
+            })
+            .catch(error => {
+                Swal.fire('Error', 'Could not load plan details: ' + error.message, 'error');
+            });
+        }
+
+        function showPlanDetailsModal(plan) {
+            document.getElementById('detailPlanId').textContent = `GAD-${String(plan.plan_id).padStart(3, '0')}`;
+            document.getElementById('detailPlanTitle').textContent = plan.activity || 'N/A';
+            document.getElementById('detailDivision').textContent = plan.division || 'Unknown Division';
+            document.getElementById('detailBudget').textContent = `₱${parseFloat(plan.budget || 0).toLocaleString()}`;
+
+            const responsibleUnits = JSON.parse(plan.responsible_units || '[]');
+            document.getElementById('detailBeneficiaries').textContent = Array.isArray(responsibleUnits) ? responsibleUnits.join(', ') : 'N/A';
+
+            const startDate = plan.startDate ? new Date(plan.startDate).toLocaleDateString() : 'N/A';
+            const endDate = plan.endDate ? new Date(plan.endDate).toLocaleDateString() : 'N/A';
+            document.getElementById('detailTimeline').textContent = `${startDate} - ${endDate}`;
+
+            const modal = new bootstrap.Modal(document.getElementById('planDetailsModal'));
+            modal.show();
         }
 
         // Print consolidated plan

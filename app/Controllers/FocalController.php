@@ -20,50 +20,10 @@ class FocalController extends Controller
             $this->session->setFlashdata('error', 'Unauthorized access.');
             return redirect()->to(base_url('/login'));
         }
-
-        // Get dashboard statistics
-        $db = \Config\Database::connect();
-        $userId = $this->session->get('user_id');
-
-        // Total GAD Plans
-        $totalPlans = $db->table('plan')->where('status !=', 'Draft')->countAllResults();
-
-        // Plans pending review (not yet reviewed by this member)
-        $pendingPlans = $db->table('plan')
-            ->where('status', 'Pending')
-            ->orWhere('status', 'Submitted')
-            ->countAllResults();
-
-        // Plans approved by this member
-        $approvedPlans = $db->table('plan')
-            ->where('approved_by', $userId)
-            ->countAllResults();
-
-        // Plans returned by this member
-        $returnedPlans = $db->table('plan')
-            ->where('returned_by', $userId)
-            ->countAllResults();
-
-        // Recent plans for review (last 10)
-        $recentPlans = $db->table('plan p')
-            ->select('p.*, d.division')
-            ->join('divisions d', 'p.authors_division = d.div_id', 'left')
-            ->where('p.status !=', 'Draft')
-            ->orderBy('p.created_at', 'DESC')
-            ->limit(10)
-            ->get()
-            ->getResultArray();
-
         $data = [
             'first_name' => $this->session->get('first_name'),
-            'last_name' => $this->session->get('last_name'),
-            'totalPlans' => $totalPlans,
-            'pendingPlans' => $pendingPlans,
-            'approvedPlans' => $approvedPlans,
-            'returnedPlans' => $returnedPlans,
-            'recentPlans' => $recentPlans
+            'last_name' => $this->session->get('last_name')
         ];
-
         return view('FocalDashboard', $data);
     }
 
@@ -337,19 +297,22 @@ public function budgetCrafting()
 
         $focalModel = new \App\Models\FocalModel();
 
-        // Get all GAD plans with division and review information
+        // Get all GAD plans with division information
         $db = \Config\Database::connect();
         $builder = $db->table('plan p');
         $builder->select('p.*, d.division,
-                         er.first_name as reviewed_by_name, er.last_name as reviewed_by_lastname,
-                         ea.first_name as approved_by_name, ea.last_name as approved_by_lastname,
-                         eret.first_name as returned_by_name, eret.last_name as returned_by_lastname');
+                         er.first_name as reviewed_by_name, er.last_name as reviewed_by_lastname, dr.division as reviewed_by_division,
+                         ea.first_name as approved_by_name, ea.last_name as approved_by_lastname, da.division as approved_by_division,
+                         eret.first_name as returned_by_name, eret.last_name as returned_by_lastname, dret.division as returned_by_division');
         $builder->join('divisions d', 'p.authors_division = d.div_id', 'left');
         $builder->join('employees er', 'p.reviewed_by = er.emp_id', 'left');
+        $builder->join('divisions dr', 'er.div_id = dr.div_id', 'left');
         $builder->join('employees ea', 'p.approved_by = ea.emp_id', 'left');
+        $builder->join('divisions da', 'ea.div_id = da.div_id', 'left');
         $builder->join('employees eret', 'p.returned_by = eret.emp_id', 'left');
+        $builder->join('divisions dret', 'eret.div_id = dret.div_id', 'left');
         $builder->where('p.status !=', 'Draft'); // Only show non-draft plans
-        $builder->orderBy('p.plan_id', 'DESC');
+        $builder->orderBy('p.created_at', 'DESC');
 
         $gadPlans = $builder->get()->getResultArray();
 
@@ -411,8 +374,23 @@ public function budgetCrafting()
             ])->setStatusCode(403);
         }
 
-        $focalModel = new \App\Models\FocalModel();
-        $plan = $focalModel->find($planId);
+        // Get plan with reviewer division information
+        $db = \Config\Database::connect();
+        $builder = $db->table('plan p');
+        $builder->select('p.*, d.division as division_name,
+                         er.first_name as reviewed_by_name, er.last_name as reviewed_by_lastname, dr.division as reviewed_by_division,
+                         ea.first_name as approved_by_name, ea.last_name as approved_by_lastname, da.division as approved_by_division,
+                         eret.first_name as returned_by_name, eret.last_name as returned_by_lastname, dret.division as returned_by_division');
+        $builder->join('divisions d', 'p.authors_division = d.div_id', 'left');
+        $builder->join('employees er', 'p.reviewed_by = er.emp_id', 'left');
+        $builder->join('divisions dr', 'er.div_id = dr.div_id', 'left');
+        $builder->join('employees ea', 'p.approved_by = ea.emp_id', 'left');
+        $builder->join('divisions da', 'ea.div_id = da.div_id', 'left');
+        $builder->join('employees eret', 'p.returned_by = eret.emp_id', 'left');
+        $builder->join('divisions dret', 'eret.div_id = dret.div_id', 'left');
+        $builder->where('p.plan_id', $planId);
+
+        $plan = $builder->get()->getRowArray();
 
         if (!$plan) {
             return $this->response->setJSON([
@@ -420,11 +398,6 @@ public function budgetCrafting()
                 'message' => 'Plan not found.'
             ])->setStatusCode(404);
         }
-
-        // Get division name
-        $db = \Config\Database::connect();
-        $division = $db->table('divisions')->where('div_id', $plan['authors_division'])->get()->getRowArray();
-        $plan['division_name'] = $division['division'] ?? 'Unknown Division';
 
         // Decode JSON fields
         $plan['gad_objective'] = json_decode($plan['gad_objective'] ?? '[]', true);
@@ -469,31 +442,12 @@ public function budgetCrafting()
             ])->setStatusCode(404);
         }
 
-        // Prepare data based on the action being taken
         $data = [
             'status' => $status,
-            'remarks' => $remarks
+            'remarks' => $remarks,
+            'reviewed_by' => $this->session->get('user_id'),
+            'reviewed_at' => date('Y-m-d H:i:s')
         ];
-
-        // Set appropriate reviewer fields based on status
-        $currentDateTime = date('Y-m-d H:i:s');
-        $userId = $this->session->get('user_id');
-
-        switch (strtolower($status)) {
-            case 'approved':
-                $data['approved_by'] = $userId;
-                $data['approved_at'] = $currentDateTime;
-                break;
-            case 'returned':
-                $data['returned_by'] = $userId;
-                $data['returned_at'] = $currentDateTime;
-                break;
-            case 'pending':
-            case 'in review':
-                $data['reviewed_by'] = $userId;
-                $data['reviewed_at'] = $currentDateTime;
-                break;
-        }
 
         if ($focalModel->update($planId, $data)) {
             // Log audit trail for GAD Plan status update

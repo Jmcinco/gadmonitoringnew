@@ -311,16 +311,16 @@ $gadPlans = $gadPlans ?? [];
                                         </td>
                                         <td class="text-center">
                                             <?php
-                                            // Show who performed the most recent action
-                                            $reviewerName = '';
-                                            if (!empty($plan['returned_by_name'])) {
-                                                $reviewerName = $plan['returned_by_name'] . ' ' . $plan['returned_by_lastname'];
-                                            } elseif (!empty($plan['approved_by_name'])) {
-                                                $reviewerName = $plan['approved_by_name'] . ' ' . $plan['approved_by_lastname'];
-                                            } elseif (!empty($plan['reviewed_by_name'])) {
-                                                $reviewerName = $plan['reviewed_by_name'] . ' ' . $plan['reviewed_by_lastname'];
+                                            // Show the division of who performed the most recent action
+                                            $reviewerDivision = '';
+                                            if (!empty($plan['returned_by_division'])) {
+                                                $reviewerDivision = $plan['returned_by_division'];
+                                            } elseif (!empty($plan['approved_by_division'])) {
+                                                $reviewerDivision = $plan['approved_by_division'];
+                                            } elseif (!empty($plan['reviewed_by_division'])) {
+                                                $reviewerDivision = $plan['reviewed_by_division'];
                                             }
-                                            echo $reviewerName ?: '-';
+                                            echo $reviewerDivision ?: '-';
                                             ?>
                                         </td>
                                         <td class="text-truncate" style="max-width: 200px;" title="<?php echo esc($plan['remarks'] ?? ''); ?>">
@@ -622,15 +622,15 @@ $gadPlans = $gadPlans ?? [];
 
                     document.getElementById('displayReviewDate').textContent = reviewDate + reviewAction;
 
-                    // Reviewed by - show the person who performed the most recent action
+                    // Reviewed by - show the division of who performed the most recent action
                     let reviewedBy = 'Not reviewed yet';
 
-                    if (plan.returned_by_name) {
-                        reviewedBy = `${plan.returned_by_name} ${plan.returned_by_lastname} (Returned)`;
-                    } else if (plan.approved_by_name) {
-                        reviewedBy = `${plan.approved_by_name} ${plan.approved_by_lastname} (Approved)`;
-                    } else if (plan.reviewed_by_name) {
-                        reviewedBy = `${plan.reviewed_by_name} ${plan.reviewed_by_lastname} (Reviewed)`;
+                    if (plan.returned_by_division) {
+                        reviewedBy = `${plan.returned_by_division} (Returned)`;
+                    } else if (plan.approved_by_division) {
+                        reviewedBy = `${plan.approved_by_division} (Approved)`;
+                    } else if (plan.reviewed_by_division) {
+                        reviewedBy = `${plan.reviewed_by_division} (Reviewed)`;
                     }
 
                     document.getElementById('displayReviewedBy').textContent = reviewedBy;
