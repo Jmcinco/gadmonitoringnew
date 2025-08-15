@@ -317,13 +317,13 @@
                                         <?php if (isset($accomplishments) && !empty($accomplishments)): ?>
                                             <?php foreach ($accomplishments as $accomplishment): ?>
                                                 <tr data-status="<?php echo strtolower($accomplishment['status']); ?>">
-                                                    <td><?php echo esc('GAD-' . str_pad($accomplishment['gad_plan_id'], 3, '0', STR_PAD_LEFT)); ?></td>
-                                                    <td><?php echo esc($accomplishment['division'] ?? 'Unknown Division'); ?></td>
+                                                    <td><?php echo esc('GAD-' . str_pad($accomplishment['plan_id'], 3, '0', STR_PAD_LEFT)); ?></td>
+                                                    <td><?php echo esc($accomplishment['office_name'] ?? 'Unknown Division'); ?></td>
                                                     <td class="text-content"><?php echo esc(substr($accomplishment['accomplishment'], 0, 100)) . (strlen($accomplishment['accomplishment']) > 100 ? '...' : ''); ?></td>
                                                     <td><?php echo esc(date('Y-m-d', strtotime($accomplishment['date_accomplished']))); ?></td>
                                                     <td>
                                                         <?php if ($accomplishment['file']): ?>
-                                                            <a href="<?php echo base_url($accomplishment['file']); ?>" target="_blank" class="btn btn-sm btn-outline-info">
+                                                            <a href="<?php echo base_url('uploads/' . $accomplishment['file']); ?>" target="_blank" class="btn btn-sm btn-outline-info">
                                                                 <i class="bi bi-file-earmark-pdf"></i> View
                                                             </a>
                                                         <?php else: ?>
@@ -334,20 +334,24 @@
                                                         <?php
                                                         $status = strtolower($accomplishment['status']);
                                                         $badgeClass = match($status) {
-                                                            'draft' => 'bg-secondary',
-                                                            'submitted' => 'bg-primary',
-                                                            'under review' => 'bg-warning text-dark',
-                                                            'accepted' => 'bg-success',
-                                                            'returned' => 'bg-danger',
+                                                            'pending' => 'bg-secondary',
+                                                            'completed' => 'bg-success',
+                                                            'failed' => 'bg-danger',
                                                             default => 'bg-info'
                                                         };
+                                                        $statusText = match($status) {
+                                                            'pending' => 'Draft',
+                                                            'completed' => 'Completed',
+                                                            'failed' => 'Failed',
+                                                            default => ucfirst($status)
+                                                        };
                                                         ?>
-                                                        <span class="badge <?php echo $badgeClass; ?>"><?php echo ucfirst($accomplishment['status']); ?></span>
+                                                        <span class="badge <?php echo $badgeClass; ?>"><?php echo $statusText; ?></span>
                                                     </td>
                                                     <td>
                                                         <div class="btn-group" role="group">
-                                                            <?php if (in_array($accomplishment['status'], ['Draft', 'Returned'])): ?>
-                                                                <button class="btn btn-sm btn-outline-primary" onclick="editAccomplishment(<?php echo $accomplishment['output_id']; ?>)" title="Edit">
+                                                            <?php if (in_array($accomplishment['status'], ['pending'])): ?>
+                                                                <button class="btn btn-sm btn-outline-primary" onclick="openAccomplishmentModal(<?php echo $accomplishment['output_id']; ?>)" title="Edit">
                                                                     <i class="bi bi-pencil"></i>
                                                                 </button>
                                                                 <button class="btn btn-sm btn-outline-success" onclick="submitAccomplishment(<?php echo $accomplishment['output_id']; ?>)" title="Submit">
@@ -408,14 +412,20 @@
                                     <label for="gadActivityId" class="form-label">GAD Activity ID *</label>
                                     <select class="form-select" id="gadActivityId" name="gadActivityId" required>
                                         <option value="">Select GAD Activity</option>
-                                        <?php if (isset($availablePlans) && !empty($availablePlans)): ?>
-                                            <?php foreach ($availablePlans as $plan): ?>
+                                        <?php if (isset($gadPlans) && !empty($gadPlans)): ?>
+                                            <?php foreach ($gadPlans as $plan): ?>
                                                 <option value="<?php echo esc($plan['plan_id']); ?>">
-                                                    GAD-<?php echo str_pad($plan['plan_id'], 3, '0', STR_PAD_LEFT); ?> - <?php echo esc($plan['activity']); ?>
+                                                    <?php echo esc($plan['gad_activity_id']); ?> - <?php echo esc($plan['activity']); ?>
                                                 </option>
                                             <?php endforeach; ?>
+                                        <?php else: ?>
+                                            <option value="" disabled>No GAD Plans available (<?php echo isset($gadPlans) ? count($gadPlans) : 'not set'; ?> plans)</option>
                                         <?php endif; ?>
                                     </select>
+                                    <!-- Debug info -->
+                                    <?php if (ENVIRONMENT === 'development'): ?>
+                                        <small class="text-muted">Debug: <?php echo isset($gadPlans) ? count($gadPlans) . ' GAD plans loaded' : 'gadPlans variable not set'; ?></small>
+                                    <?php endif; ?>
                                     <div class="invalid-feedback">
                                         Please select a GAD Activity.
                                     </div>
@@ -513,11 +523,15 @@
                                     <label for="editGadActivityId" class="form-label">GAD Activity ID *</label>
                                     <select class="form-select" id="editGadActivityId" name="editGadActivityId" required>
                                         <option value="">Select GAD Activity</option>
-                                        <option value="GAD001">GAD001 - Gender Sensitivity Training</option>
-                                        <option value="GAD002">GAD002 - Women's Leadership Workshop</option>
-                                        <option value="GAD003">GAD003 - Anti-Sexual Harassment Campaign</option>
-                                        <option value="GAD004">GAD004 - Work-Life Balance Policy</option>
-                                        <option value="GAD005">GAD005 - Gender Mainstreaming Training</option>
+                                        <?php if (isset($gadPlans) && !empty($gadPlans)): ?>
+                                            <?php foreach ($gadPlans as $plan): ?>
+                                                <option value="<?php echo esc($plan['plan_id']); ?>">
+                                                    <?php echo esc($plan['gad_activity_id']); ?> - <?php echo esc($plan['activity']); ?>
+                                                </option>
+                                            <?php endforeach; ?>
+                                        <?php else: ?>
+                                            <option value="" disabled>No GAD Plans available</option>
+                                        <?php endif; ?>
                                     </select>
                                     <div class="invalid-feedback">
                                         Please select a GAD Activity.
@@ -529,13 +543,11 @@
                                     <label for="editOffice" class="form-label">Office *</label>
                                     <select class="form-select" id="editOffice" name="editOffice" required>
                                         <option value="">Select Office</option>
-                                        <option value="Human Resources Division">Human Resources Division</option>
-                                        <option value="Training Division">Training Division</option>
-                                        <option value="Legal Affairs Division">Legal Affairs Division</option>
-                                        <option value="Policy Development Unit">Policy Development Unit</option>
-                                        <option value="Information Technology Division">Information Technology Division</option>
-                                        <option value="Finance Division">Finance Division</option>
-                                        <option value="Administration Division">Administration Division</option>
+                                        <?php if (isset($divisions) && !empty($divisions)): ?>
+                                            <?php foreach ($divisions as $division): ?>
+                                                <option value="<?php echo esc($division['division']); ?>"><?php echo esc($division['division']); ?></option>
+                                            <?php endforeach; ?>
+                                        <?php endif; ?>
                                     </select>
                                     <div class="invalid-feedback">
                                         Please select an office.

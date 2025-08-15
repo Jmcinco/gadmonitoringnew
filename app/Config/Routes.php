@@ -76,6 +76,16 @@ $routes->get('/Focal/BudgetCrafting', 'FocalController::budgetCrafting');
 $routes->get('/Focal/ConsolidatedPlan', 'FocalController::consolidatedPlan');
 $routes->get('Focal/ReviewApproval', 'FocalController::reviewApproval');
 $routes->get('/Focal/AccomplishmentSubmission', 'FocalController::accomplishmentSubmission');
+$routes->post('/Focal/saveAccomplishment', 'FocalController::saveAccomplishment');
+$routes->post('/Focal/updateAccomplishment', 'FocalController::updateAccomplishment');
+$routes->delete('/Focal/deleteAccomplishment/(:num)', 'FocalController::deleteAccomplishment/$1');
+$routes->get('/Focal/getAccomplishment/(:num)', 'FocalController::getAccomplishment/$1');
+$routes->post('/Focal/updateAccomplishmentStatus', 'FocalController::updateAccomplishmentStatus');
+$routes->get('/Focal/getAllGadPlans', 'FocalController::getAllGadPlans');
+$routes->get('/Focal/getGadPlanById/(:num)', 'FocalController::getGadPlanById/$1');
+$routes->get('/Focal/getAvailableGadPlans', 'FocalController::getAvailableGadPlans');
+$routes->get('/Focal/testGadPlans', 'FocalController::testGadPlans');
+$routes->get('/Focal/testDatabase', 'FocalController::testDatabase');
 $routes->get('/Focal/ConsolidatedAccomplishment', 'FocalController::consolidatedAccomplishment');
 
 

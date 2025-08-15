@@ -344,7 +344,408 @@ public function budgetCrafting()
             $this->session->setFlashdata('error', 'Unauthorized access.');
             return redirect()->to(base_url('/login'));
         }
-        return view('Focal/AccomplishmentSubmission');
+
+        try {
+            $outputModel = new \App\Models\OutputModel();
+
+            $data = [
+                'accomplishments' => $outputModel->getAccomplishmentsWithDetails() ?? [],
+                'gadPlans' => $outputModel->getAvailableGadPlans() ?? [],
+                'divisions' => $outputModel->getDivisions() ?? []
+            ];
+
+            return view('Focal/AccomplishmentSubmission', $data);
+        } catch (\Exception $e) {
+            log_message('error', 'Error in accomplishmentSubmission: ' . $e->getMessage());
+
+            $data = [
+                'accomplishments' => [],
+                'gadPlans' => [],
+                'divisions' => []
+            ];
+
+            return view('Focal/AccomplishmentSubmission', $data);
+        }
+    }
+
+    public function saveAccomplishment()
+    {
+        if (!$this->session->get('isLoggedIn') || $this->session->get('role_id') != 1) {
+            return $this->response->setJSON(['success' => false, 'message' => 'Unauthorized access']);
+        }
+
+        $outputModel = new \App\Models\OutputModel();
+
+        // Debug: Log all POST data
+        $allPostData = $this->request->getPost();
+        log_message('info', 'saveAccomplishment POST data: ' . json_encode($allPostData));
+
+        // Map form status to database status
+        $formStatus = $this->request->getPost('status');
+        $dbStatus = 'pending'; // default
+        if ($formStatus) {
+            switch (strtolower($formStatus)) {
+                case 'draft':
+                    $dbStatus = 'pending';
+                    break;
+                case 'submitted':
+                    $dbStatus = 'completed';
+                    break;
+                default:
+                    $dbStatus = strtolower($formStatus);
+            }
+        }
+
+        $data = [
+            'plan_id' => $this->request->getPost('gadActivityId'),
+            'accomplishment' => $this->request->getPost('actualAccomplishment'),
+            'status' => $dbStatus,
+            'date_accomplished' => $this->request->getPost('dateAccomplished') ?: date('Y-m-d'),
+            'remarks' => $this->request->getPost('additionalRemarks'),
+            'timestamp' => date('Y-m-d H:i:s')
+        ];
+
+        // Debug: Log the data array
+        log_message('info', 'saveAccomplishment data array: ' . json_encode($data));
+
+        // Handle file upload
+        $file = $this->request->getFile('fileUpload');
+        if ($file && $file->isValid() && !$file->hasMoved()) {
+            $newName = $file->getRandomName();
+            $file->move(WRITEPATH . 'uploads', $newName);
+            $data['file'] = $newName;
+            log_message('info', 'File uploaded: ' . $newName);
+        }
+
+        // Validate required fields
+        if (empty($data['plan_id'])) {
+            log_message('error', 'plan_id is empty: ' . var_export($data['plan_id'], true));
+            return $this->response->setJSON(['success' => false, 'message' => 'GAD Activity ID is required']);
+        }
+
+        if (empty($data['accomplishment'])) {
+            log_message('error', 'accomplishment is empty: ' . var_export($data['accomplishment'], true));
+            return $this->response->setJSON(['success' => false, 'message' => 'Actual Accomplishment is required']);
+        }
+
+        try {
+            log_message('info', 'Attempting to save accomplishment...');
+            $result = $outputModel->save($data);
+
+            if ($result) {
+                log_message('info', 'Accomplishment saved successfully with ID: ' . $outputModel->getInsertID());
+                return $this->response->setJSON(['success' => true, 'message' => 'Accomplishment saved successfully']);
+            } else {
+                $errors = $outputModel->errors();
+                log_message('error', 'Failed to save accomplishment. Validation errors: ' . json_encode($errors));
+                return $this->response->setJSON([
+                    'success' => false,
+                    'message' => 'Failed to save accomplishment',
+                    'validation' => $errors,
+                    'debug_data' => $data
+                ]);
+            }
+        } catch (\Exception $e) {
+            log_message('error', 'Exception in saveAccomplishment: ' . $e->getMessage());
+            log_message('error', 'Stack trace: ' . $e->getTraceAsString());
+            return $this->response->setJSON(['success' => false, 'message' => 'Database error: ' . $e->getMessage()]);
+        }
+    }
+
+    public function updateAccomplishment()
+    {
+        if (!$this->session->get('isLoggedIn') || $this->session->get('role_id') != 1) {
+            return $this->response->setJSON(['success' => false, 'message' => 'Unauthorized access']);
+        }
+
+        $outputModel = new \App\Models\OutputModel();
+        $outputId = $this->request->getPost('outputId');
+
+        // Map form status to database status
+        $formStatus = $this->request->getPost('editStatus');
+        $dbStatus = 'pending';
+        if ($formStatus) {
+            switch (strtolower($formStatus)) {
+                case 'draft':
+                    $dbStatus = 'pending';
+                    break;
+                case 'submitted':
+                    $dbStatus = 'completed';
+                    break;
+                default:
+                    $dbStatus = strtolower($formStatus);
+            }
+        }
+
+        $data = [
+            'plan_id' => $this->request->getPost('editGadActivityId'),
+            'accomplishment' => $this->request->getPost('editActualAccomplishment'),
+            'status' => $dbStatus,
+            'date_accomplished' => $this->request->getPost('editDateAccomplished') ?: date('Y-m-d'),
+            'remarks' => $this->request->getPost('editAdditionalRemarks')
+        ];
+
+        // Handle file upload
+        $file = $this->request->getFile('editFileUpload');
+        if ($file && $file->isValid() && !$file->hasMoved()) {
+            $newName = $file->getRandomName();
+            $file->move(WRITEPATH . 'uploads', $newName);
+            $data['file'] = $newName;
+        }
+
+        try {
+            if ($outputModel->update($outputId, $data)) {
+                return $this->response->setJSON(['success' => true, 'message' => 'Accomplishment updated successfully']);
+            } else {
+                return $this->response->setJSON(['success' => false, 'message' => 'Failed to update accomplishment', 'validation' => $outputModel->errors()]);
+            }
+        } catch (\Exception $e) {
+            log_message('error', 'Exception in updateAccomplishment: ' . $e->getMessage());
+            return $this->response->setJSON(['success' => false, 'message' => 'Database error: ' . $e->getMessage()]);
+        }
+    }
+
+    public function deleteAccomplishment($outputId)
+    {
+        if (!$this->session->get('isLoggedIn') || $this->session->get('role_id') != 1) {
+            return $this->response->setJSON(['success' => false, 'message' => 'Unauthorized access']);
+        }
+
+        try {
+            $outputModel = new \App\Models\OutputModel();
+
+            if ($outputModel->delete($outputId)) {
+                return $this->response->setJSON(['success' => true, 'message' => 'Accomplishment deleted successfully']);
+            } else {
+                return $this->response->setJSON(['success' => false, 'message' => 'Failed to delete accomplishment']);
+            }
+        } catch (\Exception $e) {
+            log_message('error', 'Exception in deleteAccomplishment: ' . $e->getMessage());
+            return $this->response->setJSON(['success' => false, 'message' => 'Database error: ' . $e->getMessage()]);
+        }
+    }
+
+    public function getAccomplishment($outputId)
+    {
+        if (!$this->session->get('isLoggedIn') || $this->session->get('role_id') != 1) {
+            return $this->response->setJSON(['success' => false, 'message' => 'Unauthorized access']);
+        }
+
+        try {
+            $outputModel = new \App\Models\OutputModel();
+            $accomplishment = $outputModel->getAccomplishmentWithDetails($outputId);
+
+            if ($accomplishment) {
+                return $this->response->setJSON(['success' => true, 'accomplishment' => $accomplishment]);
+            } else {
+                return $this->response->setJSON(['success' => false, 'message' => 'Accomplishment not found']);
+            }
+        } catch (\Exception $e) {
+            log_message('error', 'Exception in getAccomplishment: ' . $e->getMessage());
+            return $this->response->setJSON(['success' => false, 'message' => 'Database error: ' . $e->getMessage()]);
+        }
+    }
+
+    public function updateAccomplishmentStatus()
+    {
+        if (!$this->session->get('isLoggedIn') || $this->session->get('role_id') != 1) {
+            return $this->response->setJSON(['success' => false, 'message' => 'Unauthorized access']);
+        }
+
+        $uniqueId = $this->request->getPost('outputId');
+        $status = $this->request->getPost('status');
+
+        // Map form status to database status
+        $dbStatus = 'pending';
+        if ($status) {
+            switch (strtolower($status)) {
+                case 'draft':
+                    $dbStatus = 'pending';
+                    break;
+                case 'submitted':
+                    $dbStatus = 'completed';
+                    break;
+                default:
+                    $dbStatus = strtolower($status);
+            }
+        }
+
+        try {
+            $db = \Config\Database::connect();
+            $builder = $db->table('output');
+
+            // Parse the unique_id to get plan_id and timestamp
+            $uniqueIdParts = explode('_', $uniqueId);
+            $planId = $uniqueIdParts[0];
+            $timestamp = isset($uniqueIdParts[1]) ? $uniqueIdParts[1] : null;
+
+            if ($timestamp) {
+                $builder->where('plan_id', $planId)->where('timestamp', $timestamp);
+            } else {
+                $builder->where('plan_id', $planId);
+            }
+
+            if ($builder->update(['status' => $dbStatus])) {
+                return $this->response->setJSON(['success' => true, 'message' => 'Status updated successfully']);
+            } else {
+                return $this->response->setJSON(['success' => false, 'message' => 'Failed to update status']);
+            }
+        } catch (\Exception $e) {
+            log_message('error', 'Exception in updateAccomplishmentStatus: ' . $e->getMessage());
+            return $this->response->setJSON(['success' => false, 'message' => 'Database error: ' . $e->getMessage()]);
+        }
+    }
+
+    public function getAllGadPlans()
+    {
+        if (!$this->session->get('isLoggedIn') || $this->session->get('role_id') != 1) {
+            return $this->response->setJSON(['success' => false, 'message' => 'Unauthorized access']);
+        }
+
+        try {
+            $outputModel = new \App\Models\OutputModel();
+            $gadPlans = $outputModel->getAllGadPlans();
+
+            return $this->response->setJSON([
+                'success' => true,
+                'data' => $gadPlans,
+                'total' => count($gadPlans)
+            ]);
+        } catch (\Exception $e) {
+            log_message('error', 'Exception in getAllGadPlans: ' . $e->getMessage());
+            return $this->response->setJSON([
+                'success' => false,
+                'message' => 'Error retrieving GAD plans: ' . $e->getMessage()
+            ]);
+        }
+    }
+
+    public function getGadPlanById($planId)
+    {
+        if (!$this->session->get('isLoggedIn') || $this->session->get('role_id') != 1) {
+            return $this->response->setJSON(['success' => false, 'message' => 'Unauthorized access']);
+        }
+
+        try {
+            $outputModel = new \App\Models\OutputModel();
+            $gadPlan = $outputModel->getGadPlanById($planId);
+
+            if ($gadPlan) {
+                return $this->response->setJSON([
+                    'success' => true,
+                    'data' => $gadPlan
+                ]);
+            } else {
+                return $this->response->setJSON([
+                    'success' => false,
+                    'message' => 'GAD Plan not found'
+                ]);
+            }
+        } catch (\Exception $e) {
+            log_message('error', 'Exception in getGadPlanById: ' . $e->getMessage());
+            return $this->response->setJSON([
+                'success' => false,
+                'message' => 'Error retrieving GAD plan: ' . $e->getMessage()
+            ]);
+        }
+    }
+
+    public function getAvailableGadPlans()
+    {
+        if (!$this->session->get('isLoggedIn') || $this->session->get('role_id') != 1) {
+            return $this->response->setJSON(['success' => false, 'message' => 'Unauthorized access']);
+        }
+
+        try {
+            $outputModel = new \App\Models\OutputModel();
+            $gadPlans = $outputModel->getAvailableGadPlans();
+
+            return $this->response->setJSON([
+                'success' => true,
+                'data' => $gadPlans,
+                'total' => count($gadPlans)
+            ]);
+        } catch (\Exception $e) {
+            log_message('error', 'Exception in getAvailableGadPlans: ' . $e->getMessage());
+            return $this->response->setJSON([
+                'success' => false,
+                'message' => 'Error retrieving available GAD plans: ' . $e->getMessage()
+            ]);
+        }
+    }
+
+    public function testGadPlans()
+    {
+        try {
+            $outputModel = new \App\Models\OutputModel();
+            $gadPlans = $outputModel->getAvailableGadPlans();
+
+            return $this->response->setJSON([
+                'success' => true,
+                'count' => count($gadPlans),
+                'data' => $gadPlans,
+                'message' => 'GAD Plans retrieved successfully'
+            ]);
+        } catch (\Exception $e) {
+            return $this->response->setJSON([
+                'success' => false,
+                'error' => $e->getMessage(),
+                'message' => 'Error retrieving GAD Plans'
+            ]);
+        }
+    }
+
+    public function testDatabase()
+    {
+        try {
+            $db = \Config\Database::connect();
+
+            // Check if output table exists and its structure
+            $query = $db->query("DESCRIBE output");
+            $columns = $query->getResultArray();
+
+            // Check for primary key
+            $hasPrimaryKey = false;
+            foreach ($columns as $column) {
+                if ($column['Key'] === 'PRI') {
+                    $hasPrimaryKey = true;
+                    break;
+                }
+            }
+
+            // Count records
+            $countQuery = $db->query("SELECT COUNT(*) as count FROM output");
+            $count = $countQuery->getRowArray();
+
+            // Test insert
+            $testData = [
+                'plan_id' => 1,
+                'accomplishment' => 'Test accomplishment',
+                'status' => 'pending',
+                'date_accomplished' => date('Y-m-d'),
+                'timestamp' => date('Y-m-d H:i:s')
+            ];
+
+            $outputModel = new \App\Models\OutputModel();
+            $insertResult = $outputModel->save($testData);
+
+            return $this->response->setJSON([
+                'success' => true,
+                'table_structure' => $columns,
+                'has_primary_key' => $hasPrimaryKey,
+                'record_count' => $count['count'],
+                'test_insert' => $insertResult,
+                'insert_id' => $insertResult ? $outputModel->getInsertID() : null,
+                'validation_errors' => $outputModel->errors()
+            ]);
+
+        } catch (\Exception $e) {
+            return $this->response->setJSON([
+                'success' => false,
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString()
+            ]);
+        }
     }
 
     public function consolidatedAccomplishment()
