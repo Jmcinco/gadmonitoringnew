@@ -1,42 +1,8 @@
 <?php
 // Check if user is logged in and has the correct role (Member = role_id 2)
-$session = session();
-$isLoggedIn = $session->get('isLoggedIn');
-$roleId = $session->get('role_id');
-$userId = $session->get('user_id');
-
-// Debug session data
-log_message('debug', 'Member PlanReview - Session data: ' . json_encode([
-    'isLoggedIn' => $isLoggedIn,
-    'role_id' => $roleId,
-    'user_id' => $userId,
-    'first_name' => $session->get('first_name'),
-    'last_name' => $session->get('last_name')
-]));
-
-if (!$isLoggedIn) {
-    $session->setFlashdata('error', 'Please log in to access this page.');
+if (!session()->get('isLoggedIn') || session()->get('role_id') != 2) {
+    session()->setFlashdata('error', 'Unauthorized access.');
     header('Location: ' . base_url('/login'));
-    exit;
-}
-
-if ($roleId != 2) {
-    $session->setFlashdata('error', 'Access denied. This page is for Members only.');
-    // Redirect based on role
-    switch ($roleId) {
-        case 1: // Focal
-            header('Location: ' . base_url('/FocalDashboard'));
-            break;
-        case 3: // Secretariat
-            header('Location: ' . base_url('/SecretariatDashboard'));
-            break;
-        case 4: // Administrator
-            header('Location: ' . base_url('/AdminDashboard'));
-            break;
-        default:
-            header('Location: ' . base_url('/login'));
-            break;
-    }
     exit;
 }
 
@@ -55,7 +21,7 @@ $gadPlans = $gadPlans ?? [];
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600&display=swap" rel="stylesheet">
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <style>
-        :root {
+        :root { 
             --sidebar-width: 280px;
             --sidebar-bg: #2c3e50;
             --sidebar-hover: #34495e;
@@ -174,61 +140,64 @@ $gadPlans = $gadPlans ?? [];
                 <div class="text-white d-flex align-items-center">
                     <i class="bi bi-person-circle fs-4 me-2"></i>
                     <div>
-                        <div class="fw-bold"><?php echo esc(($first_name ?? 'Admin') . ' ' . ($last_name ?? 'User')); ?></div>
-                        <small class="text-light">Administrator</small>
+                        <div class="fw-bold"><?php echo esc(($first_name ?? 'GAD') . ' ' . ($last_name ?? 'Member')); ?></div>
+                        <small class="text-light">GAD Member</small>
                     </div>
                 </div>
             </div>
            <!-- Navigation Menu -->
-            <ul class="nav nav-pills flex-column">
-                <li class="nav-item">
-                    <a class="nav-link" href="<?= base_url('FocalDashboard') ?>">
-                        <i class="bi bi-house-door me-2"></i>Dashboard
-                    </a>
-                </li>
-                <li class="nav-item">
-                    <a class="nav-link" href="<?= base_url('Focal/PlanPreparation') ?>">
-                        <i class="bi bi-clipboard-plus me-2"></i>Preparation of GAD Plan
-                    </a>
-                </li>
-                <li class="nav-item">
-                    <a class="nav-link" href="<?= base_url('Focal/BudgetCrafting') ?>">
-                        <i class="bi bi-calculator me-2"></i>Budget Crafting
-                    </a>
-                </li>
-                <li class="nav-item">
-                    <a class="nav-link active" href="<?= base_url('Focal/PlanReview') ?>">
-                        <i class="bi bi-check-circle me-2"></i>Review & Approval of GAD Plan
-                    </a>
-                </li>
-                <li class="nav-item">
-                    <a class="nav-link" href="<?= base_url('Focal/ConsolidatedPlan') ?>">
-                        <i class="bi bi-file-earmark-text me-2"></i>Consolidated Plan & Budget
-                    </a>
-                </li>
-                <li class="nav-item">
-                    <a class="nav-link" href="<?= base_url('Focal/AccomplishmentSubmission') ?>">
-                        <i class="bi bi-send me-2"></i>Submission of GAD Accomplishment
-                    </a>
-                </li>
-                <li class="nav-item">
-                    <a class="nav-link" href="<?= base_url('Focal/ReviewApproval') ?>">
-                        <i class="bi bi-clipboard-check me-2"></i>Review & Approval of Accomplishment
-                    </a>
-                </li>
-                <li class="nav-item">
-                    <a class="nav-link" href="<?= base_url('Focal/ConsolidatedAccomplishment') ?>">
-                        <i class="bi bi-collection me-2"></i>Consolidated GAD Accomplishment
-                    </a>
-                </li>
-            </ul>
-        </div>
-<div class="sidebar-footer">
-            <a href="<?= base_url('/login/logout') ?>" class="btn btn-outline-light w-100">
-                <i class="bi bi-box-arrow-right"></i> Logout
-            </a>
-        </div>
-    </nav>
+      <!-- Navigation Menu -->
+      <ul class="nav nav-pills flex-column">
+        <li class="nav-item">
+          <a class="nav-link" href="<?= base_url('MemberDashboard') ?>">
+            <i class="bi bi-house-door me-2"></i>Dashboard
+          </a>
+        </li>
+        <li class="nav-item">
+          <a class="nav-link" href="<?= base_url('Member/PlanPreparation') ?>">
+            <i class="bi bi-clipboard-plus me-2"></i>Preparation of GAD Plan
+          </a>
+        </li>
+        <li class="nav-item">
+          <a class="nav-link" href="<?= base_url('Member/BudgetCrafting') ?>">
+            <i class="bi bi-calculator me-2"></i>Budget Crafting
+          </a>
+        </li>
+        <li class="nav-item">
+          <a class="nav-link active" href="<?= base_url('Member/PlanReview') ?>">
+            <i class="bi bi-check-circle me-2"></i>Review & Approval of GAD Plan
+          </a>
+        </li>
+        <li class="nav-item">
+          <a class="nav-link" href="<?= base_url('Member/ConsolidatedPlan') ?>">
+            <i class="bi bi-file-earmark-text me-2"></i>Consolidated Plan & Budget
+          </a>
+        </li>
+        <li class="nav-item">
+          <a class="nav-link" href="<?= base_url('Member/AccomplishmentSubmission') ?>">
+            <i class="bi bi-send me-2"></i>Submission of GAD Accomplishment
+          </a>
+        </li>
+        <li class="nav-item">
+          <a class="nav-link" href="<?= base_url('Member/ReviewApproval') ?>">
+            <i class="bi bi-clipboard-check me-2"></i>Review & Approval of Accomplishment
+          </a>
+        </li>
+        <li class="nav-item">
+          <a class="nav-link" href="<?= base_url('Member/ConsolidatedAccomplishment') ?>">
+            <i class="bi bi-collection me-2"></i>Consolidated GAD Accomplishment
+          </a>
+        </li>
+      </ul>
+    </div>
+
+    <!-- Logout Button -->
+    <div class="sidebar-footer">
+      <a href="<?= site_url('login/logout') ?>" class="btn btn-outline-light w-100">
+        <i class="bi bi-box-arrow-right"></i> Logout
+      </a>
+    </div>
+  </nav>
 
     <!-- Main Content -->
     <div class="main-content">
@@ -237,7 +206,7 @@ $gadPlans = $gadPlans ?? [];
             <nav aria-label="breadcrumb" class="bg-light">
                 <div class="container-fluid">
                     <ol class="breadcrumb py-2 mb-4">
-                        <li class="breadcrumb-item"><a href="<?php echo base_url('Focal/dashboard'); ?>">Dashboard</a></li>
+                        <li class="breadcrumb-item"><a href="<?php echo base_url('Member/dashboard'); ?>">Dashboard</a></li>
                         <li class="breadcrumb-item active">GAD Plan Review & Approval</li>
                     </ol>
                 </div>
@@ -483,7 +452,7 @@ $gadPlans = $gadPlans ?? [];
                         </div>
 
                         <!-- Additional Details -->
-                        <div class="card">
+                        <div class="card mb-4">
                             <div class="card-header bg-info text-white">
                                 <h6 class="mb-0"><i class="bi bi-list-ul"></i> Additional Details</h6>
                             </div>
@@ -502,6 +471,51 @@ $gadPlans = $gadPlans ?? [];
                                 </div>
                             </div>
                         </div>
+
+                        <!-- Review Form -->
+                        <form id="reviewPlanForm" class="needs-validation" novalidate>
+                            <input type="hidden" id="reviewPlanIdForm" name="reviewPlanId">
+                            <div class="card">
+                                <div class="card-header bg-warning text-dark">
+                                    <h6 class="mb-0"><i class="bi bi-pencil-square"></i> Submit Your Review</h6>
+                                </div>
+                                <div class="card-body">
+                                    <div class="row">
+                                        <div class="col-md-6">
+                                            <div class="mb-3">
+                                                <label for="reviewStatus" class="form-label fw-bold">Review Decision *</label>
+                                                <select class="form-select" id="reviewStatus" name="reviewStatus" required>
+                                                    <option value="">Select Decision</option>
+                                                    <option value="approved">Approve Plan</option>
+                                                    <option value="returned">Return for Revision</option>
+                                                    <option value="pending">Mark as Pending</option>
+                                                </select>
+                                                <div class="invalid-feedback">
+                                                    Please select a review decision.
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div class="col-md-6">
+                                            <div class="mb-3">
+                                                <label for="reviewDate" class="form-label fw-bold">Review Date</label>
+                                                <input type="date" class="form-control" id="reviewDate" name="reviewDate" readonly>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="mb-3">
+                                        <label for="reviewRemarks" class="form-label fw-bold">Review Comments/Remarks *</label>
+                                        <textarea class="form-control" id="reviewRemarks" name="reviewRemarks" rows="4" required placeholder="Please provide detailed comments about your review decision..."></textarea>
+                                        <div class="invalid-feedback">
+                                            Please provide review comments.
+                                        </div>
+                                    </div>
+                                    <div class="mb-3">
+                                        <label for="reviewedBy" class="form-label fw-bold">Reviewed By</label>
+                                        <input type="text" class="form-control" id="reviewedBy" name="reviewedBy" value="<?php echo esc(session()->get('first_name') . ' ' . session()->get('last_name')); ?>" readonly>
+                                    </div>
+                                </div>
+                            </div>
+                        </form>
                     </div>
                 </div>
                 <div class="modal-footer">
@@ -638,6 +652,7 @@ $gadPlans = $gadPlans ?? [];
 
                     // Populate modal with plan details
                     document.getElementById('reviewPlanId').value = planId;
+                    document.getElementById('reviewPlanIdForm').value = planId;
                     document.getElementById('displayPlanId').textContent = `GAD-${String(planId).padStart(3, '0')}`;
                     document.getElementById('displayPlanTitle').textContent = plan.activity || 'N/A';
                     document.getElementById('displayDivision').textContent = plan.division_name || 'Unknown Division';
@@ -706,6 +721,14 @@ $gadPlans = $gadPlans ?? [];
                             objectiveElement.textContent = plan.gad_objective || 'N/A';
                         }
                     }
+
+                    // Set today's date in the review form
+                    document.getElementById('reviewDate').value = new Date().toISOString().split('T')[0];
+
+                    // Clear the review form
+                    document.getElementById('reviewStatus').value = '';
+                    document.getElementById('reviewRemarks').value = '';
+                    document.getElementById('reviewPlanForm').classList.remove('was-validated');
 
                     // Show modal
                     const modal = new bootstrap.Modal(document.getElementById('reviewPlanModal'));

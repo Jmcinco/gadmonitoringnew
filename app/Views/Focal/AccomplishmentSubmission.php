@@ -334,14 +334,20 @@
                                                         <?php
                                                         $status = strtolower($accomplishment['status']);
                                                         $badgeClass = match($status) {
-                                                            'pending' => 'bg-secondary',
-                                                            'completed' => 'bg-success',
+                                                            'pending' => 'bg-warning',
+                                                            'completed' => 'bg-primary',
+                                                            'under review' => 'bg-info',
+                                                            'approved' => 'bg-success',
+                                                            'returned' => 'bg-danger',
                                                             'failed' => 'bg-danger',
-                                                            default => 'bg-info'
+                                                            default => 'bg-secondary'
                                                         };
                                                         $statusText = match($status) {
                                                             'pending' => 'Draft',
-                                                            'completed' => 'Completed',
+                                                            'completed' => 'Submitted',
+                                                            'under review' => 'Under Review',
+                                                            'approved' => 'Approved',
+                                                            'returned' => 'Returned',
                                                             'failed' => 'Failed',
                                                             default => ucfirst($status)
                                                         };
@@ -350,25 +356,39 @@
                                                     </td>
                                                     <td>
                                                         <div class="btn-group" role="group">
-                                                            <?php if (in_array($accomplishment['status'], ['pending'])): ?>
-                                                                <button class="btn btn-sm btn-outline-primary" onclick="openAccomplishmentModal(<?php echo $accomplishment['output_id']; ?>)" title="Edit">
+                                                            <?php
+                                                            $statusLower = strtolower($accomplishment['status']);
+                                                            if (in_array($statusLower, ['pending'])): ?>
+                                                                <button class="btn btn-sm btn-outline-primary" onclick="editAccomplishmentById(<?php echo $accomplishment['output_id']; ?>)" title="Edit">
                                                                     <i class="bi bi-pencil"></i>
                                                                 </button>
-                                                                <button class="btn btn-sm btn-outline-success" onclick="submitAccomplishment(<?php echo $accomplishment['output_id']; ?>)" title="Submit">
+                                                                <button class="btn btn-sm btn-outline-success" onclick="submitAccomplishment(<?php echo $accomplishment['output_id']; ?>)" title="Submit for Review">
                                                                     <i class="bi bi-send"></i>
                                                                 </button>
                                                                 <button class="btn btn-sm btn-outline-danger" onclick="deleteAccomplishment(<?php echo $accomplishment['output_id']; ?>)" title="Delete">
                                                                     <i class="bi bi-trash"></i>
                                                                 </button>
-                                                            <?php elseif ($accomplishment['status'] === 'Submitted'): ?>
-                                                                <button class="btn btn-sm btn-outline-primary" onclick="editAccomplishment(<?php echo $accomplishment['output_id']; ?>)" title="Edit">
+                                                            <?php elseif ($statusLower === 'returned'): ?>
+                                                                <button class="btn btn-sm btn-outline-primary" onclick="editAccomplishmentById(<?php echo $accomplishment['output_id']; ?>)" title="Edit and Resubmit">
                                                                     <i class="bi bi-pencil"></i>
                                                                 </button>
-                                                                <button class="btn btn-sm btn-outline-info" onclick="viewAccomplishment(<?php echo $accomplishment['output_id']; ?>)" title="View">
+                                                                <button class="btn btn-sm btn-outline-info" onclick="viewAccomplishment(<?php echo $accomplishment['output_id']; ?>)" title="View Details">
                                                                     <i class="bi bi-eye"></i>
                                                                 </button>
+                                                            <?php elseif ($statusLower === 'completed'): ?>
+                                                                <span class="badge bg-info">
+                                                                    <i class="bi bi-clock"></i> Awaiting Review
+                                                                </span>
+                                                            <?php elseif ($statusLower === 'under review'): ?>
+                                                                <span class="badge bg-info">
+                                                                    <i class="bi bi-eye"></i> Under Review
+                                                                </span>
+                                                            <?php elseif ($statusLower === 'approved'): ?>
+                                                                <span class="badge bg-success">
+                                                                    <i class="bi bi-check-circle"></i> Approved
+                                                                </span>
                                                             <?php else: ?>
-                                                                <button class="btn btn-sm btn-outline-info" onclick="viewAccomplishment(<?php echo $accomplishment['output_id']; ?>)" title="View">
+                                                                <button class="btn btn-sm btn-outline-info" onclick="viewAccomplishment(<?php echo $accomplishment['output_id']; ?>)" title="View Details">
                                                                     <i class="bi bi-eye"></i>
                                                                 </button>
                                                             <?php endif; ?>
@@ -472,9 +492,19 @@
                                     <label for="status" class="form-label">Status *</label>
                                     <select class="form-select" id="status" name="status" required>
                                         <option value="">Select Status</option>
-                                        <option value="Draft">Draft</option>
-                                        <option value="Submitted">Submitted</option>
+                                        <option value="Draft">Save as Draft</option>
+                                        <option value="Submitted">Submit for Review</option>
                                     </select>
+                                    <div class="form-text">
+                                        <small class="text-muted">
+                                            <i class="bi bi-info-circle"></i>
+                                            Draft: Save for later editing | Submit: Send to GAD Members for review
+                                        </small>
+                                    </div>
+                                    <div class="alert alert-info mt-2" style="font-size: 0.9em;">
+                                        <i class="bi bi-lightbulb"></i>
+                                        <strong>Tip:</strong> Select "Submit for Review" to send this accomplishment to GAD Members for approval.
+                                    </div>
                                     <div class="invalid-feedback">
                                         Please select a status.
                                     </div>
@@ -579,12 +609,19 @@
                                     <label for="editStatus" class="form-label">Status *</label>
                                     <select class="form-select" id="editStatus" name="editStatus" required>
                                         <option value="">Select Status</option>
-                                        <option value="Draft">Draft</option>
-                                        <option value="Submitted">Submitted</option>
-                                        <option value="Under Review">Under Review</option>
-                                        <option value="Accepted">Accepted</option>
-                                        <option value="Returned">Returned</option>
+                                        <option value="Draft">Save as Draft</option>
+                                        <option value="Submitted">Submit for Review</option>
                                     </select>
+                                    <div class="form-text">
+                                        <small class="text-muted">
+                                            <i class="bi bi-info-circle"></i>
+                                            Draft: Save for later editing | Submit: Send to GAD Members for review
+                                        </small>
+                                    </div>
+                                    <div class="alert alert-warning mt-2" style="font-size: 0.9em;">
+                                        <i class="bi bi-exclamation-triangle"></i>
+                                        <strong>Important:</strong> To submit this accomplishment for review, select "Submit for Review" from the status dropdown above.
+                                    </div>
                                     <div class="invalid-feedback">
                                         Please select a status.
                                     </div>
@@ -655,6 +692,28 @@
                     document.getElementById('actualAccomplishment').value = accomplishment.accomplishment;
                     document.getElementById('dateAccomplished').value = accomplishment.date_accomplished;
                     document.getElementById('additionalRemarks').value = accomplishment.remarks || '';
+
+                    // Set status - map database status to form values
+                    let formStatusValue = 'Draft'; // default
+                    const dbStatus = accomplishment.status ? accomplishment.status.toLowerCase() : 'pending';
+
+                    switch (dbStatus) {
+                        case 'pending':
+                            formStatusValue = 'Draft';
+                            break;
+                        case 'completed':
+                            formStatusValue = 'Submitted';
+                            break;
+                        case 'under review':
+                        case 'approved':
+                        case 'returned':
+                            formStatusValue = 'Submitted'; // These can only be changed by GAD Members
+                            break;
+                        default:
+                            formStatusValue = 'Draft';
+                    }
+
+                    document.getElementById('status').value = formStatusValue;
                 } else {
                     Swal.fire('Error', 'Could not load accomplishment data: ' + data.message, 'error');
                 }
@@ -688,11 +747,22 @@
         function handleFormSubmit(form) {
             if (form.id === 'addAccomplishmentForm') {
                 const formData = new FormData(form);
+                const status = formData.get('status');
 
                 // Add output ID if editing
                 if (currentEditingId) {
                     formData.append('outputId', currentEditingId);
                 }
+
+                // Show loading state
+                Swal.fire({
+                    title: status === 'Submitted' ? 'Submitting Accomplishment...' : 'Saving Accomplishment...',
+                    text: 'Please wait while we process your request.',
+                    allowOutsideClick: false,
+                    didOpen: () => {
+                        Swal.showLoading();
+                    }
+                });
 
                 const url = currentEditingId ?
                     '<?= base_url("Focal/updateAccomplishment") ?>' :
@@ -709,7 +779,65 @@
                 .then(response => response.json())
                 .then(data => {
                     if (data.success) {
-                        Swal.fire('Success', data.message, 'success').then(() => {
+                        const successMessage = status === 'Submitted' ?
+                            'Accomplishment submitted successfully! It will now be reviewed by GAD Members.' :
+                            data.message;
+
+                        Swal.fire('Success', successMessage, 'success').then(() => {
+                            location.reload();
+                        });
+                    } else {
+                        Swal.fire('Error', data.message, 'error');
+                    }
+                })
+                .catch(error => {
+                    Swal.fire('Error', 'An error occurred: ' + error.message, 'error');
+                });
+            } else if (form.id === 'editAccomplishmentForm') {
+                // Handle edit form submission
+                const formData = new FormData(form);
+                const status = formData.get('editStatus');
+                const outputId = formData.get('editAccomplishmentId');
+
+                // Debug: Log form data
+                console.log('Edit form submission:');
+                console.log('Status:', status);
+                console.log('Output ID:', outputId);
+                for (let [key, value] of formData.entries()) {
+                    console.log(key, value);
+                }
+
+                // Add the outputId for the update
+                formData.append('outputId', outputId);
+
+                // Show loading state
+                Swal.fire({
+                    title: status === 'Submitted' ? 'Submitting Accomplishment...' : 'Updating Accomplishment...',
+                    text: 'Please wait while we process your request.',
+                    allowOutsideClick: false,
+                    didOpen: () => {
+                        Swal.showLoading();
+                    }
+                });
+
+                fetch('<?= base_url("Focal/updateAccomplishment") ?>', {
+                    method: 'POST',
+                    headers: {
+                        'X-Requested-With': 'XMLHttpRequest',
+                        '<?php echo csrf_header(); ?>': '<?php echo csrf_token(); ?>'
+                    },
+                    body: formData
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        const successMessage = status === 'Submitted' ?
+                            'Accomplishment submitted successfully! It will now be reviewed by GAD Members.' :
+                            data.message;
+
+                        Swal.fire('Success', successMessage, 'success').then(() => {
+                            // Close the modal and reload the page
+                            bootstrap.Modal.getInstance(document.getElementById('editAccomplishmentModal')).hide();
                             location.reload();
                         });
                     } else {
@@ -760,26 +888,181 @@
             tableBody.appendChild(newRow);
         }
 
-        // Edit accomplishment
-        function editAccomplishment(gadActivityId) {
-            const modal = new bootstrap.Modal(document.getElementById('editAccomplishmentModal'));
-            const rows = document.querySelectorAll('#accomplishmentTableBody tr');
-            
-            rows.forEach(row => {
-                if (row.cells[0].textContent === gadActivityId) {
-                    document.getElementById('editAccomplishmentId').value = gadActivityId;
-                    document.getElementById('editGadActivityId').value = row.cells[0].textContent;
-                    document.getElementById('editOffice').value = row.cells[1].textContent;
-                    document.getElementById('editActualAccomplishment').value = row.cells[2].textContent;
-                    document.getElementById('editDateAccomplished').value = row.cells[3].textContent;
-                    
-                    // Set status
-                    const statusText = row.cells[5].textContent.trim();
-                    document.getElementById('editStatus').value = statusText;
+        // Edit accomplishment by output ID (proper way)
+        function editAccomplishmentById(outputId) {
+            // Show loading state
+            Swal.fire({
+                title: 'Loading...',
+                text: 'Please wait while we load the accomplishment data.',
+                allowOutsideClick: false,
+                didOpen: () => {
+                    Swal.showLoading();
                 }
             });
-            
-            modal.show();
+
+            // Fetch accomplishment data from server
+            fetch(`<?= base_url("Focal/getAccomplishment/") ?>${outputId}`, {
+                headers: {
+                    'X-Requested-With': 'XMLHttpRequest'
+                }
+            })
+            .then(response => response.json())
+            .then(data => {
+                Swal.close(); // Close loading dialog
+
+                console.log('API Response:', data); // Debug log
+
+                if (data.success) {
+                    const accomplishment = data.accomplishment;
+                    console.log('Accomplishment data:', accomplishment); // Debug log
+
+                    // Set the output ID for updating
+                    document.getElementById('editAccomplishmentId').value = outputId;
+                    console.log('Set editAccomplishmentId to:', outputId);
+
+                    // Set GAD Activity ID
+                    document.getElementById('editGadActivityId').value = accomplishment.plan_id;
+                    console.log('Set editGadActivityId to:', accomplishment.plan_id);
+
+                    // Set office/division
+                    const officeValue = accomplishment.office_name || 'Unknown Division';
+                    document.getElementById('editOffice').value = officeValue;
+                    console.log('Set editOffice to:', officeValue);
+
+                    // Set accomplishment details
+                    document.getElementById('editActualAccomplishment').value = accomplishment.accomplishment;
+                    console.log('Set editActualAccomplishment to:', accomplishment.accomplishment);
+
+                    document.getElementById('editDateAccomplished').value = accomplishment.date_accomplished;
+                    console.log('Set editDateAccomplished to:', accomplishment.date_accomplished);
+
+                    document.getElementById('editAdditionalRemarks').value = accomplishment.remarks || '';
+                    console.log('Set editAdditionalRemarks to:', accomplishment.remarks);
+
+                    // Set status - map database status to form values
+                    let formStatusValue = 'Draft'; // default
+                    const dbStatus = accomplishment.status ? accomplishment.status.toLowerCase() : 'pending';
+
+                    switch (dbStatus) {
+                        case 'pending':
+                            formStatusValue = 'Draft';
+                            break;
+                        case 'completed':
+                        case 'under review':
+                        case 'approved':
+                            formStatusValue = 'Submitted'; // These are all submitted states
+                            break;
+                        case 'returned':
+                            formStatusValue = 'Draft'; // Returned items can be edited as draft
+                            break;
+                        default:
+                            formStatusValue = 'Draft';
+                    }
+
+                    document.getElementById('editStatus').value = formStatusValue;
+                    console.log('Set editStatus to:', formStatusValue);
+
+                    // Show the modal
+                    const modal = new bootstrap.Modal(document.getElementById('editAccomplishmentModal'));
+
+                    // Wait for modal to be fully shown before ensuring data is populated
+                    document.getElementById('editAccomplishmentModal').addEventListener('shown.bs.modal', function() {
+                        // Double-check that all fields are populated after modal is shown
+                        console.log('Modal shown, re-checking field values...');
+
+                        // Re-populate fields to ensure they're set
+                        document.getElementById('editAccomplishmentId').value = outputId;
+                        document.getElementById('editGadActivityId').value = accomplishment.plan_id;
+                        document.getElementById('editOffice').value = accomplishment.office_name || 'Unknown Division';
+                        document.getElementById('editActualAccomplishment').value = accomplishment.accomplishment;
+                        document.getElementById('editDateAccomplished').value = accomplishment.date_accomplished;
+                        document.getElementById('editAdditionalRemarks').value = accomplishment.remarks || '';
+                        document.getElementById('editStatus').value = formStatusValue;
+
+                        console.log('Fields re-populated after modal shown');
+                    }, { once: true }); // Only run once
+
+                    modal.show();
+                } else {
+                    console.error('API Error:', data);
+                    Swal.close(); // Close loading dialog
+
+                    // Try fallback method using table data
+                    console.log('Trying fallback method...');
+                    if (populateEditFormFromTable(outputId)) {
+                        // Show the modal with fallback data
+                        const modal = new bootstrap.Modal(document.getElementById('editAccomplishmentModal'));
+                        modal.show();
+                    } else {
+                        Swal.fire('Error', 'Could not load accomplishment data: ' + (data.message || 'Unknown error'), 'error');
+                    }
+                }
+            })
+            .catch(error => {
+                Swal.close(); // Close loading dialog
+                console.error('Network Error:', error);
+
+                // Try fallback method using table data
+                console.log('Network error, trying fallback method...');
+                if (populateEditFormFromTable(outputId)) {
+                    // Show the modal with fallback data
+                    const modal = new bootstrap.Modal(document.getElementById('editAccomplishmentModal'));
+                    modal.show();
+                } else {
+                    Swal.fire('Error', 'Could not load accomplishment data: ' + error.message, 'error');
+                }
+            });
+        }
+
+        // Fallback method to populate edit form from table data
+        function populateEditFormFromTable(outputId) {
+            console.log('Using fallback method to populate form from table data');
+
+            const rows = document.querySelectorAll('#accomplishmentTableBody tr');
+            let found = false;
+
+            rows.forEach(row => {
+                // Check if this row contains the output_id we're looking for
+                const editButton = row.querySelector('button[onclick*="editAccomplishmentById(' + outputId + ')"]');
+                if (editButton) {
+                    found = true;
+                    console.log('Found row for output_id:', outputId);
+
+                    // Extract data from table cells
+                    const gadActivityId = row.cells[0].textContent.trim();
+                    const office = row.cells[1].textContent.trim();
+                    const accomplishment = row.cells[2].textContent.trim();
+                    const dateAccomplished = row.cells[3].textContent.trim();
+                    const statusText = row.cells[5].textContent.trim();
+
+                    // Populate form fields
+                    document.getElementById('editAccomplishmentId').value = outputId;
+                    document.getElementById('editOffice').value = office;
+                    document.getElementById('editActualAccomplishment').value = accomplishment;
+                    document.getElementById('editDateAccomplished').value = dateAccomplished;
+
+                    // Map status
+                    let formStatusValue = 'Draft';
+                    if (statusText === 'Submitted' || statusText === 'Awaiting Review') {
+                        formStatusValue = 'Submitted';
+                    }
+                    document.getElementById('editStatus').value = formStatusValue;
+
+                    console.log('Populated form with table data');
+                }
+            });
+
+            if (!found) {
+                console.error('Could not find table row for output_id:', outputId);
+            }
+
+            return found;
+        }
+
+        // Edit accomplishment (old method - kept for compatibility)
+        function editAccomplishment(gadActivityId) {
+            // This function is kept for backward compatibility but should not be used
+            console.warn('editAccomplishment is deprecated, use editAccomplishmentById instead');
         }
 
         // Update accomplishment in table
@@ -963,11 +1246,35 @@
         document.getElementById('searchInput').addEventListener('input', function() {
             const searchTerm = this.value.toLowerCase();
             const rows = document.querySelectorAll('#accomplishmentTableBody tr');
-            
+
             rows.forEach(row => {
                 const text = row.textContent.toLowerCase();
                 row.style.display = text.includes(searchTerm) ? '' : 'none';
             });
+        });
+
+        // Add status change highlighting for main form
+        document.getElementById('status').addEventListener('change', function() {
+            const alertDiv = document.querySelector('.alert-info');
+            if (this.value === 'Submitted') {
+                alertDiv.className = 'alert alert-success mt-2';
+                alertDiv.innerHTML = '<i class="bi bi-check-circle"></i> <strong>Ready to Submit:</strong> This accomplishment will be sent to GAD Members for review.';
+            } else {
+                alertDiv.className = 'alert alert-info mt-2';
+                alertDiv.innerHTML = '<i class="bi bi-lightbulb"></i> <strong>Tip:</strong> Select "Submit for Review" to send this accomplishment to GAD Members for approval.';
+            }
+        });
+
+        // Add status change highlighting for edit form
+        document.getElementById('editStatus').addEventListener('change', function() {
+            const alertDiv = document.querySelector('.alert-warning');
+            if (this.value === 'Submitted') {
+                alertDiv.className = 'alert alert-success mt-2';
+                alertDiv.innerHTML = '<i class="bi bi-check-circle"></i> <strong>Ready to Submit:</strong> This accomplishment will be sent to GAD Members for review.';
+            } else {
+                alertDiv.className = 'alert alert-warning mt-2';
+                alertDiv.innerHTML = '<i class="bi bi-exclamation-triangle"></i> <strong>Important:</strong> To submit this accomplishment for review, select "Submit for Review" from the status dropdown above.';
+            }
         });
     </script>
 </body>

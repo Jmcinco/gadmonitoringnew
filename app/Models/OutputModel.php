@@ -22,12 +22,15 @@ class OutputModel extends Model
         'remarks',
         'accepted_by',
         'timestamp'
+        // TODO: Add these fields after database migration
+        // 'reviewed_at',
+        // 'submitted_at'
     ];
 
     protected $validationRules = [
         'plan_id' => 'required|is_natural_no_zero',
         'accomplishment' => 'required|min_length[3]',
-        'status' => 'permit_empty|in_list[pending,completed,failed]'
+        'status' => 'permit_empty|in_list[pending,completed,failed,approved,returned,under review]'
     ];
 
     protected $validationMessages = [
@@ -40,36 +43,42 @@ class OutputModel extends Model
             'min_length' => 'Accomplishment must be at least 3 characters long'
         ],
         'status' => [
-            'in_list' => 'Status must be one of: pending, completed, failed'
+            'in_list' => 'Status must be one of: pending, completed, failed, approved, returned, under review'
         ]
     ];
 
     /**
      * Get accomplishments with related plan and division data
      */
-    public function getAccomplishmentsWithDetails()
+    public function getAccomplishmentsWithDetails($userId = null)
     {
         try {
             $db = \Config\Database::connect();
 
-            // First, let's check what columns exist
-            $query = $db->query("SHOW COLUMNS FROM output");
-            $columns = $query->getResultArray();
-            log_message('info', 'Output table columns: ' . json_encode($columns));
-
-            // Use a simple query to get data
-            $query = $db->query("
+            // Build the query with optional user filter
+            $sql = "
                 SELECT
                     o.*,
                     p.activity as gad_activity,
                     p.authors_division,
-                    d.division as office_name
+                    d.division as office_name,
+                    er.first_name as reviewed_by_name,
+                    er.last_name as reviewed_by_lastname,
+                    dr.division as reviewed_by_division
                 FROM output o
                 LEFT JOIN plan p ON p.plan_id = o.plan_id
                 LEFT JOIN divisions d ON d.div_id = p.authors_division
-                ORDER BY o.date_accomplished DESC, o.timestamp DESC
-            ");
+                LEFT JOIN employees er ON o.accepted_by = er.emp_id
+                LEFT JOIN divisions dr ON er.div_id = dr.div_id
+            ";
 
+            if ($userId) {
+                $sql .= " WHERE o.accepted_by = " . intval($userId);
+            }
+
+            $sql .= " ORDER BY o.date_accomplished DESC, o.timestamp DESC";
+
+            $query = $db->query($sql);
             $result = $query->getResultArray();
 
             // Map the results to expected format
@@ -87,7 +96,10 @@ class OutputModel extends Model
                     'timestamp' => $row['timestamp'],
                     'gad_activity' => $row['gad_activity'],
                     'authors_division' => $row['authors_division'],
-                    'office_name' => $row['office_name']
+                    'office_name' => $row['office_name'],
+                    'reviewed_by_name' => $row['reviewed_by_name'],
+                    'reviewed_by_lastname' => $row['reviewed_by_lastname'],
+                    'reviewed_by_division' => $row['reviewed_by_division']
                 ];
             }
 

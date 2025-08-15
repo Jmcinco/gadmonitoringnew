@@ -42,6 +42,14 @@ $routes->group('Member', function($routes) {
     $routes->get('getPlanDetails/(:num)', 'MemberController::getPlanDetails/$1');
     $routes->post('getPlanDetails/(:num)', 'MemberController::getPlanDetails/$1');
     $routes->get('reports', 'MemberController::reports');
+    // Accomplishment Review Routes
+    $routes->get('ReviewApproval', 'MemberController::reviewApproval');
+    $routes->get('reviewApproval', 'MemberController::reviewApproval');
+    $routes->post('reviewAccomplishment', 'MemberController::reviewAccomplishment');
+    $routes->post('updateAccomplishmentStatus', 'MemberController::updateAccomplishmentStatus');
+    $routes->get('getAccomplishmentDetails/(:num)', 'MemberController::getAccomplishmentDetails/$1');
+    $routes->post('reviewAccomplishment', 'MemberController::reviewAccomplishment');
+    $routes->post('updateAccomplishmentStatus', 'MemberController::updateAccomplishmentStatus');
     $routes->get('profile', 'MemberController::profile');
 });
 

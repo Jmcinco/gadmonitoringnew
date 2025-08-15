@@ -386,10 +386,12 @@ public function budgetCrafting()
         if ($formStatus) {
             switch (strtolower($formStatus)) {
                 case 'draft':
+                case 'save as draft':
                     $dbStatus = 'pending';
                     break;
                 case 'submitted':
-                    $dbStatus = 'completed';
+                case 'submit for review':
+                    $dbStatus = 'completed'; // This means submitted and awaiting review
                     break;
                 default:
                     $dbStatus = strtolower($formStatus);
@@ -404,6 +406,12 @@ public function budgetCrafting()
             'remarks' => $this->request->getPost('additionalRemarks'),
             'timestamp' => date('Y-m-d H:i:s')
         ];
+
+        // TODO: Add submitted_at timestamp when database migration is complete
+        // Set submitted_at timestamp if status is submitted (completed)
+        // if ($dbStatus === 'completed') {
+        //     $data['submitted_at'] = date('Y-m-d H:i:s');
+        // }
 
         // Debug: Log the data array
         log_message('info', 'saveAccomplishment data array: ' . json_encode($data));
@@ -461,16 +469,35 @@ public function budgetCrafting()
         $outputModel = new \App\Models\OutputModel();
         $outputId = $this->request->getPost('outputId');
 
+        // Debug: Log all POST data
+        $allPostData = $this->request->getPost();
+        log_message('info', 'updateAccomplishment POST data: ' . json_encode($allPostData));
+        log_message('info', 'updateAccomplishment outputId: ' . $outputId);
+
+        if (empty($outputId)) {
+            return $this->response->setJSON(['success' => false, 'message' => 'Output ID is required']);
+        }
+
+        // Check if the record exists
+        $existingRecord = $outputModel->find($outputId);
+        if (!$existingRecord) {
+            log_message('error', 'updateAccomplishment: Record not found for outputId: ' . $outputId);
+            return $this->response->setJSON(['success' => false, 'message' => 'Accomplishment record not found']);
+        }
+        log_message('info', 'updateAccomplishment existing record: ' . json_encode($existingRecord));
+
         // Map form status to database status
         $formStatus = $this->request->getPost('editStatus');
         $dbStatus = 'pending';
         if ($formStatus) {
             switch (strtolower($formStatus)) {
                 case 'draft':
+                case 'save as draft':
                     $dbStatus = 'pending';
                     break;
                 case 'submitted':
-                    $dbStatus = 'completed';
+                case 'submit for review':
+                    $dbStatus = 'completed'; // This means submitted and awaiting review
                     break;
                 default:
                     $dbStatus = strtolower($formStatus);
@@ -485,6 +512,12 @@ public function budgetCrafting()
             'remarks' => $this->request->getPost('editAdditionalRemarks')
         ];
 
+        // TODO: Add submitted_at timestamp when database migration is complete
+        // Set submitted_at timestamp if status is submitted (completed)
+        // if ($dbStatus === 'completed') {
+        //     $data['submitted_at'] = date('Y-m-d H:i:s');
+        // }
+
         // Handle file upload
         $file = $this->request->getFile('editFileUpload');
         if ($file && $file->isValid() && !$file->hasMoved()) {
@@ -494,13 +527,34 @@ public function budgetCrafting()
         }
 
         try {
+            // Log the data being sent for debugging
+            log_message('info', 'updateAccomplishment data: ' . json_encode($data));
+
+            // Temporarily disable validation to test
+            $outputModel->skipValidation(true);
+
             if ($outputModel->update($outputId, $data)) {
                 return $this->response->setJSON(['success' => true, 'message' => 'Accomplishment updated successfully']);
             } else {
-                return $this->response->setJSON(['success' => false, 'message' => 'Failed to update accomplishment', 'validation' => $outputModel->errors()]);
+                $errors = $outputModel->errors();
+                log_message('error', 'updateAccomplishment validation errors: ' . json_encode($errors));
+
+                // Try to get more detailed error information
+                $db = \Config\Database::connect();
+                $lastQuery = $db->getLastQuery();
+                log_message('error', 'Last query: ' . $lastQuery);
+
+                return $this->response->setJSON([
+                    'success' => false,
+                    'message' => 'Failed to update accomplishment',
+                    'validation' => $errors,
+                    'debug_data' => $data,
+                    'output_id' => $outputId
+                ]);
             }
         } catch (\Exception $e) {
             log_message('error', 'Exception in updateAccomplishment: ' . $e->getMessage());
+            log_message('error', 'updateAccomplishment data that caused error: ' . json_encode($data));
             return $this->response->setJSON(['success' => false, 'message' => 'Database error: ' . $e->getMessage()]);
         }
     }

@@ -26,6 +26,8 @@ SET time_zone = "+00:00";
 --
 -- Table structure for table `audit_trail`
 --
+CREATE DATABASE IF NOT EXISTS pgms_db CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci;
+USE pgms_db;
 
 CREATE TABLE `audit_trail` (
   `id` int(11) UNSIGNED NOT NULL,
