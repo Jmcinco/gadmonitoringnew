@@ -183,6 +183,15 @@ class MemberController extends BaseController
             'reviewed_at' => date('Y-m-d H:i:s')
         ];
 
+        // Add specific reviewer fields based on status
+        if ($status === 'returned') {
+            $data['returned_by'] = $this->session->get('user_id');
+            $data['returned_at'] = date('Y-m-d H:i:s');
+        } elseif ($status === 'approved') {
+            $data['approved_by'] = $this->session->get('user_id');
+            $data['approved_at'] = date('Y-m-d H:i:s');
+        }
+
         if ($this->memberModel->update($planId, $data)) {
             // Log audit trail for GAD Plan review
             $auditModel = new AuditTrailModel();
@@ -278,12 +287,14 @@ class MemberController extends BaseController
             if ($result) {
                 // Log audit trail
                 $auditModel = new AuditTrailModel();
+                $statusMessage = "Plan status updated to: $status";
+
                 $auditModel->logActivity([
                     'user_id' => $userId,
                     'action' => 'UPDATE',
                     'table_name' => 'plan',
                     'record_id' => $planId,
-                    'details' => "Plan status updated to: $status by Member",
+                    'details' => "$statusMessage by Member",
                     'old_data' => null,
                     'new_data' => $data
                 ]);

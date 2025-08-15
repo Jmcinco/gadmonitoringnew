@@ -563,6 +563,11 @@ if (!session()->get('isLoggedIn') || session()->get('role_id') != 1) {
               <i class="bi bi-plus-circle"></i> Create GAD Plan
             </button>
           </div>
+          <div class="alert alert-info" role="alert">
+            <i class="bi bi-info-circle"></i>
+            <strong>Note:</strong> You can edit and resubmit plans that have been <span class="badge bg-danger">Returned</span> by reviewers.
+            Draft plans can always be edited before submission.
+          </div>
         </div>
       </div>
 
@@ -731,13 +736,35 @@ if (!session()->get('isLoggedIn') || session()->get('role_id') != 1) {
                           </td>
 
                           <td class="status-cell">
-                            <?php if (($plan['status'] ?? 'Pending') === 'Draft'): ?>
-                            <span class="badge bg-warning text-dark">Draft</span>
-                            <?php else: ?>
-                            <span class="badge bg-success">Submitted</span>
+                            <?php
+                            $status = $plan['status'] ?? 'Pending';
+                            $badgeClass = match(strtolower($status)) {
+                                'draft' => 'bg-warning text-dark',
+                                'pending' => 'bg-info',
+                                'approved' => 'bg-success',
+                                'returned' => 'bg-danger',
+                                'finalized' => 'bg-primary',
+                                default => 'bg-secondary'
+                            };
+                            $statusText = match(strtolower($status)) {
+                                'draft' => 'Draft',
+                                'pending' => 'Submitted',
+                                'approved' => 'Approved',
+                                'returned' => 'Returned',
+                                'finalized' => 'Finalized',
+                                default => ucfirst($status)
+                            };
+                            ?>
+                            <span class="badge <?php echo $badgeClass; ?>"><?php echo $statusText; ?></span>
+                            <?php if (strtolower($status) === 'returned'): ?>
+                            <br><small class="text-muted">Can be edited</small>
                             <?php endif; ?>
                           </td>
                           <td class="actions-cell">
+                            <?php
+                            $canEdit = in_array(strtolower($status), ['draft', 'returned']);
+                            if ($canEdit):
+                            ?>
                             <button class="btn btn-sm btn-outline-primary me-1"
                               onclick="editGadPlan(this, '<?php echo esc($plan['plan_id'] ?? ''); ?>')"
                               title="Edit Plan">
@@ -748,6 +775,11 @@ if (!session()->get('isLoggedIn') || session()->get('role_id') != 1) {
                               title="Delete Plan">
                               <i class="bi bi-trash"></i>
                             </button>
+                            <?php else: ?>
+                            <button class="btn btn-sm btn-outline-secondary me-1" disabled title="Cannot edit <?php echo $statusText; ?> plan">
+                              <i class="bi bi-eye"></i> View Only
+                            </button>
+                            <?php endif; ?>
                           </td>
                         </tr>
                         <?php endforeach; endif?>
