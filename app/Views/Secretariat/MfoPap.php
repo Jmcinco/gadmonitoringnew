@@ -113,17 +113,27 @@
             align-items: center;
             justify-content: space-between;
             width: 100%;
+            cursor: pointer;
+            border-radius: 0.3rem;
+            transition: background-color 0.2s ease;
+        }
+        .nav-links .iocn-link:hover {
+            background-color: var(--sidebar-hover);
         }
         .nav-links .arrow {
             font-size: 1rem;
             color: var(--sidebar-muted);
             margin-left: 0.1rem;
-            transition: transform 0.3s;
+            transition: transform 0.3s ease, color 0.2s ease;
             cursor: pointer;
+            padding: 0.2rem;
         }
         .nav-links .showMenu .arrow {
-            transform: rotate(-180deg);
+            transform: rotate(180deg);
             color: var(--sidebar-text);
+        }
+        .nav-links .showMenu .iocn-link {
+            background-color: var(--sidebar-hover);
         }
         .nav-links .link_name {
             font-size: 1rem;
@@ -138,32 +148,54 @@
         }
         .nav-links .sub-menu {
             display: none;
-            background: var(--sidebar-bg);
-            padding: 0 0 0 2.6rem;
-            margin-bottom: 2px;
+            background: rgba(255, 255, 255, 0.08);
+            padding: 0.5rem 0;
+            margin: 0.5rem 0 0.5rem 1rem;
             list-style: none;
+            border-radius: 0.5rem;
+            border-left: 3px solid var(--bs-primary);
         }
         .nav-links .showMenu .sub-menu {
             display: block;
-            animation: fadeInSubMenu 0.32s cubic-bezier(0.37, 0.18, 0.57, 1.13);
+            animation: fadeInSubMenu 0.4s cubic-bezier(0.37, 0.18, 0.57, 1.13);
         }
         @keyframes fadeInSubMenu {
-            from { opacity: 0; transform: translateY(-10px);}
-            to { opacity: 1; transform: translateY(0);}
+            from { opacity: 0; transform: translateY(-10px); max-height: 0;}
+            to { opacity: 1; transform: translateY(0); max-height: 400px;}
         }
         .nav-links .sub-menu a {
-            color: rgba(255, 255, 255, 0.66);
-            font-size: 0.97rem;
-            padding: 0.33rem 0;
+            color: rgba(255, 255, 255, 0.8);
+            font-size: 0.85rem;
+            padding: 0.6rem 1rem;
             white-space: nowrap;
             text-decoration: none;
-            display: block;
+            display: flex;
+            align-items: center;
             border-radius: 0.3rem;
-            transition: color 0.2s;
+            margin: 0.1rem 0.5rem;
+            transition: all 0.3s ease;
+            position: relative;
         }
         .nav-links .sub-menu a:hover {
             color: var(--sidebar-text);
             background: var(--sidebar-hover);
+            transform: translateX(5px);
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        }
+        .nav-links .sub-menu a:active {
+            background-color: var(--bs-primary);
+            color: white;
+        }
+        .nav-links .sub-menu a.active {
+            background-color: var(--bs-primary);
+            color: white;
+        }
+        .nav-links .sub-menu a i {
+            opacity: 0.7;
+            transition: opacity 0.2s ease;
+        }
+        .nav-links .sub-menu a:hover i {
+            opacity: 1;
         }
         .nav-links .sub-menu .link_name { display: none; }
         .main-content {
@@ -212,7 +244,7 @@
                 </li>
                 <li class="nav-item">
                     <div class="iocn-link" id="toggle-gad-maintenance">
-                        <a class="nav-link active" href="#">
+                        <a class="nav-link" href="#" role="button">
                             <span class="link_name">
                                 <i class="bi bi-gear"></i> GAD Maintenance
                             </span>
@@ -220,13 +252,13 @@
                         <i class="bi bi-chevron-down arrow"></i>
                     </div>
                     <ul class="sub-menu">
-                        <li><a href="#">User Information</a></li>
-                        <li><a href="<?= site_url('/Secretariat/DivisionManagement') ?>">Division / Office</a></li>
-                        <li><a href="<?= site_url('/Secretariat/PositionsManagement') ?>">Positions</a></li>
-                        <li><a href="<?= site_url('/Secretariat/MfoPap') ?>" class="active">MFO / PAP</a></li>
-                        <li><a href="#">Source of Funds</a></li>
-                        <li><a href="#">Object of Expense</a></li>
-                        <li><a href="<?= site_url('/Secretariat/GadMandateManagement') ?>">Gender Issue / Mandate</a></li>
+                        <li><a href="<?= base_url('Secretariat/UserManagement') ?>"><i class="bi bi-person-gear me-2"></i>User Information</a></li>
+                        <li><a href="<?= site_url('/Secretariat/DivisionManagement') ?>"><i class="bi bi-building me-2"></i>Division / Office</a></li>
+                        <li><a href="<?= site_url('/Secretariat/PositionsManagement') ?>"><i class="bi bi-briefcase me-2"></i>Positions</a></li>
+                        <li><a href="<?= site_url('/Secretariat/MfoPap') ?>" class="active"><i class="bi bi-list-task me-2"></i>MFO / PAP</a></li>
+                        <li><a href="<?= base_url('Secretariat/SourceOfFunds') ?>"><i class="bi bi-cash-stack me-2"></i>Source of Funds</a></li>
+                        <li><a href="<?= base_url('Secretariat/ObjectOfExpense') ?>"><i class="bi bi-receipt me-2"></i>Object of Expense</a></li>
+                        <li><a href="<?= site_url('Secretariat/GadMandateManagement') ?>"><i class="bi bi-people me-2"></i>Gender Issue / Mandate</a></li>
                     </ul>
                 </li>
             </ul>
@@ -464,11 +496,44 @@
 <!-- Bootstrap JS Bundle -->
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 <script>
-    // Toggle submenu on click
-    document.getElementById("toggle-gad-maintenance").addEventListener("click", function (e) {
-        e.preventDefault();
-        const parentItem = this.parentElement;
-        parentItem.classList.toggle("showMenu");
+    // Enhanced dropdown functionality
+    document.addEventListener('DOMContentLoaded', function() {
+        const toggleButton = document.getElementById("toggle-gad-maintenance");
+        const parentItem = toggleButton.parentElement;
+
+        // Toggle submenu on click
+        toggleButton.addEventListener("click", function (e) {
+            e.preventDefault();
+            e.stopPropagation();
+
+            // Close other open dropdowns
+            document.querySelectorAll('.nav-item.showMenu').forEach(item => {
+                if (item !== parentItem) {
+                    item.classList.remove('showMenu');
+                }
+            });
+
+            // Toggle current dropdown
+            parentItem.classList.toggle("showMenu");
+
+            // Add visual feedback
+            if (parentItem.classList.contains("showMenu")) {
+                toggleButton.style.backgroundColor = 'var(--sidebar-hover)';
+            } else {
+                toggleButton.style.backgroundColor = 'transparent';
+            }
+        });
+
+        // Close dropdown when clicking outside
+        document.addEventListener('click', function(e) {
+            if (!parentItem.contains(e.target)) {
+                parentItem.classList.remove('showMenu');
+                toggleButton.style.backgroundColor = 'transparent';
+            }
+        });
+
+        // Keep dropdown open since we're on a submenu page
+        parentItem.classList.add('showMenu');
     });
 </script>
 </body>
