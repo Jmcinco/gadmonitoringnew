@@ -20,10 +20,86 @@ class FocalController extends Controller
             $this->session->setFlashdata('error', 'Unauthorized access.');
             return redirect()->to(base_url('/login'));
         }
+
+        // Get dashboard statistics
+        $db = \Config\Database::connect();
+
+        // Total GAD Plans
+        $totalPlans = $db->table('plan')->countAllResults();
+
+        // Plans by status
+        $pendingPlans = $db->table('plan')->where('status', 'Pending')->countAllResults();
+        $approvedPlans = $db->table('plan')->where('status', 'Approved')->countAllResults();
+        $returnedPlans = $db->table('plan')->where('status', 'Returned')->countAllResults();
+        $draftPlans = $db->table('plan')->where('status', 'Draft')->countAllResults();
+
+        // Budget calculations
+        $totalBudgetQuery = $db->table('budget b')
+            ->select('COALESCE(SUM(b.amount), 0) as total')
+            ->join('plan p', 'p.plan_id = b.plan_id', 'inner')
+            ->get();
+        $totalBudget = $totalBudgetQuery->getRow()->total ?? 0;
+
+        $approvedBudgetQuery = $db->table('budget b')
+            ->select('COALESCE(SUM(b.amount), 0) as total')
+            ->join('plan p', 'p.plan_id = b.plan_id', 'inner')
+            ->where('p.status', 'Approved')
+            ->get();
+        $approvedBudget = $approvedBudgetQuery->getRow()->total ?? 0;
+
+        $pendingBudgetQuery = $db->table('budget b')
+            ->select('COALESCE(SUM(b.amount), 0) as total')
+            ->join('plan p', 'p.plan_id = b.plan_id', 'inner')
+            ->where('p.status', 'Pending')
+            ->get();
+        $pendingBudget = $pendingBudgetQuery->getRow()->total ?? 0;
+
+        $draftBudgetQuery = $db->table('budget b')
+            ->select('COALESCE(SUM(b.amount), 0) as total')
+            ->join('plan p', 'p.plan_id = b.plan_id', 'inner')
+            ->where('p.status', 'Draft')
+            ->get();
+        $draftBudget = $draftBudgetQuery->getRow()->total ?? 0;
+
+        // Recent plans (last 10)
+        $recentPlans = $db->table('plan p')
+            ->select('p.*, d.division, COALESCE(SUM(b.amount), 0) as total_budget')
+            ->join('divisions d', 'p.authors_division = d.div_id', 'left')
+            ->join('budget b', 'p.plan_id = b.plan_id', 'left')
+            ->groupBy('p.plan_id, d.division')
+            ->orderBy('p.created_at', 'DESC')
+            ->limit(10)
+            ->get()
+            ->getResultArray();
+
+        // Accomplishments count from output table
+        $accomplishments = $db->table('output')->countAllResults();
+
+        // Accomplishments by status
+        $completedAccomplishments = $db->table('output')->where('status', 'completed')->countAllResults();
+        $pendingAccomplishments = $db->table('output')->where('status', 'pending')->countAllResults();
+        $approvedAccomplishments = $db->table('output')->where('status', 'approved')->countAllResults();
+
         $data = [
             'first_name' => $this->session->get('first_name'),
-            'last_name' => $this->session->get('last_name')
+            'last_name' => $this->session->get('last_name'),
+            'totalPlans' => $totalPlans,
+            'pendingPlans' => $pendingPlans,
+            'approvedPlans' => $approvedPlans,
+            'returnedPlans' => $returnedPlans,
+            'draftPlans' => $draftPlans,
+            'totalBudget' => $totalBudget,
+            'approvedBudget' => $approvedBudget,
+            'pendingBudget' => $pendingBudget,
+            'draftBudget' => $draftBudget,
+            'recentPlans' => $recentPlans,
+            'accomplishments' => $accomplishments,
+            'totalAccomplishments' => $accomplishments, // For backward compatibility
+            'completedAccomplishments' => $completedAccomplishments,
+            'pendingAccomplishments' => $pendingAccomplishments,
+            'approvedAccomplishments' => $approvedAccomplishments
         ];
+
         return view('FocalDashboard', $data);
     }
 
@@ -347,21 +423,50 @@ public function budgetCrafting()
 
         try {
             $outputModel = new \App\Models\OutputModel();
+            $db = \Config\Database::connect();
+
+            // Calculate statistics for the accomplishments
+            $totalAccomplishments = $db->table('output')->countAllResults();
+            $draftAccomplishments = $db->table('output')->where('status', 'pending')->countAllResults();
+            $submittedAccomplishments = $db->table('output')->where('status', 'completed')->countAllResults();
+            $underReviewAccomplishments = $db->table('output')->where('status', 'under review')->countAllResults();
+            $acceptedAccomplishments = $db->table('output')->where('status', 'approved')->countAllResults();
+            $returnedAccomplishments = $db->table('output')->where('status', 'returned')->countAllResults();
+
+            $statistics = [
+                'Total' => $totalAccomplishments,
+                'Draft' => $draftAccomplishments,
+                'Submitted' => $submittedAccomplishments,
+                'Under Review' => $underReviewAccomplishments,
+                'Accepted' => $acceptedAccomplishments,
+                'Returned' => $returnedAccomplishments
+            ];
 
             $data = [
                 'accomplishments' => $outputModel->getAccomplishmentsWithDetails() ?? [],
                 'gadPlans' => $outputModel->getAvailableGadPlans() ?? [],
-                'divisions' => $outputModel->getDivisions() ?? []
+                'divisions' => $outputModel->getDivisions() ?? [],
+                'statistics' => $statistics
             ];
 
             return view('Focal/AccomplishmentSubmission', $data);
         } catch (\Exception $e) {
             log_message('error', 'Error in accomplishmentSubmission: ' . $e->getMessage());
 
+            $statistics = [
+                'Total' => 0,
+                'Draft' => 0,
+                'Submitted' => 0,
+                'Under Review' => 0,
+                'Accepted' => 0,
+                'Returned' => 0
+            ];
+
             $data = [
                 'accomplishments' => [],
                 'gadPlans' => [],
-                'divisions' => []
+                'divisions' => [],
+                'statistics' => $statistics
             ];
 
             return view('Focal/AccomplishmentSubmission', $data);
