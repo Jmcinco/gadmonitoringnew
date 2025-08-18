@@ -184,261 +184,440 @@
         </div>
     </nav>
 
+    <!-- Print Styles -->
+    <style>
+        @media print {
+            @page {
+                margin: 0.3cm 0.5cm;
+                size: A4 landscape;
+            }
+
+            /* Hide non-print elements */
+            .no-print, .btn-group, .breadcrumb, nav {
+                display: none !important;
+            }
+
+            /* Ensure full width usage */
+            .container-fluid {
+                max-width: 100% !important;
+                padding: 0 !important;
+            }
+
+            .row {
+                margin: 0 !important;
+            }
+
+            .col-12 {
+                padding: 0 !important;
+            }
+
+            /* Table styling for print */
+            .table {
+                font-size: 9px !important;
+                width: 100% !important;
+                table-layout: fixed !important;
+                margin: 0 !important;
+                page-break-inside: auto !important;
+                border-collapse: collapse !important;
+            }
+
+            .table th {
+                background-color: #343a40 !important;
+                color: white !important;
+                border: 1px solid #000 !important;
+                padding: 4px 2px !important;
+                word-wrap: break-word !important;
+                page-break-inside: avoid !important;
+                font-weight: bold !important;
+                text-align: center !important;
+            }
+
+            .table td {
+                border: 1px solid #000 !important;
+                padding: 3px 2px !important;
+                word-wrap: break-word !important;
+                vertical-align: top !important;
+                line-height: 1.1 !important;
+            }
+
+            /* Column width adjustments */
+            .table th:nth-child(1), .table td:nth-child(1) {
+                width: 8% !important;
+                text-align: center !important;
+            } /* GAD Activity ID */
+
+            .table th:nth-child(2), .table td:nth-child(2) {
+                width: 15% !important;
+            } /* Division/Office */
+
+            .table th:nth-child(3), .table td:nth-child(3) {
+                width: 25% !important;
+            } /* GAD Activity */
+
+            .table th:nth-child(4), .table td:nth-child(4) {
+                width: 12% !important;
+            } /* Responsible Unit/Offices */
+
+            .table th:nth-child(5), .table td:nth-child(5) {
+                width: 10% !important;
+                text-align: right !important;
+            } /* Budget Allocation */
+
+            .table th:nth-child(6), .table td:nth-child(6) {
+                width: 8% !important;
+                text-align: center !important;
+            } /* Source of Fund */
+
+            .table th:nth-child(7), .table td:nth-child(7) {
+                width: 10% !important;
+                text-align: center !important;
+            } /* Date Accomplished */
+
+            .table th:nth-child(8), .table td:nth-child(8) {
+                width: 12% !important;
+                text-align: center !important;
+            } /* Status */
+
+            /* Print header styling */
+            .print-header {
+                display: block !important;
+                text-align: center !important;
+                margin-bottom: 20px !important;
+                page-break-after: avoid !important;
+            }
+
+            .print-date {
+                display: block !important;
+                text-align: right !important;
+                font-size: 10px !important;
+                margin-bottom: 10px !important;
+            }
+
+            /* Hide the regular title when printing */
+            .main-title {
+                display: none !important;
+            }
+
+            /* Show print table header */
+            .print-table-header {
+                display: block !important;
+                page-break-after: avoid !important;
+            }
+
+            /* Summary cards for print */
+            .summary-section {
+                display: flex !important;
+                flex-direction: row !important;
+                justify-content: space-around !important;
+                margin-bottom: 20px !important;
+                border: 1px solid #000 !important;
+                padding: 10px !important;
+                background-color: #f8f9fa !important;
+            }
+
+            .summary-section .col-md-3 {
+                flex: 1 !important;
+                margin: 0 5px !important;
+                max-width: none !important;
+            }
+
+            .summary-section .card {
+                border: none !important;
+                background-color: transparent !important;
+                color: #000 !important;
+                margin-bottom: 0 !important;
+                text-align: center !important;
+            }
+
+            .summary-section .card-body {
+                padding: 5px !important;
+                color: #000 !important;
+            }
+
+            .summary-section .card-title {
+                color: #000 !important;
+                font-weight: bold !important;
+                font-size: 16px !important;
+                margin-bottom: 2px !important;
+            }
+
+            .summary-section .card-text {
+                color: #000 !important;
+                font-size: 10px !important;
+                margin-bottom: 0 !important;
+            }
+
+            /* Override any background colors for print */
+            .bg-primary, .bg-success, .bg-info, .bg-warning {
+                background-color: transparent !important;
+                color: #000 !important;
+            }
+
+            .text-white {
+                color: #000 !important;
+            }
+
+            /* Hide the flex icons in summary cards */
+            .summary-section .bi {
+                display: none !important;
+            }
+
+            /* Ensure table doesn't break awkwardly */
+            .table-responsive {
+                overflow: visible !important;
+            }
+
+            /* Force table to use full width */
+            #accomplishmentTable {
+                width: 100% !important;
+                max-width: 100% !important;
+            }
+        }
+    </style>
+
     <!-- Main Content -->
     <div class="main-content">
         <div class="container-fluid py-4">
             <!-- Breadcrumb -->
-            <nav aria-label="breadcrumb" class="bg-light">
+            <nav aria-label="breadcrumb" class="bg-light no-print">
                 <div class="container-fluid">
                     <ol class="breadcrumb py-2 mb-4">
                         <li class="breadcrumb-item"><a href="<?php echo base_url('Focal/dashboard'); ?>">Dashboard</a></li>
-                        <li class="breadcrumb-item active">Consolidated GAD Accomplishment Report</li>
+                        <li class="breadcrumb-item active">Table of Accepted GAD Accomplishments</li>
                     </ol>
                 </div>
             </nav>
 
+            <!-- Print Header (only visible when printing) -->
+            <div class="print-header" style="display: none;">
+                <h1 style="font-size: 18px; margin-bottom: 5px; font-weight: bold;">Table of Accepted GAD Accomplishments</h1>
+                <p style="font-size: 12px; margin-bottom: 20px; color: #666;">Fiscal Year 2025 | Generated on <span id="printDate"></span></p>
+                <hr style="border: 1px solid #000; margin-bottom: 20px;">
+            </div>
+
             <div class="row">
                 <div class="col-12">
                     <div class="d-flex justify-content-between align-items-center mb-4">
-                        <h1 class="h3 mb-0">
-                            <i class="bi bi-file-earmark-bar-graph text-primary"></i> Consolidated GAD Accomplishment Report
+                        <h1 class="h3 mb-0 main-title">
+                            <i class="bi bi-file-earmark-check text-primary"></i> Table of Accepted GAD Accomplishments
                         </h1>
-                        <div class="btn-group">
-                            <button type="button" class="btn btn-primary" disabled><i class="bi bi-file-earmark-text"></i> Generate Report</button>
-                            <button type="button" class="btn btn-success" disabled><i class="bi bi-file-earmark-excel"></i> Export to Excel</button>
-                            <button type="button" class="btn btn-info" disabled><i class="bi bi-printer"></i> Print Report</button>
+                        <div class="btn-group no-print">
+                            <button type="button" class="btn btn-success" onclick="printAccomplishments()">
+                                <i class="bi bi-printer"></i> Print
+                            </button>
+                            <button type="button" class="btn btn-info" onclick="saveToPDF()">
+                                <i class="bi bi-file-earmark-pdf"></i> Save as PDF
+                            </button>
                         </div>
                     </div>
                 </div>
             </div>
 
-            <!-- Report Period Selection -->
-            <div class="row mb-4">
-                <div class="col-12">
-                    <div class="card">
-                        <div class="card-body">
-                            <div class="row align-items-end">
-                                <div class="col-md-3">
-                                    <label for="reportYear" class="form-label">Report Year</label>
-                                    <select class="form-select" id="reportYear" disabled>
-                                        <option value="2024" selected>2024</option>
-                                        <option value="2023">2023</option>
-                                        <option value="2022">2022</option>
-                                    </select>
-                                </div>
-                                <div class="col-md-3">
-                                    <label for="reportQuarter" class="form-label">Quarter</label>
-                                    <select class="form-select" id="reportQuarter" disabled>
-                                        <option value="">All Quarters</option>
-                                        <option value="Q1">Q1 (Jan-Mar)</option>
-                                        <option value="Q2" selected>Q2 (Apr-Jun)</option>
-                                        <option value="Q3">Q3 (Jul-Sep)</option>
-                                        <option value="Q4">Q4 (Oct-Dec)</option>
-                                    </select>
-                                </div>
-                                <div class="col-md-3">
-                                    <label for="reportOffice" class="form-label">Office</label>
-                                    <select class="form-select" id="reportOffice" disabled>
-                                        <option value="">All Offices</option>
-                                        <option value="Human Resources Division">Human Resources Division</option>
-                                        <option value="Training Division">Training Division</option>
-                                        <option value="Legal Affairs Division">Legal Affairs Division</option>
-                                        <option value="Policy Development Unit">Policy Development Unit</option>
-                                        <option value="IT Division">IT Division</option>
-                                    </select>
-                                </div>
-                                <div class="col-md-3">
-                                    <button type="button" class="btn btn-outline-primary" disabled><i class="bi bi-funnel"></i> Apply Filter</button>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Summary Statistics -->
-            <div class="row mb-4">
+            <!-- Summary Cards -->
+            <div class="row mb-4 summary-section">
                 <div class="col-md-3">
                     <div class="card bg-primary text-white">
-                        <div class="card-body text-center">
-                            <h3 class="card-title">15</h3>
-                            <p class="card-text">Total Activities</p>
-                            <i class="bi bi-clipboard-data fs-1"></i>
+                        <div class="card-body">
+                            <div class="d-flex justify-content-between">
+                                <div>
+                                    <h4 class="card-title" id="totalAccomplishments"><?php echo $totalAccomplishments ?? 0; ?></h4>
+                                    <p class="card-text">Total Accomplishments</p>
+                                </div>
+                                <div class="align-self-center">
+                                    <i class="bi bi-check-circle fs-1"></i>
+                                </div>
+                            </div>
                         </div>
                     </div>
                 </div>
                 <div class="col-md-3">
                     <div class="card bg-success text-white">
-                        <div class="card-body text-center">
-                            <h3 class="card-title">12</h3>
-                            <p class="card-text">Completed</p>
-                            <i class="bi bi-check-circle fs-1"></i>
-                        </div>
-                    </div>
-                </div>
-                <div class="col-md-3">
-                    <div class="card bg-warning text-white">
-                        <div class="card-body text-center">
-                            <h3 class="card-title">2</h3>
-                            <p class="card-text">In Progress</p>
-                            <i class="bi bi-clock fs-1"></i>
+                        <div class="card-body">
+                            <div class="d-flex justify-content-between">
+                                <div>
+                                    <h4 class="card-title" id="totalBudgetUtilized">₱<?php echo number_format($totalBudget ?? 0, 2); ?></h4>
+                                    <p class="card-text">Total Budget Utilized</p>
+                                </div>
+                                <div class="align-self-center">
+                                    <i class="bi bi-currency-dollar fs-1"></i>
+                                </div>
+                            </div>
                         </div>
                     </div>
                 </div>
                 <div class="col-md-3">
                     <div class="card bg-info text-white">
-                        <div class="card-body text-center">
-                            <h3 class="card-title">80%</h3>
-                            <p class="card-text">Success Rate</p>
-                            <i class="bi bi-bar-chart fs-1"></i>
+                        <div class="card-body">
+                            <div class="d-flex justify-content-between">
+                                <div>
+                                    <h4 class="card-title" id="totalDivisions"><?php echo $divisionsCount ?? 0; ?></h4>
+                                    <p class="card-text">Participating Divisions</p>
+                                </div>
+                                <div class="align-self-center">
+                                    <i class="bi bi-building fs-1"></i>
+                                </div>
+                            </div>
                         </div>
                     </div>
                 </div>
-            </div>
-
-            <!-- Performance by Office -->
-            <div class="row mb-4">
-                <div class="col-12">
-                    <div class="card shadow">
-                        <div class="card-header">
-                            <h5 class="mb-0">Performance Summary by Office</h5>
-                        </div>
+                <div class="col-md-3">
+                    <div class="card bg-warning text-white">
                         <div class="card-body">
-                            <div class="table-responsive">
-                                <table class="table table-hover">
-                                    <thead class="table-dark">
-                                        <tr>
-                                            <th>Office</th>
-                                            <th>Planned Activities</th>
-                                            <th>Completed</th>
-                                            <th>Success Rate</th>
-                                            <th>Budget Utilization</th>
-                                            <th>Beneficiaries Reached</th>
-                                        </tr>
-                                    </thead>
-                                    <tbody>
-                                        <tr>
-                                            <td>Human Resources Division</td>
-                                            <td>4</td>
-                                            <td>4</td>
-                                            <td><span class="badge bg-success">100%</span></td>
-                                            <td>₱450,000 (95%)</td>
-                                            <td>320 employees</td>
-                                        </tr>
-                                        <tr>
-                                            <td>Training Division</td>
-                                            <td>3</td>
-                                            <td>3</td>
-                                            <td><span class="badge bg-success">100%</span></td>
-                                            <td>₱280,000 (88%)</td>
-                                            <td>150 participants</td>
-                                        </tr>
-                                        <tr>
-                                            <td>Legal Affairs Division</td>
-                                            <td>3</td>
-                                            <td>2</td>
-                                            <td><span class="badge bg-warning">67%</span></td>
-                                            <td>₱180,000 (72%)</td>
-                                            <td>All employees</td>
-                                        </tr>
-                                        <tr>
-                                            <td>Policy Development Unit</td>
-                                            <td>2</td>
-                                            <td>1</td>
-                                            <td><span class="badge bg-warning">50%</span></td>
-                                            <td>₱120,000</td>
-                                            <td>52 participants</td>
-                                        </tr>
-                                        <tr>
-                                            <td>IT Division</td>
-                                            <td>3</td>
-                                            <td>2</td>
-                                            <td><span class="badge bg-warning">67%</span></td>
-                                            <td>₱200,000 (80%)</td>
-                                            <td>Digital platform users</td>
-                                        </tr>
-                                    </tbody>
-                                </table>
+                            <div class="d-flex justify-content-between">
+                                <div>
+                                    <h4 class="card-title">2025</h4>
+                                    <p class="card-text">Target Year</p>
+                                </div>
+                                <div class="align-self-center">
+                                    <i class="bi bi-calendar-event fs-1"></i>
+                                </div>
                             </div>
                         </div>
                     </div>
                 </div>
             </div>
 
-            <!-- Detailed Accomplishments -->
+            <!-- Main Table -->
             <div class="row">
                 <div class="col-12">
-                    <div class="card shadow">
-                        <div class="card-header">
-                            <h5 class="mb-0">Detailed GAD Accomplishments</h5>
+                    <div class="card shadow-sm">
+                        <div class="card-header bg-white">
+                            <div class="row align-items-center">
+                                <div class="col">
+                                    <h5 class="card-title mb-0">
+                                        <i class="bi bi-table text-primary"></i> Table of Accepted GAD Accomplishments
+                                    </h5>
+                                    <small class="text-muted">Fiscal Year <?= date('Y') ?> | Generated on: <?= date('F d, Y') ?></small>
+                                </div>
+                                <div class="col-auto no-print">
+                                    <div class="d-flex gap-2 align-items-center">
+                                        <!-- Search -->
+                                        <div class="input-group" style="width: 250px;">
+                                            <input type="text" class="form-control form-control-sm" id="searchInput" placeholder="Search accomplishments...">
+                                            <button class="btn btn-outline-secondary btn-sm" type="button" onclick="searchAccomplishments()">
+                                                <i class="bi bi-search"></i>
+                                            </button>
+                                        </div>
+
+                                        <!-- Filter by Division -->
+                                        <select class="form-select form-select-sm" id="divisionFilter" onchange="filterByDivision()" style="width: 200px;">
+                                            <option value="">All Divisions</option>
+                                            <?php if (isset($divisions) && !empty($divisions)): ?>
+                                                <?php foreach ($divisions as $division): ?>
+                                                    <option value="<?php echo esc($division['division']); ?>"><?php echo esc($division['division']); ?></option>
+                                                <?php endforeach; ?>
+                                            <?php endif; ?>
+                                        </select>
+
+                                        <!-- Filter by Status -->
+                                        <select class="form-select form-select-sm" id="statusFilter" onchange="filterByStatus()" style="width: 150px;">
+                                            <option value="">All Status</option>
+                                            <option value="Completed">Completed</option>
+                                            <option value="Ongoing">Ongoing</option>
+                                            <option value="Pending">Pending</option>
+                                        </select>
+                                    </div>
+                                </div>
+                            </div>
                         </div>
                         <div class="card-body">
+                            <!-- Print-only table header -->
+                            <div class="print-table-header" style="display: none;">
+                                <h3 style="font-size: 14px; margin-bottom: 10px; font-weight: bold; text-align: center;">Detailed Accomplishment Information</h3>
+                            </div>
+
                             <div class="table-responsive">
-                                <table class="table table-hover table-striped">
+                                <table class="table table-hover table-striped" id="accomplishmentTable">
                                     <thead class="table-dark">
                                         <tr>
                                             <th>GAD Activity ID</th>
-                                            <th>Activity Title</th>
-                                            <th>Office</th>
-                                            <th>Target vs Actual</th>
-                                            <th>Budget vs Actual</th>
-                                            <th>Completion Date</th>
-                                            <th>Scope</th>
-                                            <th>Impact</th>
+                                            <th>Division/Office</th>
+                                            <th>GAD Activity</th>
+                                            <th>Responsible Unit/Offices</th>
+                                            <th>Budget Allocation</th>
+                                            <th>Source of Fund</th>
+                                            <th>Date Accomplished</th>
+                                            <th>Status</th>
+                                            <th class="no-print">Actions</th>
                                         </tr>
                                     </thead>
                                     <tbody>
-                                        <tr>
-                                            <td>GAD001</td>
-                                            <td>Gender Sensitivity Training</td>
-                                            <td>HR Division</td>
-                                            <td>100 → 120 (<span class="text-success">+20%</span>)</td>
-                                            <td>₱250k → ₱238k (<span class="text-green"> -5% </span>)</td>
-                                            <td>2024-03-25</td>
-                                            <td><span class="badge bg-success">Completed</span></td>
-                                            <td><span class="badge bg-info">High</span></td>
-                                        </tr>
-                                        <tr>
-                                            <td>GAD002</td>
-                                            <td>Women's Leadership Workshop</td>
-                                            <td>Training Division</td>
-                                            <td>50 → 45 (<span class="text-warning"> -10% </span>)</td>
-                                            <td>₱180k → ₱165k (<span class="text-green"> -8% </span>)</td>
-                                            <td>2024-04-15</td>
-                                            <td><span class="badge bg-success">Success</span></td>
-                                            <td><span class="badge bg-info">High</span></td>
-                                        </tr>
-                                        <tr>
-                                            <td>GAD003</td>
-                                            <td>Anti-Sexual Harassment Campaign</td>
-                                            <td>Legal Affairs</td>
-                                            <td>All → All (<span class="text-success">100%</span>)</td>
-                                            <td>₱150k → ₱145k (<span class="text-green"> -3% </span>)</td>
-                                            <td>2024-05-25</td>
-                                            <td><span class="badge bg-success">Completed</span></td>
-                                            <td><span class="badge bg-success">Very High</span></td>
-                                        </tr>
-                                        <tr>
-                                            <td>GAD004</td>
-                                            <td>Work-Life Balance</td>
-                                            <td>Policy Unit</td>
-                                            <td>45 → 45 (<span class="text-success">0</span>)</td>
-                                            <td>₱120k → ₱80k (<span class="text-warning"> -33% </span>)</td>
-                                            <td>Pending</td>
-                                            <td><span class="badge bg-warning">In Progress</span></td>
-                                            <td><span class="badge bg-warning">Medium</span></td>
-                                        </tr>
-                                        <tr>
-                                            <td>GAD005</td>
-                                            <td>Digital Gender Platform</td>
-                                            <td>LIT Division</td>
-                                            <td>Beta → Beta (<span class="text-success">100%</span>)</td>
-                                            <td>₱200k → ₱185k (<span class="text-green"> -8% </span>)</td>
-                                            <td>2024-07-25</td>
-                                            <td><span class="badge bg-success">Completed</span></td>
-                                            <td><span class="badge bg-info">High</span></td>
-                                        </tr>
+                                        <?php if (isset($accomplishments) && !empty($accomplishments)): ?>
+                                            <?php foreach ($accomplishments as $accomplishment): ?>
+                                                <tr>
+                                                    <td>GAD-<?php echo str_pad($accomplishment['plan_id'] ?? '000', 3, '0', STR_PAD_LEFT); ?></td>
+                                                    <td><?php echo esc($accomplishment['office_name'] ?? 'Unknown Division'); ?></td>
+                                                    <td><?php echo esc($accomplishment['gad_activity'] ?? 'N/A'); ?></td>
+                                                    <td>
+                                                        <?php
+                                                        $responsibleUnits = $accomplishment['responsible_units'] ?? 'N/A';
+                                                        if ($responsibleUnits !== 'N/A' && !empty($responsibleUnits)) {
+                                                            // Try to decode JSON if it's a JSON string
+                                                            $decoded = json_decode($responsibleUnits, true);
+                                                            if (json_last_error() === JSON_ERROR_NONE && is_array($decoded)) {
+                                                                echo esc(implode(', ', $decoded));
+                                                            } else {
+                                                                echo esc($responsibleUnits);
+                                                            }
+                                                        } else {
+                                                            echo 'N/A';
+                                                        }
+                                                        ?>
+                                                    </td>
+                                                    <td>₱<?php echo number_format($accomplishment['budget_allocation'] ?? 0, 2); ?></td>
+                                                    <td><?php echo esc($accomplishment['source_of_fund'] ?? 'N/A'); ?></td>
+                                                    <td><?php echo date('M d, Y', strtotime($accomplishment['date_accomplished'] ?? 'now')); ?></td>
+                                                    <td>
+                                                        <?php
+                                                        $status = strtolower($accomplishment['status'] ?? 'pending');
+                                                        $badgeClass = 'bg-secondary';
+                                                        $statusText = ucfirst($status);
+
+                                                        switch($status) {
+                                                            case 'approved':
+                                                                $badgeClass = 'bg-success';
+                                                                $statusText = 'Approved';
+                                                                break;
+                                                            case 'completed':
+                                                                $badgeClass = 'bg-primary';
+                                                                $statusText = 'Completed';
+                                                                break;
+                                                            case 'under review':
+                                                                $badgeClass = 'bg-warning';
+                                                                $statusText = 'Under Review';
+                                                                break;
+                                                            case 'returned':
+                                                                $badgeClass = 'bg-danger';
+                                                                $statusText = 'Returned';
+                                                                break;
+                                                        }
+                                                        ?>
+                                                        <span class="badge <?php echo $badgeClass; ?>"><?php echo $statusText; ?></span>
+                                                    </td>
+                                                    <td class="no-print">
+                                                        <button class="btn btn-sm btn-outline-primary" onclick="viewAccomplishmentDetails('GAD-<?php echo str_pad($accomplishment['plan_id'] ?? '000', 3, '0', STR_PAD_LEFT); ?>')">
+                                                            <i class="bi bi-eye"></i> View
+                                                        </button>
+                                                    </td>
+                                                </tr>
+                                            <?php endforeach; ?>
+                                        <?php else: ?>
+                                            <tr>
+                                                <td colspan="9" class="text-center py-4">
+                                                    <i class="bi bi-inbox text-muted" style="font-size: 3rem;"></i>
+                                                    <p class="text-muted mt-2 mb-0">No approved GAD accomplishments available.</p>
+                                                    <small class="text-muted">Accomplishments will appear here once they are submitted and approved.</small>
+                                                </td>
+                                            </tr>
+                                        <?php endif; ?>
                                     </tbody>
+                                    <tfoot class="table-light">
+                                        <tr class="fw-bold">
+                                            <th colspan="4" class="text-end">TOTAL BUDGET UTILIZED:</th>
+                                            <th class="text-end">₱<?php echo number_format($totalBudget ?? 0, 2); ?></th>
+                                            <th colspan="4"></th>
+                                        </tr>
+                                    </tfoot>
                                 </table>
                             </div>
                         </div>
@@ -446,32 +625,63 @@
                 </div>
             </div>
 
-            <!-- Report Footer -->
-            <div class="row mt-4">
-                <div class="col-12">
-                    <div class="card">
-                        <div class="card-body">
-                            <div class="row">
-                                <div class="col-md-6">
-                                    <h6>Data Summary</h6>
-                                    <p class="text-muted mb-0">
-                                        Generated on: <strong>July 27, 2025</strong><br>
-                                        Report Period: <strong>Q2 2024 (April - June)</strong><br>
-                                        Generated by: <strong><?php echo esc($first_name . ' ' . $last_name); ?></strong>
-                                    </p>
-                                </div>
-                                <div class="col-md-6">
-                                    <h6>Key Insights</h6>
-                                    <ul class="text-muted mb-0">
-                                        <li>Overall completion rate: 84%</li>
-                                        <li>Budget efficiency: 85% average utilization</li>
-                                        <li>High-impact activities: 3 out of 5 completed</li>
-                                        <li>Total beneficiaries reached: 470+ individuals</li>
-                                    </ul>
-                                </div>
-                            </div>
+        </div>
+    </div>
+
+    <!-- Accomplishment Details Modal -->
+    <div class="modal fade" id="accomplishmentDetailsModal" tabindex="-1" aria-labelledby="accomplishmentDetailsModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="accomplishmentDetailsModalLabel">GAD Accomplishment Details</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <strong>GAD Activity ID:</strong>
+                            <p id="detailAccomplishmentId"></p>
+                        </div>
+                        <div class="col-md-6">
+                            <strong>Division/Office:</strong>
+                            <p id="detailDivision"></p>
                         </div>
                     </div>
+                    <div class="row">
+                        <div class="col-12">
+                            <strong>GAD Activity:</strong>
+                            <p id="detailActivity"></p>
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-12">
+                            <strong>Responsible Unit/Offices:</strong>
+                            <p id="detailResponsibleUnits"></p>
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-md-6">
+                            <strong>Budget Allocation:</strong>
+                            <p id="detailBudget"></p>
+                        </div>
+                        <div class="col-md-6">
+                            <strong>Source of Fund:</strong>
+                            <p id="detailSourceOfFund"></p>
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-md-6">
+                            <strong>Date Accomplished:</strong>
+                            <p id="detailDateAccomplished"></p>
+                        </div>
+                        <div class="col-md-6">
+                            <strong>Status:</strong>
+                            <p id="detailStatus"></p>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
                 </div>
             </div>
         </div>
@@ -479,5 +689,200 @@
 
     <!-- Bootstrap JavaScript -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+
+    <script>
+        // Print functionality
+        function printAccomplishments() {
+            // Set print date
+            document.getElementById('printDate').textContent = new Date().toLocaleString();
+
+            // Hide non-print elements
+            const noPrintElements = document.querySelectorAll('.no-print');
+            noPrintElements.forEach(el => el.style.display = 'none');
+
+            // Show print header and table header
+            const printHeader = document.querySelector('.print-header');
+            const printTableHeader = document.querySelector('.print-table-header');
+            if (printHeader) {
+                printHeader.style.display = 'block';
+            }
+            if (printTableHeader) {
+                printTableHeader.style.display = 'block';
+            }
+
+            // Print the page
+            window.print();
+
+            // Restore hidden elements after printing
+            setTimeout(() => {
+                noPrintElements.forEach(el => el.style.display = '');
+                if (printHeader) {
+                    printHeader.style.display = 'none';
+                }
+                if (printTableHeader) {
+                    printTableHeader.style.display = 'none';
+                }
+            }, 1000);
+        }
+
+        // Save to PDF functionality
+        function saveToPDF() {
+            // Set print date
+            document.getElementById('printDate').textContent = new Date().toLocaleString();
+
+            // Hide non-print elements
+            const noPrintElements = document.querySelectorAll('.no-print');
+            noPrintElements.forEach(el => el.style.display = 'none');
+
+            // Show print header and table header
+            const printHeader = document.querySelector('.print-header');
+            const printTableHeader = document.querySelector('.print-table-header');
+            if (printHeader) {
+                printHeader.style.display = 'block';
+            }
+            if (printTableHeader) {
+                printTableHeader.style.display = 'block';
+            }
+
+            // Trigger print dialog (user can save as PDF)
+            window.print();
+
+            // Restore hidden elements after printing
+            setTimeout(() => {
+                noPrintElements.forEach(el => el.style.display = '');
+                if (printHeader) {
+                    printHeader.style.display = 'none';
+                }
+                if (printTableHeader) {
+                    printTableHeader.style.display = 'none';
+                }
+            }, 1000);
+        }
+
+        // Search functionality
+        function searchAccomplishments() {
+            const searchTerm = document.getElementById('searchInput').value.toLowerCase();
+            const table = document.getElementById('accomplishmentTable');
+            const rows = table.getElementsByTagName('tbody')[0].getElementsByTagName('tr');
+
+            for (let i = 0; i < rows.length; i++) {
+                const row = rows[i];
+                const cells = row.getElementsByTagName('td');
+                let found = false;
+
+                for (let j = 0; j < cells.length; j++) {
+                    if (cells[j].textContent.toLowerCase().includes(searchTerm)) {
+                        found = true;
+                        break;
+                    }
+                }
+
+                row.style.display = found ? '' : 'none';
+            }
+        }
+
+        // Filter by division
+        function filterByDivision() {
+            const selectedDivision = document.getElementById('divisionFilter').value;
+            const table = document.getElementById('accomplishmentTable');
+            const rows = table.getElementsByTagName('tbody')[0].getElementsByTagName('tr');
+
+            for (let i = 0; i < rows.length; i++) {
+                const row = rows[i];
+                const divisionCell = row.getElementsByTagName('td')[1]; // Division is in the 2nd column
+
+                if (selectedDivision === '' || divisionCell.textContent.includes(selectedDivision)) {
+                    row.style.display = '';
+                } else {
+                    row.style.display = 'none';
+                }
+            }
+        }
+
+        // Filter by status
+        function filterByStatus() {
+            const selectedStatus = document.getElementById('statusFilter').value;
+            const table = document.getElementById('accomplishmentTable');
+            const rows = table.getElementsByTagName('tbody')[0].getElementsByTagName('tr');
+
+            for (let i = 0; i < rows.length; i++) {
+                const row = rows[i];
+                const statusCell = row.getElementsByTagName('td')[7]; // Status is in the 8th column
+
+                if (selectedStatus === '' || statusCell.textContent.includes(selectedStatus)) {
+                    row.style.display = '';
+                } else {
+                    row.style.display = 'none';
+                }
+            }
+        }
+
+        // View accomplishment details
+        function viewAccomplishmentDetails(accomplishmentId) {
+            // Get accomplishment data from PHP
+            const accomplishments = <?php echo json_encode($accomplishments ?? []); ?>;
+
+            // Find the accomplishment by ID
+            let selectedAccomplishment = null;
+            for (let acc of accomplishments) {
+                const accId = 'GAD-' + String(acc.plan_id || '000').padStart(3, '0');
+                if (accId === accomplishmentId) {
+                    selectedAccomplishment = acc;
+                    break;
+                }
+            }
+
+            if (selectedAccomplishment) {
+                document.getElementById('detailAccomplishmentId').textContent = accomplishmentId;
+                document.getElementById('detailDivision').textContent = selectedAccomplishment.office_name || 'Unknown Division';
+                document.getElementById('detailActivity').textContent = selectedAccomplishment.gad_activity || 'N/A';
+                // Format responsible units
+                let responsibleUnits = selectedAccomplishment.responsible_units || 'N/A';
+                if (responsibleUnits !== 'N/A' && responsibleUnits) {
+                    try {
+                        const parsed = JSON.parse(responsibleUnits);
+                        if (Array.isArray(parsed)) {
+                            responsibleUnits = parsed.join(', ');
+                        }
+                    } catch (e) {
+                        // If not JSON, use as is
+                    }
+                }
+                document.getElementById('detailResponsibleUnits').textContent = responsibleUnits;
+                document.getElementById('detailBudget').textContent = '₱' + parseFloat(selectedAccomplishment.budget_allocation || 0).toLocaleString();
+                document.getElementById('detailSourceOfFund').textContent = selectedAccomplishment.source_of_fund || 'N/A';
+
+                // Format date
+                const dateAccomplished = selectedAccomplishment.date_accomplished;
+                if (dateAccomplished) {
+                    const date = new Date(dateAccomplished);
+                    document.getElementById('detailDateAccomplished').textContent = date.toLocaleDateString('en-US', {
+                        year: 'numeric',
+                        month: 'short',
+                        day: 'numeric'
+                    });
+                } else {
+                    document.getElementById('detailDateAccomplished').textContent = 'N/A';
+                }
+
+                // Format status
+                const status = selectedAccomplishment.status || 'pending';
+                document.getElementById('detailStatus').textContent = status.charAt(0).toUpperCase() + status.slice(1);
+
+                // Show modal
+                const modal = new bootstrap.Modal(document.getElementById('accomplishmentDetailsModal'));
+                modal.show();
+            } else {
+                alert('Accomplishment details not found.');
+            }
+        }
+
+        // Search on Enter key
+        document.getElementById('searchInput').addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') {
+                searchAccomplishments();
+            }
+        });
+    </script>
 </body>
 </html>

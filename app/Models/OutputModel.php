@@ -61,22 +61,28 @@ class OutputModel extends Model
                     o.*,
                     p.activity as gad_activity,
                     p.authors_division,
+                    p.responsible_units,
+                    p.budget as plan_budget,
                     d.division as office_name,
                     er.first_name as reviewed_by_name,
                     er.last_name as reviewed_by_lastname,
-                    dr.division as reviewed_by_division
+                    dr.division as reviewed_by_division,
+                    COALESCE(SUM(b.amount), 0) as budget_allocation,
+                    GROUP_CONCAT(DISTINCT sf.source_name SEPARATOR ', ') as source_of_fund
                 FROM output o
                 LEFT JOIN plan p ON p.plan_id = o.plan_id
                 LEFT JOIN divisions d ON d.div_id = p.authors_division
                 LEFT JOIN employees er ON o.accepted_by = er.emp_id
                 LEFT JOIN divisions dr ON er.div_id = dr.div_id
+                LEFT JOIN budget b ON b.plan_id = p.plan_id
+                LEFT JOIN source_of_fund sf ON sf.src_id = b.src_id
             ";
 
             if ($userId) {
                 $sql .= " WHERE o.accepted_by = " . intval($userId);
             }
 
-            $sql .= " ORDER BY o.date_accomplished DESC, o.timestamp DESC";
+            $sql .= " GROUP BY o.output_id ORDER BY o.date_accomplished DESC, o.timestamp DESC";
 
             $query = $db->query($sql);
             $result = $query->getResultArray();
@@ -99,7 +105,11 @@ class OutputModel extends Model
                     'office_name' => $row['office_name'],
                     'reviewed_by_name' => $row['reviewed_by_name'],
                     'reviewed_by_lastname' => $row['reviewed_by_lastname'],
-                    'reviewed_by_division' => $row['reviewed_by_division']
+                    'reviewed_by_division' => $row['reviewed_by_division'],
+                    'responsible_units' => $row['responsible_units'],
+                    'budget_allocation' => $row['budget_allocation'],
+                    'source_of_fund' => $row['source_of_fund'],
+                    'plan_budget' => $row['plan_budget']
                 ];
             }
 

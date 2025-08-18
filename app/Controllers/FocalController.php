@@ -1014,11 +1014,62 @@ public function budgetCrafting()
             $this->session->setFlashdata('error', 'Unauthorized access.');
             return redirect()->to(base_url('/login'));
         }
-        $data = [
-            'first_name' => $this->session->get('first_name') ?? 'Admin', // Fallback if null
-            'last_name' => $this->session->get('last_name') ?? 'User'
-        ];
-        return view('Focal/ConsolidatedAccomplishment', $data);
+
+        try {
+            $outputModel = new \App\Models\OutputModel();
+
+            // Get all accomplishments with details
+            $allAccomplishments = $outputModel->getAccomplishmentsWithDetails();
+
+            // Filter to show only approved accomplishments
+            // Temporarily show all accomplishments for debugging
+            $approvedAccomplishments = array_filter($allAccomplishments, function($acc) {
+                return in_array(strtolower($acc['status']), ['approved', 'completed', 'under review']);
+            });
+
+            // Get unique divisions from approved accomplishments
+            $divisions = [];
+            foreach ($approvedAccomplishments as $accomplishment) {
+                if (!empty($accomplishment['office_name'])) {
+                    $divisions[$accomplishment['office_name']] = [
+                        'division' => $accomplishment['office_name']
+                    ];
+                }
+            }
+            $divisions = array_values($divisions);
+
+            // Calculate totals
+            $totalBudget = 0;
+            foreach ($approvedAccomplishments as $accomplishment) {
+                $totalBudget += floatval($accomplishment['budget_allocation'] ?? 0);
+            }
+
+            $data = [
+                'accomplishments' => $approvedAccomplishments,
+                'divisions' => $divisions,
+                'totalAccomplishments' => count($approvedAccomplishments),
+                'totalBudget' => $totalBudget,
+                'divisionsCount' => count($divisions),
+                'first_name' => $this->session->get('first_name') ?? 'Admin',
+                'last_name' => $this->session->get('last_name') ?? 'User'
+            ];
+
+            return view('Focal/ConsolidatedAccomplishment', $data);
+        } catch (\Exception $e) {
+            log_message('error', 'Error in consolidatedAccomplishment: ' . $e->getMessage());
+
+            $data = [
+                'accomplishments' => [],
+                'divisions' => [],
+                'totalAccomplishments' => 0,
+                'totalBudget' => 0,
+                'divisionsCount' => 0,
+                'first_name' => $this->session->get('first_name') ?? 'Admin',
+                'last_name' => $this->session->get('last_name') ?? 'User'
+            ];
+
+            return view('Focal/ConsolidatedAccomplishment', $data);
+        }
     }
     
 

@@ -103,38 +103,102 @@
             .main-content {
                 margin-left: 0 !important;
                 padding: 0 !important;
+                width: 100% !important;
             }
 
             .card {
                 border: none !important;
                 box-shadow: none !important;
+                margin: 0 !important;
+                width: 100% !important;
             }
 
             .card-header {
                 background-color: #f8f9fc !important;
                 border-bottom: 2px solid #000 !important;
                 padding: 1rem !important;
+                page-break-inside: avoid !important;
+            }
+
+            .card-body {
+                padding: 0 !important;
+            }
+
+            .table-responsive {
+                overflow: visible !important;
             }
 
             .table {
-                font-size: 12px !important;
+                font-size: 9px !important;
+                width: 100% !important;
+                table-layout: fixed !important;
+                margin: 0 !important;
+                page-break-inside: auto !important;
+                border-collapse: collapse !important;
             }
 
             .table th {
                 background-color: #343a40 !important;
                 color: white !important;
                 border: 1px solid #000 !important;
+                padding: 4px 2px !important;
+                word-wrap: break-word !important;
+                page-break-inside: avoid !important;
+                font-weight: bold !important;
+                text-align: center !important;
             }
 
             .table td {
                 border: 1px solid #000 !important;
+                padding: 3px 2px !important;
+                word-wrap: break-word !important;
+                vertical-align: top !important;
+                line-height: 1.1 !important;
             }
 
             .table tfoot th {
                 background-color: #f8f9fc !important;
                 color: #000 !important;
                 border: 2px solid #000 !important;
+                font-weight: bold !important;
+                page-break-inside: avoid !important;
+                padding: 6px 2px !important;
+                font-size: 10px !important;
             }
+
+            /* Column width adjustments for better fit */
+            .table th:nth-child(1), .table td:nth-child(1) {
+                width: 10% !important;
+                text-align: center !important;
+            } /* GAD Activity ID */
+
+            .table th:nth-child(2), .table td:nth-child(2) {
+                width: 18% !important;
+            } /* Division/Office */
+
+            .table th:nth-child(3), .table td:nth-child(3) {
+                width: 30% !important;
+            } /* GAD Activity */
+
+            .table th:nth-child(4), .table td:nth-child(4) {
+                width: 15% !important;
+            } /* Responsible Unit/Offices */
+
+            .table th:nth-child(5), .table td:nth-child(5) {
+                width: 12% !important;
+                text-align: right !important;
+            } /* Budget Allocation */
+
+            .table th:nth-child(6), .table td:nth-child(6) {
+                width: 10% !important;
+                text-align: center !important;
+            } /* Source of Fund */
+
+            .table th:nth-child(7), .table td:nth-child(7) {
+                width: 5% !important;
+                text-align: center !important;
+                font-size: 8px !important;
+            } /* Date Approved */
 
             .breadcrumb {
                 display: none !important;
@@ -146,15 +210,165 @@
 
             h1, h5 {
                 color: #000 !important;
+                page-break-after: avoid !important;
             }
 
             .text-muted {
                 color: #666 !important;
             }
 
+            /* Summary section styling */
+            .summary-section {
+                page-break-inside: avoid !important;
+                margin-bottom: 20px !important;
+            }
+
+            /* Summary cards for print */
+            .summary-section {
+                display: flex !important;
+                flex-direction: row !important;
+                justify-content: space-around !important;
+                margin-bottom: 20px !important;
+                border: 1px solid #000 !important;
+                padding: 10px !important;
+                background-color: #f8f9fa !important;
+            }
+
+            .summary-section .col-md-3 {
+                flex: 1 !important;
+                margin: 0 5px !important;
+                max-width: none !important;
+            }
+
+            .summary-section .card {
+                border: none !important;
+                background-color: transparent !important;
+                color: #000 !important;
+                margin-bottom: 0 !important;
+                text-align: center !important;
+            }
+
+            .summary-section .card-body {
+                padding: 5px !important;
+                color: #000 !important;
+            }
+
+            .summary-section .card-title {
+                color: #000 !important;
+                font-weight: bold !important;
+                font-size: 16px !important;
+                margin-bottom: 2px !important;
+            }
+
+            .summary-section .card-text {
+                color: #000 !important;
+                font-size: 10px !important;
+                margin-bottom: 0 !important;
+            }
+
+            /* Override any background colors for print */
+            .bg-primary, .bg-success, .bg-info, .bg-warning {
+                background-color: transparent !important;
+                color: #000 !important;
+            }
+
+            .text-white {
+                color: #000 !important;
+            }
+
+            /* Hide the flex icons in summary cards */
+            .summary-section .bi {
+                display: none !important;
+            }
+
+            /* Prevent page breaks in table rows */
+            .table tr {
+                page-break-inside: avoid !important;
+            }
+
             @page {
-                margin: 1cm;
+                margin: 0.3cm 0.5cm;
                 size: A4 landscape;
+            }
+
+            /* Ensure full width usage */
+            .container-fluid {
+                max-width: 100% !important;
+                padding: 0 !important;
+            }
+
+            .row {
+                margin: 0 !important;
+            }
+
+            .col-12 {
+                padding: 0 !important;
+            }
+
+            /* Hide any overflow content */
+            body {
+                overflow: hidden !important;
+            }
+
+            /* Print header styling */
+            .print-header {
+                display: block !important;
+                text-align: center !important;
+                margin-bottom: 20px !important;
+                page-break-after: avoid !important;
+            }
+
+            .print-date {
+                display: block !important;
+                text-align: right !important;
+                font-size: 10px !important;
+                margin-bottom: 10px !important;
+            }
+
+            /* Hide the regular title when printing */
+            .main-title {
+                display: none !important;
+            }
+
+            /* Show print table header */
+            .print-table-header {
+                display: block !important;
+                page-break-after: avoid !important;
+            }
+
+            /* Ensure table doesn't break awkwardly */
+            .table-responsive {
+                overflow: visible !important;
+            }
+
+            /* Force table to use full width */
+            #consolidatedPlanTable {
+                width: 100% !important;
+                max-width: 100% !important;
+            }
+
+            /* Ensure icons don't break layout */
+            .bi {
+                display: none !important;
+            }
+
+            /* Compact text for better fit */
+            .text-content {
+                font-size: 9px !important;
+                line-height: 1.2 !important;
+            }
+
+            /* Ensure table fits on page */
+            .table-responsive {
+                overflow: visible !important;
+                width: 100% !important;
+            }
+
+            /* Better text wrapping */
+            .table td, .table th {
+                white-space: normal !important;
+                word-break: break-word !important;
+                hyphens: auto !important;
             }
         }
         .badge {
@@ -269,11 +483,18 @@
 
             <div class="row">
                 <div class="col-12">
+                    <!-- Print Header (only visible when printing) -->
+                    <div class="print-header" style="display: none;">
+                        <h1 style="font-size: 18px; margin-bottom: 5px; font-weight: bold;">Table of Approved GAD Plan and Budget</h1>
+                        <p style="font-size: 12px; margin-bottom: 20px; color: #666;">Fiscal Year 2025 | Generated on <span id="printDate"></span></p>
+                        <hr style="border: 1px solid #000; margin-bottom: 20px;">
+                    </div>
+
                     <div class="d-flex justify-content-between align-items-center mb-4">
-                        <h1 class="h3 mb-0">
+                        <h1 class="h3 mb-0 main-title">
                             <i class="bi bi-file-earmark-ruled text-primary"></i> Table of Approved GAD Plan and Budget
                         </h1>
-                        <div class="btn-group">
+                        <div class="btn-group no-print">
                             <button type="button" class="btn btn-success" onclick="printConsolidatedPlan()">
                                 <i class="bi bi-printer"></i> Print
                             </button>
@@ -286,7 +507,7 @@
             </div>
 
             <!-- Summary Cards -->
-            <div class="row mb-4">
+            <div class="row mb-4 summary-section">
                 <div class="col-md-3">
                     <div class="card bg-primary text-white">
                         <div class="card-body">
@@ -383,6 +604,11 @@
                             </div>
                         </div>
                         <div class="card-body">
+                            <!-- Print-only table header -->
+                            <div class="print-table-header" style="display: none;">
+                                <h3 style="font-size: 14px; margin-bottom: 10px; font-weight: bold; text-align: center;">Detailed Plan Information</h3>
+                            </div>
+
                             <div class="table-responsive">
                                 <table class="table table-hover table-striped" id="consolidatedPlanTable">
                                     <thead class="table-dark">
@@ -390,7 +616,7 @@
                                             <th>GAD Activity ID</th>
                                             <th>Division/Office</th>
                                             <th>GAD Activity</th>
-                                            <th>Target Beneficiaries</th>
+                                            <th>Responsible Unit/Offices</th>
                                             <th>Budget Allocation</th>
                                             <th>Source of Fund</th>
                                             <th>Date Approved</th>
@@ -461,7 +687,7 @@
     </div>
 
     <!-- Approve Consolidated Plan Modal -->
-    <div class="modal fade" id="approveConsolidatedModal" tabindex="-1" aria-labelledby="approveConsolidatedModalLabel" aria-hidden="true">
+    <div class="modal fade no-print" id="approveConsolidatedModal" tabindex="-1" aria-labelledby="approveConsolidatedModalLabel" aria-hidden="true">
         <div class="modal-dialog">
             <div class="modal-content">
                 <div class="modal-header">
@@ -524,7 +750,7 @@
     </div>
 
     <!-- Plan Details Modal -->
-    <div class="modal fade" id="planDetailsModal" tabindex="-1" aria-labelledby="planDetailsModalLabel" aria-hidden="true">
+    <div class="modal fade no-print" id="planDetailsModal" tabindex="-1" aria-labelledby="planDetailsModalLabel" aria-hidden="true">
         <div class="modal-dialog modal-lg">
             <div class="modal-content">
                 <div class="modal-header">
@@ -558,7 +784,7 @@
                     </div>
                     <div class="row">
                         <div class="col-12">
-                            <strong>Target Beneficiaries:</strong>
+                            <strong>Responsible Unit/Offices:</strong>
                             <p id="detailBeneficiaries"></p>
                         </div>
                     </div>
@@ -694,9 +920,30 @@
 
         // Print consolidated plan
         function printConsolidatedPlan() {
+            // Set current date for print header
+            const now = new Date();
+            const printDate = now.toLocaleDateString('en-US', {
+                year: 'numeric',
+                month: 'long',
+                day: 'numeric',
+                hour: '2-digit',
+                minute: '2-digit'
+            });
+            document.getElementById('printDate').textContent = printDate;
+
             // Hide elements that shouldn't be printed
             const noPrintElements = document.querySelectorAll('.no-print');
             noPrintElements.forEach(el => el.style.display = 'none');
+
+            // Show print header and table header
+            const printHeader = document.querySelector('.print-header');
+            const printTableHeader = document.querySelector('.print-table-header');
+            if (printHeader) {
+                printHeader.style.display = 'block';
+            }
+            if (printTableHeader) {
+                printTableHeader.style.display = 'block';
+            }
 
             // Print the page
             window.print();
@@ -704,6 +951,12 @@
             // Restore hidden elements after printing
             setTimeout(() => {
                 noPrintElements.forEach(el => el.style.display = '');
+                if (printHeader) {
+                    printHeader.style.display = 'none';
+                }
+                if (printTableHeader) {
+                    printTableHeader.style.display = 'none';
+                }
             }, 1000);
         }
 
