@@ -236,10 +236,11 @@ class GadPlanController extends Controller
 
         $db = \Config\Database::connect();
         $builder = $db->table('plan')
-                      ->select('plan.*, COALESCE(SUM(b.amount),0) AS total_budget')
+                      ->select('plan.*, d.division, COALESCE(SUM(b.amount),0) AS total_budget')
                       ->join('budget b', 'b.plan_id = plan.plan_id', 'left')
+                      ->join('divisions d', 'plan.authors_division = d.div_id', 'left')
                       ->where('plan.plan_id', $id)
-                      ->groupBy('plan.plan_id');
+                      ->groupBy('plan.plan_id, d.division');
         $plan = $builder->get()->getRowArray();
 
         if (! $plan) {

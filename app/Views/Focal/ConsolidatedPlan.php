@@ -679,7 +679,7 @@
             document.getElementById('detailPlanId').textContent = `GAD-${String(plan.plan_id).padStart(3, '0')}`;
             document.getElementById('detailPlanTitle').textContent = plan.activity || 'N/A';
             document.getElementById('detailDivision').textContent = plan.division || 'Unknown Division';
-            document.getElementById('detailBudget').textContent = `₱${parseFloat(plan.budget || 0).toLocaleString()}`;
+            document.getElementById('detailBudget').textContent = `₱${parseFloat(plan.total_budget || plan.budget || 0).toLocaleString()}`;
 
             const responsibleUnits = JSON.parse(plan.responsible_units || '[]');
             document.getElementById('detailBeneficiaries').textContent = Array.isArray(responsibleUnits) ? responsibleUnits.join(', ') : 'N/A';
