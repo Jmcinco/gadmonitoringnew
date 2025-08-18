@@ -190,7 +190,7 @@ $gadPlans = $gadPlans ?? [];
             </ul>
         </div>
 <div class="sidebar-footer">
-            <a href="<?= base_url('/login/logout') ?>" class="btn btn-outline-light w-100">
+            <a href="<?= site_url('login/logout') ?>" class="btn btn-outline-light w-100">
                 <i class="bi bi-box-arrow-right"></i> Logout
             </a>
         </div>

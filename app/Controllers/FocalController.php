@@ -361,7 +361,81 @@ public function budgetCrafting()
             $this->session->setFlashdata('error', 'Unauthorized access.');
             return redirect()->to(base_url('/login'));
         }
-        return view('Focal/ConsolidatedPlan');
+
+        try {
+            // Get all GAD plans with division information and budget data
+            $db = \Config\Database::connect();
+            $builder = $db->table('plan p');
+            $builder->select('p.*, d.division as office_name,
+                             COALESCE(SUM(b.amount), 0) as budget_allocation,
+                             GROUP_CONCAT(DISTINCT sf.source_name SEPARATOR ", ") as source_of_fund,
+                             p.responsible_units as target_beneficiaries,
+                             er.first_name as reviewed_by_name, er.last_name as reviewed_by_lastname,
+                             ea.first_name as approved_by_name, ea.last_name as approved_by_lastname,
+                             eret.first_name as returned_by_name, eret.last_name as returned_by_lastname');
+            $builder->join('divisions d', 'p.authors_division = d.div_id', 'left');
+            $builder->join('budget b', 'p.plan_id = b.plan_id', 'left');
+            $builder->join('source_of_fund sf', 'b.src_id = sf.src_id', 'left');
+            $builder->join('employees er', 'p.reviewed_by = er.emp_id', 'left');
+            $builder->join('employees ea', 'p.approved_by = ea.emp_id', 'left');
+            $builder->join('employees eret', 'p.returned_by = eret.emp_id', 'left');
+            $builder->groupBy('p.plan_id, d.division, p.responsible_units, er.first_name, er.last_name, ea.first_name, ea.last_name, eret.first_name, eret.last_name');
+            $builder->orderBy('p.created_at', 'DESC');
+
+            $gadPlans = $builder->get()->getResultArray();
+
+            // Process the responsible_units JSON field for display
+            foreach ($gadPlans as &$plan) {
+                if (!empty($plan['target_beneficiaries'])) {
+                    $responsibleUnits = json_decode($plan['target_beneficiaries'], true);
+                    if (is_array($responsibleUnits)) {
+                        $plan['target_beneficiaries'] = implode(', ', $responsibleUnits);
+                    }
+                } else {
+                    $plan['target_beneficiaries'] = 'Not specified';
+                }
+
+                // Ensure source_of_fund has a default value
+                if (empty($plan['source_of_fund'])) {
+                    $plan['source_of_fund'] = 'Not specified';
+                }
+            }
+
+            // Get divisions for filter dropdown
+            $divisions = $db->table('divisions')->select('division')->distinct()->get()->getResultArray();
+
+            // Calculate statistics
+            $approvedPlans = array_filter($gadPlans, fn($p) => strtolower($p['status']) === 'approved');
+            $approvedPlansCount = count($approvedPlans);
+            $totalBudget = array_sum(array_map(fn($p) => $p['budget_allocation'] ?? 0, $approvedPlans));
+            $divisionsCount = count(array_unique(array_column($approvedPlans, 'office_name')));
+
+            $data = [
+                'gadPlans' => $gadPlans,
+                'divisions' => $divisions,
+                'approvedPlansCount' => $approvedPlansCount,
+                'totalBudget' => $totalBudget,
+                'divisionsCount' => $divisionsCount,
+                'first_name' => $this->session->get('first_name'),
+                'last_name' => $this->session->get('last_name')
+            ];
+
+            return view('Focal/ConsolidatedPlan', $data);
+        } catch (\Exception $e) {
+            log_message('error', 'Error in consolidatedPlan: ' . $e->getMessage());
+
+            $data = [
+                'gadPlans' => [],
+                'divisions' => [],
+                'approvedPlansCount' => 0,
+                'totalBudget' => 0,
+                'divisionsCount' => 0,
+                'first_name' => $this->session->get('first_name'),
+                'last_name' => $this->session->get('last_name')
+            ];
+
+            return view('Focal/ConsolidatedPlan', $data);
+        }
     }
 
     public function planReview()
@@ -407,11 +481,38 @@ public function budgetCrafting()
             $this->session->setFlashdata('error', 'Unauthorized access.');
             return redirect()->to(base_url('/login'));
         }
-        $data = [
-            'first_name' => $this->session->get('first_name'),
-            'last_name' => $this->session->get('last_name')
-        ];
-        return view('Focal/ReviewApproval', $data);
+
+        try {
+            $outputModel = new \App\Models\OutputModel();
+
+            // Get all accomplishments with details for view-only access
+            $accomplishments = $outputModel->getAccomplishmentsWithDetails();
+
+            // Filter to show only submitted accomplishments (not drafts)
+            $accomplishments = array_filter($accomplishments, function($acc) {
+                return in_array(strtolower($acc['status']), ['completed', 'under review', 'approved', 'returned']);
+            });
+
+            $data = [
+                'accomplishments' => $accomplishments,
+                'gadPlans' => $outputModel->getAvailableGadPlans() ?? [],
+                'first_name' => $this->session->get('first_name'),
+                'last_name' => $this->session->get('last_name')
+            ];
+
+            return view('Focal/ReviewApproval', $data);
+        } catch (\Exception $e) {
+            log_message('error', 'Error in Focal reviewApproval: ' . $e->getMessage());
+
+            $data = [
+                'accomplishments' => [],
+                'gadPlans' => [],
+                'first_name' => $this->session->get('first_name'),
+                'last_name' => $this->session->get('last_name')
+            ];
+
+            return view('Focal/ReviewApproval', $data);
+        }
     }
 
     public function accomplishmentSubmission()

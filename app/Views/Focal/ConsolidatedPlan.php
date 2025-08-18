@@ -93,6 +93,70 @@
             vertical-align: middle;
             padding: 0.75rem;
         }
+
+        /* Print Styles */
+        @media print {
+            .sidebar, .no-print {
+                display: none !important;
+            }
+
+            .main-content {
+                margin-left: 0 !important;
+                padding: 0 !important;
+            }
+
+            .card {
+                border: none !important;
+                box-shadow: none !important;
+            }
+
+            .card-header {
+                background-color: #f8f9fc !important;
+                border-bottom: 2px solid #000 !important;
+                padding: 1rem !important;
+            }
+
+            .table {
+                font-size: 12px !important;
+            }
+
+            .table th {
+                background-color: #343a40 !important;
+                color: white !important;
+                border: 1px solid #000 !important;
+            }
+
+            .table td {
+                border: 1px solid #000 !important;
+            }
+
+            .table tfoot th {
+                background-color: #f8f9fc !important;
+                color: #000 !important;
+                border: 2px solid #000 !important;
+            }
+
+            .breadcrumb {
+                display: none !important;
+            }
+
+            .btn-group {
+                display: none !important;
+            }
+
+            h1, h5 {
+                color: #000 !important;
+            }
+
+            .text-muted {
+                color: #666 !important;
+            }
+
+            @page {
+                margin: 1cm;
+                size: A4 landscape;
+            }
+        }
         .badge {
             font-size: 0.9rem;
         }
@@ -138,7 +202,7 @@
                 </div>
             </div>
             
-           <!-- Navigation Menu -->
+         <!-- Navigation Menu -->
             <ul class="nav nav-pills flex-column">
                 <li class="nav-item">
                     <a class="nav-link" href="<?= base_url('FocalDashboard') ?>">
@@ -157,7 +221,7 @@
                 </li>
                 <li class="nav-item">
                     <a class="nav-link" href="<?= base_url('Focal/PlanReview') ?>">
-                        <i class="bi bi-eye me-2"></i>View Submitted GAD Plans
+                        <i class="bi bi-check-circle me-2"></i>Review & Approval of GAD Plan
                     </a>
                 </li>
                 <li class="nav-item">
@@ -182,32 +246,34 @@
                 </li>
             </ul>
         </div>
-        
+
         <!-- Logout Button -->
         <div class="sidebar-footer">
-            <a href="index.html" class="btn btn-outline-light w-100">
+            <a href="<?= site_url('login/logout') ?>" class="btn btn-outline-light w-100">
                 <i class="bi bi-box-arrow-right"></i> Logout
             </a>
         </div>
     </nav>
-
     <!-- Main Content -->
     <div class="main-content">
-
+        <div class="container-fluid py-4">
             <!-- Breadcrumb -->
-                
+            <nav aria-label="breadcrumb" class="bg-light">
+                <div class="container-fluid">
+                    <ol class="breadcrumb py-2 mb-4">
+                        <li class="breadcrumb-item"><a href="<?php echo base_url('FocalDashboard'); ?>">Dashboard</a></li>
+                        <li class="breadcrumb-item active">Consolidated GAD Plan & Budget</li>
+                    </ol>
+                </div>
             </nav>
 
             <div class="row">
                 <div class="col-12">
                     <div class="d-flex justify-content-between align-items-center mb-4">
                         <h1 class="h3 mb-0">
-                            <i class="bi bi-file-earmark-ruled text-primary"></i> Consolidated GAD Plan & Budget
+                            <i class="bi bi-file-earmark-ruled text-primary"></i> Table of Approved GAD Plan and Budget
                         </h1>
                         <div class="btn-group">
-                            <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#approveConsolidatedModal">
-                                <i class="bi bi-check-circle"></i> Approve Consolidated Plan
-                            </button>
                             <button type="button" class="btn btn-success" onclick="printConsolidatedPlan()">
                                 <i class="bi bi-printer"></i> Print
                             </button>
@@ -283,16 +349,17 @@
                 </div>
             </div>
 
-            <!-- Consolidated Plan Table -->
+            <!-- Table of Approved GAD Plan and Budget -->
             <div class="row">
                 <div class="col-12">
-                    <div class="card shadow">
+                    <div class="card shadow" id="printableArea">
                         <div class="card-header">
                             <div class="row align-items-center">
                                 <div class="col">
-                                    <h5 class="mb-0">Approved GAD Plans and Budget</h5>
+                                    <h5 class="mb-0">Table of Approved GAD Plan and Budget</h5>
+                                    <small class="text-muted">Fiscal Year <?= date('Y') ?> | Generated on: <?= date('F d, Y') ?></small>
                                 </div>
-                                <div class="col-auto">
+                                <div class="col-auto no-print">
                                     <div class="d-flex gap-2 align-items-center">
                                         <!-- Search -->
                                         <div class="input-group" style="width: 250px;">
@@ -311,98 +378,77 @@
                                                 <?php endforeach; ?>
                                             <?php endif; ?>
                                         </select>
-
-                                        <!-- Select All -->
-                                        <div class="form-check">
-                                            <input class="form-check-input" type="checkbox" value="" id="selectAll" onchange="toggleSelectAll()">
-                                            <label class="form-check-label" for="selectAll">
-                                                Select All
-                                            </label>
-                                        </div>
                                     </div>
                                 </div>
                             </div>
                         </div>
                         <div class="card-body">
                             <div class="table-responsive">
-                                <table class="table table-hover table-striped">
+                                <table class="table table-hover table-striped" id="consolidatedPlanTable">
                                     <thead class="table-dark">
                                         <tr>
-                                            <th>
-                                                <input type="checkbox" class="form-check-input" onclick="toggleSelectAll()">
-                                            </th>
                                             <th>GAD Activity ID</th>
-                                            <th>Plan Title</th>
-                                            <th>Division</th>
-                                            <th>Budget Allocation</th>
+                                            <th>Division/Office</th>
+                                            <th>GAD Activity</th>
                                             <th>Target Beneficiaries</th>
-                                            <th>Timeline</th>
-                                            <th>Status</th>
-                                            <th>Actions</th>
+                                            <th>Budget Allocation</th>
+                                            <th>Source of Fund</th>
+                                            <th>Date Approved</th>
+                                            <th class="no-print">Actions</th>
                                         </tr>
                                     </thead>
                                     <tbody id="consolidatedTableBody">
-                                        <?php if (isset($approvedPlans) && !empty($approvedPlans)): ?>
-                                            <?php foreach ($approvedPlans as $plan): ?>
-                                                <tr data-division="<?php echo esc($plan['division'] ?? ''); ?>">
-                                                    <td>
-                                                        <input class="form-check-input plan-checkbox" type="checkbox" value="<?php echo esc($plan['plan_id']); ?>" name="selectedPlans[]">
-                                                    </td>
-                                                    <td><?php echo esc('GAD-' . str_pad($plan['plan_id'], 3, '0', STR_PAD_LEFT)); ?></td>
-                                                    <td class="text-content"><?php echo esc($plan['activity'] ?? 'N/A'); ?></td>
-                                                    <td><?php echo esc($plan['division'] ?? 'Unknown Division'); ?></td>
-                                                    <td>₱<?php echo number_format($plan['budget'] ?? 0, 2); ?></td>
-                                                    <td>
-                                                        <?php
-                                                        $responsibleUnits = json_decode($plan['responsible_units'] ?? '[]', true);
-                                                        if (is_array($responsibleUnits) && !empty($responsibleUnits)) {
-                                                            echo esc(implode(', ', $responsibleUnits));
-                                                        } else {
-                                                            echo 'N/A';
-                                                        }
-                                                        ?>
-                                                    </td>
-                                                    <td>
-                                                        <?php
-                                                        $startDate = $plan['startDate'] ? date('M Y', strtotime($plan['startDate'])) : 'N/A';
-                                                        $endDate = $plan['endDate'] ? date('M Y', strtotime($plan['endDate'])) : 'N/A';
-                                                        echo esc($startDate . ' - ' . $endDate);
-                                                        ?>
-                                                    </td>
-                                                    <td>
-                                                        <?php
-                                                        $status = strtolower($plan['status'] ?? 'pending');
-                                                        $badgeClass = match($status) {
-                                                            'approved' => 'bg-success',
-                                                            'pending' => 'bg-warning text-dark',
-                                                            'returned' => 'bg-danger',
-                                                            'draft' => 'bg-secondary',
-                                                            default => 'bg-info'
-                                                        };
-                                                        ?>
-                                                        <span class="badge <?php echo $badgeClass; ?>"><?php echo ucfirst($plan['status'] ?? 'Pending'); ?></span>
-                                                    </td>
-                                                    <td>
-                                                        <button class="btn btn-sm btn-outline-primary" onclick="viewPlanDetails(<?php echo esc($plan['plan_id']); ?>)">
-                                                            <i class="bi bi-eye"></i>
-                                                        </button>
+                                        <?php if (isset($gadPlans) && !empty($gadPlans)): ?>
+                                            <?php
+                                            $approvedPlans = array_filter($gadPlans, fn($p) => strtolower($p['status']) === 'approved');
+                                            if (!empty($approvedPlans)): ?>
+                                                <?php foreach ($approvedPlans as $plan): ?>
+                                                    <tr data-division="<?php echo esc($plan['office_name'] ?? ''); ?>">
+                                                        <td><?php echo esc('GAD-' . str_pad($plan['plan_id'], 3, '0', STR_PAD_LEFT)); ?></td>
+                                                        <td><?php echo esc($plan['office_name'] ?? 'Unknown Office'); ?></td>
+                                                        <td class="text-content"><?php echo esc($plan['activity'] ?? 'N/A'); ?></td>
+                                                        <td><?php echo esc($plan['target_beneficiaries'] ?? 'Not specified'); ?></td>
+                                                        <td class="text-end">₱<?php echo number_format($plan['budget_allocation'] ?? 0, 2); ?></td>
+                                                        <td><?php echo esc($plan['source_of_fund'] ?? 'Not specified'); ?></td>
+                                                        <td><?php echo isset($plan['approved_at']) ? date('M d, Y', strtotime($plan['approved_at'])) : 'N/A'; ?></td>
+                                                        <td class="no-print">
+                                                            <button class="btn btn-sm btn-outline-primary" onclick="viewPlanDetails(<?php echo esc($plan['plan_id']); ?>)">
+                                                                <i class="bi bi-eye"></i> View
+                                                            </button>
+                                                        </td>
+                                                    </tr>
+                                                <?php endforeach; ?>
+                                            <?php else: ?>
+                                                <tr>
+                                                    <td colspan="8" class="text-center text-muted py-4">
+                                                        <i class="bi bi-inbox fs-1 d-block mb-2"></i>
+                                                        No approved GAD plans found.
                                                     </td>
                                                 </tr>
-                                            <?php endforeach; ?>
+                                            <?php endif; ?>
                                         <?php else: ?>
                                             <tr>
-                                                <td colspan="9" class="text-center text-muted py-4">
+                                                <td colspan="8" class="text-center text-muted py-4">
                                                     <i class="bi bi-inbox fs-1 d-block mb-2"></i>
-                                                    No approved GAD plans found.
+                                                    No GAD plans available.
                                                 </td>
                                             </tr>
                                         <?php endif; ?>
                                     </tbody>
                                     <tfoot class="table-light">
-                                        <tr>
-                                            <th colspan="4" class="text-end">Total Approved Budget:</th>
-                                            <th id="totalBudgetFooter">₱<?php echo number_format($totalBudget ?? 0, 2); ?></th>
-                                            <th colspan="4"></th>
+                                        <tr class="fw-bold">
+                                            <th colspan="4" class="text-end">TOTAL APPROVED BUDGET:</th>
+                                            <th class="text-end">
+                                                ₱<?php
+                                                if (isset($gadPlans) && !empty($gadPlans)) {
+                                                    $approvedPlans = array_filter($gadPlans, fn($p) => strtolower($p['status']) === 'approved');
+                                                    echo number_format(array_sum(array_map(fn($p) => $p['budget_allocation'] ?? 0, $approvedPlans)), 2);
+                                                } else {
+                                                    echo '0.00';
+                                                }
+                                                ?>
+                                            </th>
+                                            <th colspan="3"></th>
                                         </tr>
                                     </tfoot>
                                 </table>
@@ -648,12 +694,33 @@
 
         // Print consolidated plan
         function printConsolidatedPlan() {
+            // Hide elements that shouldn't be printed
+            const noPrintElements = document.querySelectorAll('.no-print');
+            noPrintElements.forEach(el => el.style.display = 'none');
+
+            // Print the page
             window.print();
+
+            // Restore hidden elements after printing
+            setTimeout(() => {
+                noPrintElements.forEach(el => el.style.display = '');
+            }, 1000);
         }
 
-        // Save to PDF
+        // Save to PDF using browser's print to PDF
         function saveToPDF() {
-            alert('PDF generation functionality would be implemented here.');
+            Swal.fire({
+                title: 'Save as PDF',
+                text: 'Use your browser\'s print function and select "Save as PDF" as the destination.',
+                icon: 'info',
+                showCancelButton: true,
+                confirmButtonText: 'Open Print Dialog',
+                cancelButtonText: 'Cancel'
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    printConsolidatedPlan();
+                }
+            });
         }
     </script>
 </body>

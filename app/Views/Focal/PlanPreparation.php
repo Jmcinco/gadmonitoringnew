@@ -542,12 +542,12 @@ if (!session()->get('isLoggedIn') || session()->get('role_id') != 1) {
     </div>
 
     <!-- Logout Button -->
-    <div class="sidebar-footer">
-      <a href="<?= site_url('login/logout') ?>" class="btn btn-outline-light w-100">
-        <i class="bi bi-box-arrow-right"></i> Logout
-      </a>
-    </div>
-  </nav>
+   <div class="sidebar-footer">
+    <a href="<?= site_url('login/logout') ?>" class="btn btn-outline-light w-100">
+      <i class="bi bi-box-arrow-right"></i> Logout
+    </a>
+  </div>      
+</nav>
 
   <!-- Main Content -->
   <div class="main-content">
