@@ -1204,17 +1204,28 @@
             .then(data => {
                 if (data.success) {
                     const accomplishment = data.accomplishment;
+                    console.log('Accomplishment data for view:', accomplishment); // Debug log
+
+                    // Use the correct property names from OutputModel getAccomplishmentWithDetails
+                    const planId = accomplishment.plan_id || 'N/A';
+                    const planActivity = accomplishment.gad_activity || 'No activity description';
+                    const division = accomplishment.office_name || 'Unknown Division';
+                    const dateAccomplished = accomplishment.date_accomplished || 'Not specified';
+                    const status = accomplishment.status || 'Unknown';
+                    const accomplishmentText = accomplishment.accomplishment || 'No accomplishment details';
+                    const remarks = accomplishment.remarks || '';
+
                     Swal.fire({
                         title: 'Accomplishment Details',
                         html: `
                             <div class="text-start">
-                                <p><strong>GAD Activity:</strong> GAD-${String(accomplishment.gad_plan_id).padStart(3, '0')} - ${accomplishment.plan_activity}</p>
-                                <p><strong>Division:</strong> ${accomplishment.division}</p>
-                                <p><strong>Date Accomplished:</strong> ${accomplishment.date_accomplished}</p>
-                                <p><strong>Status:</strong> ${accomplishment.status}</p>
+                                <p><strong>GAD Activity:</strong> GAD-${String(planId).padStart(3, '0')} - ${planActivity}</p>
+                                <p><strong>Division:</strong> ${division}</p>
+                                <p><strong>Date Accomplished:</strong> ${dateAccomplished}</p>
+                                <p><strong>Status:</strong> ${status}</p>
                                 <p><strong>Accomplishment:</strong></p>
-                                <p class="text-muted">${accomplishment.accomplishment}</p>
-                                ${accomplishment.remarks ? `<p><strong>Remarks:</strong> ${accomplishment.remarks}</p>` : ''}
+                                <p class="text-muted">${accomplishmentText}</p>
+                                ${remarks ? `<p><strong>Remarks:</strong> ${remarks}</p>` : ''}
                             </div>
                         `,
                         width: '600px',
