@@ -92,8 +92,6 @@ $routes->post('/Focal/updateAccomplishmentStatus', 'FocalController::updateAccom
 $routes->get('/Focal/getAllGadPlans', 'FocalController::getAllGadPlans');
 $routes->get('/Focal/getGadPlanById/(:num)', 'FocalController::getGadPlanById/$1');
 $routes->get('/Focal/getAvailableGadPlans', 'FocalController::getAvailableGadPlans');
-$routes->get('/Focal/testGadPlans', 'FocalController::testGadPlans');
-$routes->get('/Focal/testDatabase', 'FocalController::testDatabase');
 $routes->get('/Focal/ConsolidatedAccomplishment', 'FocalController::consolidatedAccomplishment');
 
 
