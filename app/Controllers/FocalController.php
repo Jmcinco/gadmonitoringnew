@@ -118,6 +118,12 @@ class FocalController extends Controller
     // ✅ Fetch divisions from DB
     $divisions = $db->table('divisions')->select('div_id, division')->orderBy('division')->get()->getResult();
 
+    // ✅ Fetch MFO and PAP data from DB
+    $mfoModel = new \App\Models\MfoModel();
+    $papModel = new \App\Models\PapModel();
+    $mfos = $mfoModel->findAll();
+    $paps = $papModel->getAllWithMfo();
+
     $focalModel = new \App\Models\FocalModel();
     $gadPlans = $focalModel->getGadPlansWithAmount();
 
@@ -153,7 +159,9 @@ class FocalController extends Controller
         'gadPlans'   => $gadPlans,
         'first_name' => $this->session->get('first_name'),
         'last_name'  => $this->session->get('last_name'),
-        'divisions'  => $divisions
+        'divisions'  => $divisions,
+        'mfos'       => $mfos,
+        'paps'       => $paps
     ];
 
     return view('Focal/PlanPreparation', $data);
@@ -1164,7 +1172,7 @@ public function budgetCrafting()
         if ($focalModel->update($planId, $data)) {
             // Log audit trail for GAD Plan status update
             $auditModel = new AuditTrailModel();
-            $planTitle = $oldPlan['activity'] ?? 'GAD Plan';
+            $planTitle = 'GAD Plan - ' . substr($oldPlan['issue_mandate'], 0, 50);
 
             $auditModel->logActivity([
                 'user_id' => $this->session->get('user_id'),

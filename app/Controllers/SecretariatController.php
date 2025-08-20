@@ -120,7 +120,7 @@ class SecretariatController extends BaseController
         if ($this->focalModel->update($planId, $data)) {
             // Log audit trail for GAD Plan finalization
             $auditModel = new AuditTrailModel();
-            $planTitle = $oldPlan['activity'] ?? 'GAD Plan';
+            $planTitle = 'GAD Plan - ' . substr($oldPlan['issue_mandate'], 0, 50);
             $finalAction = '';
 
             switch ($status) {

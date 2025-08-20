@@ -12,7 +12,6 @@ class FocalModel extends Model
         'issue_mandate',
         'cause',
         'gad_objective',
-        'activity',
         'indicator_text',
         'target_text',
         'startDate',
@@ -38,11 +37,10 @@ class FocalModel extends Model
         'issue_mandate' => 'required|min_length[10]',
         'cause' => 'required|min_length[10]',
         'gad_objective' => 'required|min_length[10]',
-        'activity' => 'required|min_length[10]',
         'indicators' => 'required|min_length[10]',
         'startDate' => 'required|valid_date',
         'endDate' => 'required|valid_date',
-        'responsible_units' => 'required', 
+        'responsible_units' => 'required',
         'budget' => 'required|numeric|greater_than[0]',
         'mfoPapData' => 'permit_empty|valid_json'
     ];
@@ -60,10 +58,7 @@ class FocalModel extends Model
             'required' => 'GAD objective is required.',
             'min_length' => 'GAD objective must be at least 10 characters long.'
         ],
-        'activity' => [
-            'required' => 'GAD activity is required.',
-            'min_length' => 'GAD activity must be at least 10 characters long.'
-        ],
+
         'indicators' => [
             'required' => 'Performance targets are required.',
             'min_length' => 'Performance targets must be at least 10 characters long.'
