@@ -43,12 +43,6 @@ CREATE TABLE `output` (
 -- Dumping data for table `output`
 --
 
-INSERT INTO `output` (`accomplishment`, `accepted_by`, `date_accomplished`, `file`, `plan_id`, `remarks`, `status`, `timestamp`, `output_id`) VALUES
-('Sample Actual Accomplishment', NULL, '2025-08-14', '1755234530_73353fc22c17aa3bc920.pdf', 43, 'dsadasdasdas', 'completed', '2025-08-15 05:08:50', 1),
-('dsadasdasdsa', NULL, '2025-08-14', '1755234674_a0b513b539ddf3baa0e4.pdf', 43, 'dasdasdsada', 'completed', '2025-08-15 05:11:14', 2),
-('dsadasdsad', NULL, '2025-08-14', '1755237373_a09f73b433fd8ea8a338.pdf', 43, 'sdsadasdasd', 'pending', '2025-08-15 05:56:13', 3),
-('Sample Actual Accomplishment', NULL, '2025-08-13', '1755237885_136e63312bc3fb0469c8.pdf', 44, 'dasdasdas', 'completed', '2025-08-15 06:04:45', 4);
-
 --
 -- Indexes for dumped tables
 --

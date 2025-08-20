@@ -303,7 +303,7 @@
                                 <?php else: ?>
                                     <?php foreach ($plans as $plan): ?>
                                         <option value="<?= esc($plan['plan_id']) ?>">
-                                            <?= esc($plan['activity'] ?? 'Plan ' . $plan['plan_id']) ?>
+                                            GAD-<?= str_pad($plan['plan_id'], 3, '0', STR_PAD_LEFT) ?>: <?= esc($plan['issue_mandate'] ?? $plan['activity'] ?? 'Plan ' . $plan['plan_id']) ?>
                                         </option>
                                     <?php endforeach; ?>
                                 <?php endif; ?>
@@ -399,7 +399,7 @@
                                 <option value="">Select Plan</option>
                                 <?php foreach ($plans as $plan): ?>
                                     <option value="<?= esc($plan['plan_id']) ?>">
-                                        <?= esc($plan['activity'] ?? 'Plan ' . $plan['plan_id']) ?>
+                                        GAD-<?= str_pad($plan['plan_id'], 3, '0', STR_PAD_LEFT) ?>: <?= esc($plan['issue_mandate'] ?? $plan['activity'] ?? 'Plan ' . $plan['plan_id']) ?>
                                     </option>
                                 <?php endforeach; ?>
                             </select>

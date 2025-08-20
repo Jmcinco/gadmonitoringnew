@@ -586,7 +586,7 @@ $gadPlans = $gadPlans ?? [];
                     // Populate modal with plan details
                     document.getElementById('reviewPlanId').value = planId;
                     document.getElementById('displayPlanId').textContent = `GAD-${String(planId).padStart(3, '0')}`;
-                    document.getElementById('displayPlanTitle').textContent = plan.activity || 'N/A';
+                    document.getElementById('displayPlanTitle').textContent = plan.issue_mandate || plan.activity || 'N/A';
                     document.getElementById('displayDivision').textContent = plan.division_name || 'Unknown Division';
 
                     // Budget and HGDG information

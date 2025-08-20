@@ -168,6 +168,10 @@ class GadPlanController extends Controller
 
         $mfoPapData = $post['mfoPapData'] ?? json_encode([]);
 
+        // Debug: Log the MFO/PAP data being saved
+        log_message('info', 'Saving GAD Plan - MFO/PAP Data: ' . $mfoPapData);
+        log_message('info', 'Saving GAD Plan - Raw POST data: ' . json_encode($post));
+
         $saveData = [
             'plan_id'             => $planId,
             'issue_mandate'       => $post['issue_mandate'],
@@ -252,6 +256,11 @@ class GadPlanController extends Controller
         $plan['mfoPapData']       = json_decode($plan['mfoPapData'], true)       ?: [];
         $plan['indicators'] = json_decode($plan['indicator_text'], true) ?: [];
         $plan['targets']    = json_decode($plan['target_text'],    true) ?: [];
+
+        // Debug: Log the MFO/PAP data being retrieved
+        log_message('info', 'Retrieving GAD Plan ID: ' . $id);
+        log_message('info', 'Raw mfoPapData from DB: ' . ($plan['mfoPapData'] ? json_encode($plan['mfoPapData']) : 'null'));
+        log_message('info', 'Decoded mfoPapData: ' . json_encode($plan['mfoPapData']));
 
         return $this->response
                     ->setJSON(['success'=>true,'plan'=>$plan]);

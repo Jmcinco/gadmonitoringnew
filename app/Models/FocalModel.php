@@ -12,6 +12,7 @@ class FocalModel extends Model
         'issue_mandate',
         'cause',
         'gad_objective',
+        'activity',
         'indicator_text',
         'target_text',
         'startDate',

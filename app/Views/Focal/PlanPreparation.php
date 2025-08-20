@@ -1350,6 +1350,12 @@ if (!session()->get('isLoggedIn') || session()->get('role_id') != 1) {
               };
               customContainer.appendChild(backBtn);
             }
+          } else {
+            // Hide custom input container when other options are selected
+            selectElement.style.display = 'block';
+            customContainer.style.display = 'none';
+            textInput.required = false;
+            selectElement.required = true;
           }
         }
 
@@ -1386,7 +1392,7 @@ if (!session()->get('isLoggedIn') || session()->get('role_id') != 1) {
           </div>
         </td>
         <td>
-          <button type="button" class="btn btn-danger btn-sm" onclick="removeMfoPapRow(${idx})">Delete</button>
+          <button type="button" class="btn btn-danger btn-sm" onclick="removeMfoPapRow(this)">Delete</button>
         </td>
       </tr>
     </tbody>`;
@@ -1395,10 +1401,42 @@ if (!session()->get('isLoggedIn') || session()->get('role_id') != 1) {
 
 
 
-        function removeMfoPapRow(idx) {
+        function removeMfoPapRow(element) {
+          // Handle both button element and direct index parameter
+          let idx;
+          if (typeof element === 'object' && element.closest) {
+            // If element is a button, find the table and extract index
+            const tbl = element.closest('table[id^="mfoPapTable_"]');
+            if (tbl) {
+              idx = tbl.id.split('_')[1];
+            }
+          } else {
+            // If element is already an index
+            idx = element;
+          }
+
           const tbl = document.getElementById(`mfoPapTable_${idx}`);
           if (tbl) tbl.remove();
         }
+
+        function backToDropdown(index) {
+          const selectElement = document.getElementById(`mfoPapStatement_${index}`);
+          const customContainer = document.getElementById(`customInputContainer_${index}`);
+          const textInput = document.getElementById(`mfoPapStatementText_${index}`);
+          const additionalInput = document.getElementById(`mfoPapAdditional_${index}`);
+
+          if (selectElement && customContainer) {
+            selectElement.style.display = 'block';
+            customContainer.style.display = 'none';
+            textInput.value = '';
+            additionalInput.value = '';
+            textInput.required = false;
+            selectElement.required = true;
+            selectElement.value = '';
+          }
+        }
+
+
 
 
 
@@ -1415,8 +1453,58 @@ if (!session()->get('isLoggedIn') || session()->get('role_id') != 1) {
             Array.from(document.getElementsByClassName('needs-validation')).forEach(form => {
               form.addEventListener('submit', function (e) {
                 e.preventDefault();
+
+                // Check if form is valid before proceeding
+                let isValid = true;
+
+                // Custom validation for MFO/PAP entries
+                document.querySelectorAll('[id^="mfoPapTable_"]').forEach(tbl => {
+                  const idx = tbl.id.split('_')[1];
+                  const typeSelect = tbl.querySelector(`[name="mfoPapType_${idx}"]`);
+                  const customContainer = tbl.querySelector(`#customInputContainer_${idx}`);
+                  const textInput = tbl.querySelector(`[name="mfoPapStatementText_${idx}"]`);
+                  const selectInput = tbl.querySelector(`[name="mfoPapStatement_${idx}"]`);
+
+                  if (typeSelect && typeSelect.value) {
+                    const isCustomMode = customContainer && customContainer.style.display === 'block';
+
+                    if (isCustomMode) {
+                      // In custom mode, text input should have value
+                      if (!textInput || !textInput.value.trim()) {
+                        isValid = false;
+                        if (textInput) {
+                          textInput.classList.add('is-invalid');
+                        }
+                      } else {
+                        if (textInput) {
+                          textInput.classList.remove('is-invalid');
+                        }
+                      }
+                    } else {
+                      // In dropdown mode, select should have value
+                      if (!selectInput || !selectInput.value || selectInput.value === 'Others') {
+                        isValid = false;
+                        if (selectInput) {
+                          selectInput.classList.add('is-invalid');
+                        }
+                      } else {
+                        if (selectInput) {
+                          selectInput.classList.remove('is-invalid');
+                        }
+                      }
+                    }
+                  }
+                });
+
                 form.classList.add('was-validated');
-                saveGadPlan();
+
+                if (isValid) {
+                  console.log('Form validation passed, proceeding with save...');
+                  saveGadPlan();
+                } else {
+                  console.log('Form validation failed, please check MFO/PAP entries');
+                  Swal.fire('Validation Error', 'Please complete all MFO/PAP entries properly.', 'error');
+                }
               }, false);
             });
           }, false);
@@ -1681,6 +1769,7 @@ if (!session()->get('isLoggedIn') || session()->get('role_id') != 1) {
             })
             .then(r => r.json())
             .then(d => {
+              console.log('Server response:', d);
               if (d.success) {
                 Swal.fire({
                   icon: 'success',
@@ -1756,16 +1845,96 @@ if (!session()->get('isLoggedIn') || session()->get('role_id') != 1) {
             const additionalInput = tbl.querySelector(`[name="mfoPapAdditional_${idx}"]`);
             const selectInput = tbl.querySelector(`[name="mfoPapStatement_${idx}"]`);
 
-            if (customContainer && customContainer.style.display !== 'none') {
-              // Custom entry mode
-              s = textInput ? textInput.value.trim() : '';
-              additional = additionalInput ? additionalInput.value.trim() : '';
-            } else if (selectInput) {
-              // Dropdown selection mode
-              s = selectInput.value.trim();
+            // Check if we're in custom entry mode (custom container is visible)
+            // Also check if the select has "Others" selected as an alternative indicator
+            const isCustomMode = (customContainer && customContainer.style.display === 'block') ||
+                                (selectInput && selectInput.value === 'Others');
+
+            console.log(`Processing table ${idx}: type=${t}, isCustomMode=${isCustomMode}`);
+            console.log(`Custom container display: ${customContainer ? customContainer.style.display : 'not found'}`);
+            console.log(`Text input element:`, textInput);
+            console.log(`Text input value: "${textInput ? textInput.value : 'no element'}"`);
+            console.log(`Select input value: "${selectInput ? selectInput.value : 'no element'}"`);
+
+            // Debug all input elements in this table
+            const allInputs = tbl.querySelectorAll('input[type="text"]');
+            console.log(`All text inputs in table ${idx}:`, allInputs);
+            allInputs.forEach((input, i) => {
+              console.log(`  Input ${i}: name="${input.name}", value="${input.value}", placeholder="${input.placeholder}"`);
+            });
+
+            // Try alternative ways to get the input value
+            if (textInput) {
+              console.log(`Text input getAttribute value: "${textInput.getAttribute('value') || ''}"`);
+              console.log(`Text input innerHTML: "${textInput.innerHTML}"`);
+              console.log(`Text input focused: ${document.activeElement === textInput}`);
+              console.log(`Text input name: "${textInput.name}"`);
+              console.log(`Text input id: "${textInput.id}"`);
+
+              // Force focus and blur to ensure value is captured
+              textInput.focus();
+              textInput.blur();
+              console.log(`After focus/blur - Text input value: "${textInput.value}"`);
             }
 
-            if (t && s && s !== 'Others') {
+            console.log(`About to check condition: isCustomMode=${isCustomMode}, textInput=${!!textInput}`);
+            if (isCustomMode && textInput) {
+              // Custom entry mode - get values from text inputs
+              // Try multiple ways to get the value for better reliability
+              let textValue = textInput.value.trim();
+
+              // If value is empty, try getting it from the form data directly
+              if (!textValue) {
+                const formData = new FormData(document.querySelector('form'));
+                textValue = formData.get(textInput.name) || '';
+              }
+
+              // Also try jQuery if available as a fallback
+              if (!textValue && typeof $ !== 'undefined') {
+                textValue = $(textInput).val() || '';
+              }
+
+              console.log(`Custom mode - final textValue: "${textValue}"`);
+
+              // Get additional field value
+              const additionalValue = additionalInput ? additionalInput.value.trim() : '';
+              console.log(`Additional field value: "${additionalValue}"`);
+            console.log(`About to check conditions: textValue="${textValue}", additionalValue="${additionalValue}"`);
+
+              if (textValue) {
+                s = textValue;
+                additional = additionalValue;
+                console.log(`Using main field: statement="${s}", additional="${additional}"`);
+              } else if (additionalValue) {
+                // If main field is empty but additional has content, use additional as main
+                s = additionalValue;
+                additional = '';
+                console.log(`Moving additional to main: statement="${s}"`);
+                console.log(`After move - s="${s}", additional="${additional}"`);
+              } else {
+                console.log(`Both fields are empty - textValue="${textValue}", additionalValue="${additionalValue}"`);
+              }
+              console.log(`Final values for table ${idx}: type="${t}", statement="${s}", additional="${additional}"`);
+            } else if (selectInput && selectInput.value && selectInput.value !== 'Others') {
+              // Dropdown selection mode - get value from select
+              s = selectInput.value.trim();
+              console.log(`Dropdown mode - statement: "${s}"`);
+            } else {
+              console.log(`No valid input found for table ${idx}`);
+            }
+
+            // Only add to array if we have type and either statement or additional content
+            // For custom entries, accept if either main statement or additional field has content
+            const hasValidContent = s && s !== 'Others' && s !== '';
+            const hasAdditionalContent = additional && additional !== '';
+
+            if (t && (hasValidContent || hasAdditionalContent)) {
+              // If main statement is empty but additional has content, use additional as statement
+              if (!hasValidContent && hasAdditionalContent) {
+                s = additional;
+                additional = '';
+                console.log(`Moved additional content to main statement: "${s}"`);
+              }
               const mfoItem = {
                 type: t,
                 statement: s
@@ -1776,10 +1945,22 @@ if (!session()->get('isLoggedIn') || session()->get('role_id') != 1) {
                 mfoItem.additional = additional;
               }
 
+              console.log(`Adding MFO/PAP item:`, mfoItem);
               mfoArr.push(mfoItem);
+            } else {
+              console.log(`Skipping table ${idx} - missing data: type="${t}", statement="${s}"`);
             }
           });
+
+          console.log('Final MFO/PAP array:', mfoArr);
+          console.log('MFO/PAP JSON string:', JSON.stringify(mfoArr));
           fd.set('mfoPapData', JSON.stringify(mfoArr));
+
+          // Debug: Log all form data being sent
+          console.log('All form data being sent:');
+          for (let [key, value] of fd.entries()) {
+            console.log(key + ':', value);
+          }
 
           fetch(form.action, {
               method: 'POST',
@@ -1984,11 +2165,23 @@ function editGadPlan(button, planId) {
 
         // Helper function to check if statement exists in database
         function isInDatabase(type, statement) {
-            if (type === 'MFO') {
-                return mfoData.some(mfo => mfo.mfo === statement);
-            } else if (type === 'PAP') {
-                return papData.some(pap => pap.pap === statement);
+            console.log(`Checking isInDatabase: type="${type}", statement="${statement}"`);
+
+            if (!statement || statement.trim() === '') {
+                console.log(`Empty statement, returning false`);
+                return false;
             }
+
+            if (type === 'MFO') {
+                const found = mfoData.some(mfo => mfo.mfo === statement);
+                console.log(`MFO check result: ${found}`, mfoData);
+                return found;
+            } else if (type === 'PAP') {
+                const found = papData.some(pap => pap.pap === statement);
+                console.log(`PAP check result: ${found}`, papData);
+                return found;
+            }
+            console.log(`Unknown type, returning false`);
             return false;
         }
 
@@ -1996,12 +2189,25 @@ function editGadPlan(button, planId) {
         const mfoContainer = document.getElementById('mfoPapTableContainer');
         if (mfoContainer) {
             mfoContainer.innerHTML = '';
+            console.log('Rebuilding MFO/PAP rows from saved data:', plan.mfoPapData);
+            console.log('Available MFO data:', mfoData);
+            console.log('Available PAP data:', papData);
             plan.mfoPapData.forEach((item, idx) => {
+                console.log(`Processing item ${idx}:`, item);
                 const tbl = document.createElement('table');
                 tbl.className = 'table table-bordered mb-2';
                 tbl.id = `mfoPapTable_${idx}`;
                 // Check if this is a custom entry (not in database)
                 const isCustomEntry = !isInDatabase(item.type, item.statement);
+                console.log(`Item ${idx} isCustomEntry: ${isCustomEntry}`, {
+                    type: item.type,
+                    statement: item.statement,
+                    additional: item.additional
+                });
+                console.log(`Item ${idx} statement value for input: "${isCustomEntry ? (item.statement || '').replace(/"/g, '&quot;') : ''}"`);
+                console.log(`Item ${idx} additional value for input: "${isCustomEntry ? (item.additional || '').replace(/"/g, '&quot;') : ''}"`);
+                console.log(`Item ${idx} raw statement: "${item.statement}"`);
+                console.log(`Item ${idx} raw additional: "${item.additional}"`);
 
                 tbl.innerHTML = `
                     <thead>
@@ -2024,16 +2230,17 @@ function editGadPlan(button, planId) {
                                 <div id="customInputContainer_${idx}" style="display: ${isCustomEntry ? 'block' : 'none'};">
                                     <input type="text" class="form-control" name="mfoPapStatementText_${idx}" id="mfoPapStatementText_${idx}"
                                            placeholder="Enter custom MFO/PAP statement..."
-                                           value="${isCustomEntry ? (item.statement || '') : ''}">
+                                           value="${isCustomEntry ? (item.statement || '').replace(/"/g, '&quot;') : ''}">
                                     <input type="text" class="form-control mt-2" name="mfoPapAdditional_${idx}" id="mfoPapAdditional_${idx}"
                                            placeholder="Enter additional details/description..."
-                                           value="${isCustomEntry ? (item.additional || '') : ''}">
+                                           value="${isCustomEntry ? (item.additional || '').replace(/"/g, '&quot;') : ''}">
+                                    ${isCustomEntry ? '<button type="button" class="btn btn-sm btn-outline-secondary mt-2 back-to-dropdown" onclick="backToDropdown(' + idx + ')">Back to dropdown</button>' : ''}
                                 </div>
                             </td>
                             <td>
                                 <button type="button"
                                         class="btn btn-danger btn-sm"
-                                        onclick="removeMfoPapRow(${idx})">
+                                        onclick="removeMfoPapRow(this)">
                                     Delete
                                 </button>
                             </td>
@@ -2051,12 +2258,13 @@ function editGadPlan(button, planId) {
 
                     if (isCustomEntry) {
                         // For custom entries, the text input is already populated via the template
-                        // No additional action needed
+                        console.log(`Custom entry ${idx}: statement="${item.statement}", additional="${item.additional}"`);
                     } else {
                         // For database entries, set the dropdown value
                         setTimeout(() => {
                             statementSelect.value = item.statement || '';
-                        }, 10);
+                            console.log(`Database entry ${idx}: set dropdown to "${item.statement}"`);
+                        }, 50); // Increased timeout to ensure dropdown is populated
                     }
                 }
             });
