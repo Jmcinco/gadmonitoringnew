@@ -262,7 +262,6 @@ $gadPlans = $gadPlans ?? [];
                                 <thead class="table-dark">
                                     <tr>
                                         <th>GAD Activity ID</th>
-                                        <th>Plan Title</th>
                                         <th>Division</th>
                                         <th>Status</th>
                                         <th>Review Date</th>
@@ -274,13 +273,12 @@ $gadPlans = $gadPlans ?? [];
                                 <tbody id="reviewTableBody">
                                     <?php if (!isset($gadPlans) || empty($gadPlans)): ?>
                                     <tr>
-                                        <td colspan="8" class="text-center">No GAD plans found.</td>
+                                        <td colspan="7" class="text-center">No GAD plans found.</td>
                                     </tr>
                                     <?php else: ?>
                                     <?php foreach ($gadPlans as $plan): ?>
                                     <tr data-status="<?php echo strtolower($plan['status'] ?? 'pending'); ?>" data-plan-id="<?php echo esc($plan['plan_id']); ?>">
                                         <td><?php echo esc('GAD-' . str_pad($plan['plan_id'], 3, '0', STR_PAD_LEFT)); ?></td>
-                                        <td><?php echo esc($plan['activity'] ?? 'N/A'); ?></td>
                                         <td>
                                             <?php echo esc($plan['division'] ?? 'Unknown Division'); ?>
                                         </td>
