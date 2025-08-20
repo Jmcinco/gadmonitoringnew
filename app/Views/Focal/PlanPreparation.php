@@ -815,7 +815,9 @@ if (!session()->get('isLoggedIn') || session()->get('role_id') != 1) {
                               <i class="bi bi-trash"></i>
                             </button>
                             <?php else: ?>
-                            <button class="btn btn-sm btn-outline-secondary me-1" disabled title="Cannot edit <?php echo $statusText; ?> plan">
+                            <button class="btn btn-sm btn-outline-secondary me-1"
+                              onclick="viewGadPlan('<?php echo esc($plan['plan_id'] ?? ''); ?>')"
+                              title="View <?php echo $statusText; ?> plan">
                               <i class="bi bi-eye"></i> View Only
                             </button>
                             <?php endif; ?>
@@ -1212,6 +1214,31 @@ if (!session()->get('isLoggedIn') || session()->get('role_id') != 1) {
           </div>
         </div>
       </div>
+
+      <!-- View Plan Modal -->
+      <div class="modal fade" id="viewPlanModal" tabindex="-1" aria-labelledby="viewPlanModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-xl">
+          <div class="modal-content">
+            <div class="modal-header">
+              <h5 class="modal-title" id="viewPlanModalLabel">
+                <i class="bi bi-eye"></i> View GAD Plan
+              </h5>
+              <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+              <div id="viewPlanContent">
+                <!-- Plan details will be populated here -->
+              </div>
+            </div>
+            <div class="modal-footer">
+              <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                <i class="bi bi-x-circle"></i> Close
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+
       <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
       <script>
         function esc(s) {
@@ -2521,6 +2548,146 @@ function editGadPlan(button, planId) {
           });
           objectiveIndex = document.querySelectorAll('.objective-row').length + 1;
         }
+
+        // View GAD Plan function
+        function viewGadPlan(planId) {
+          fetch(`<?= base_url("GadPlanController/getGadPlan/") ?>${planId}`, {
+            headers: {
+              'X-Requested-With': 'XMLHttpRequest'
+            }
+          })
+          .then(response => response.json())
+          .then(data => {
+            if (data.success) {
+              showPlanDetailsModal(data.plan);
+            } else {
+              Swal.fire('Error', 'Could not load plan details: ' + data.message, 'error');
+            }
+          })
+          .catch(error => {
+            Swal.fire('Error', 'Could not load plan details: ' + error.message, 'error');
+          });
+        }
+
+        // Show plan details in modal
+        function showPlanDetailsModal(plan) {
+          const content = document.getElementById('viewPlanContent');
+
+          // Format MFO/PAP data
+          let mfoPapDisplay = 'No MFO/PAP data';
+          if (plan.mfoPapData) {
+            try {
+              const mfoPapData = typeof plan.mfoPapData === 'string' ? JSON.parse(plan.mfoPapData) : plan.mfoPapData;
+              if (Array.isArray(mfoPapData) && mfoPapData.length > 0) {
+                mfoPapDisplay = mfoPapData.map(item =>
+                  `<div class="mb-2">
+                    <strong>${item.type}:</strong> ${item.statement}
+                    ${item.additional ? `<br><small class="text-muted">${item.additional}</small>` : ''}
+                  </div>`
+                ).join('');
+              }
+            } catch (e) {
+              mfoPapDisplay = 'Invalid MFO/PAP data format';
+            }
+          }
+
+          // Format responsible units
+          let responsibleUnitsDisplay = 'No units specified';
+          if (plan.responsible_units) {
+            try {
+              const units = typeof plan.responsible_units === 'string' ? JSON.parse(plan.responsible_units) : plan.responsible_units;
+              if (Array.isArray(units) && units.length > 0) {
+                responsibleUnitsDisplay = units.join(', ');
+              }
+            } catch (e) {
+              responsibleUnitsDisplay = plan.responsible_units;
+            }
+          }
+
+          // Format file attachments
+          let attachmentsDisplay = 'No attachments';
+          if (plan.file_attachments) {
+            try {
+              const attachments = typeof plan.file_attachments === 'string' ? JSON.parse(plan.file_attachments) : plan.file_attachments;
+              if (Array.isArray(attachments) && attachments.length > 0) {
+                attachmentsDisplay = attachments.map(file => {
+                  const fileName = file.split('/').pop();
+                  return `<a href="<?= base_url() ?>${file}" target="_blank" class="btn btn-sm btn-outline-primary me-1 mb-1">${fileName}</a>`;
+                }).join('');
+              }
+            } catch (e) {
+              attachmentsDisplay = 'Invalid attachment data';
+            }
+          }
+
+          content.innerHTML = `
+            <div class="row">
+              <div class="col-md-6">
+                <h6>Plan Information</h6>
+                <dl class="row">
+                  <dt class="col-sm-4">Plan ID:</dt>
+                  <dd class="col-sm-8">GAD-ACT-${String(plan.plan_id).padStart(3, '0')}</dd>
+                  <dt class="col-sm-4">Status:</dt>
+                  <dd class="col-sm-8"><span class="badge bg-${plan.status === 'approved' ? 'success' : plan.status === 'submitted' ? 'info' : plan.status === 'returned' ? 'warning' : 'secondary'}">${plan.status ? plan.status.charAt(0).toUpperCase() + plan.status.slice(1) : 'Draft'}</span></dd>
+                  <dt class="col-sm-4">Budget:</dt>
+                  <dd class="col-sm-8">₱${plan.amount ? Number(plan.amount).toLocaleString() : '0'}</dd>
+                  <dt class="col-sm-4">HGDG Score:</dt>
+                  <dd class="col-sm-8">${plan.hgdg_score ? Number(plan.hgdg_score).toFixed(1) : 'N/A'}</dd>
+                </dl>
+              </div>
+              <div class="col-md-6">
+                <h6>Timeline</h6>
+                <dl class="row">
+                  <dt class="col-sm-4">Start Date:</dt>
+                  <dd class="col-sm-8">${plan.startDate || 'Not specified'}</dd>
+                  <dt class="col-sm-4">End Date:</dt>
+                  <dd class="col-sm-8">${plan.endDate || 'Not specified'}</dd>
+                  <dt class="col-sm-4">Created:</dt>
+                  <dd class="col-sm-8">${plan.created_at ? new Date(plan.created_at).toLocaleDateString() : 'Unknown'}</dd>
+                  <dt class="col-sm-4">Updated:</dt>
+                  <dd class="col-sm-8">${plan.updated_at ? new Date(plan.updated_at).toLocaleDateString() : 'Unknown'}</dd>
+                </dl>
+              </div>
+            </div>
+            <hr>
+            <div class="mb-3">
+              <h6>Gender Issue/GAD Mandate</h6>
+              <p>${plan.issue_mandate || 'Not specified'}</p>
+            </div>
+            <div class="mb-3">
+              <h6>Cause of Gender Issue</h6>
+              <p>${plan.cause || 'Not specified'}</p>
+            </div>
+            <div class="mb-3">
+              <h6>GAD Result/Objective</h6>
+              <p>${plan.gad_objective || 'Not specified'}</p>
+            </div>
+            <div class="mb-3">
+              <h6>Relevant MFO/PAP</h6>
+              <div>${mfoPapDisplay}</div>
+            </div>
+            <div class="mb-3">
+              <h6>Performance Indicators/Targets</h6>
+              <p>${plan.indicators || 'Not specified'}</p>
+            </div>
+            <div class="mb-3">
+              <h6>Responsible Units</h6>
+              <p>${responsibleUnitsDisplay}</p>
+            </div>
+            <div class="mb-3">
+              <h6>File Attachments</h6>
+              <div>${attachmentsDisplay}</div>
+            </div>
+          `;
+
+          // Update modal title with plan ID
+          document.getElementById('viewPlanModalLabel').innerHTML = `<i class="bi bi-eye"></i> View GAD Plan - GAD-ACT-${String(plan.plan_id).padStart(3, '0')}`;
+
+          // Show modal
+          showModal('viewPlanModal');
+        }
+
+
       </script>
 
 
