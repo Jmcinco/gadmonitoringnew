@@ -942,79 +942,7 @@ public function budgetCrafting()
         }
     }
 
-    public function testGadPlans()
-    {
-        try {
-            $outputModel = new \App\Models\OutputModel();
-            $gadPlans = $outputModel->getAvailableGadPlans();
 
-            return $this->response->setJSON([
-                'success' => true,
-                'count' => count($gadPlans),
-                'data' => $gadPlans,
-                'message' => 'GAD Plans retrieved successfully'
-            ]);
-        } catch (\Exception $e) {
-            return $this->response->setJSON([
-                'success' => false,
-                'error' => $e->getMessage(),
-                'message' => 'Error retrieving GAD Plans'
-            ]);
-        }
-    }
-
-    public function testDatabase()
-    {
-        try {
-            $db = \Config\Database::connect();
-
-            // Check if output table exists and its structure
-            $query = $db->query("DESCRIBE output");
-            $columns = $query->getResultArray();
-
-            // Check for primary key
-            $hasPrimaryKey = false;
-            foreach ($columns as $column) {
-                if ($column['Key'] === 'PRI') {
-                    $hasPrimaryKey = true;
-                    break;
-                }
-            }
-
-            // Count records
-            $countQuery = $db->query("SELECT COUNT(*) as count FROM output");
-            $count = $countQuery->getRowArray();
-
-            // Test insert
-            $testData = [
-                'plan_id' => 1,
-                'accomplishment' => 'Test accomplishment',
-                'status' => 'pending',
-                'date_accomplished' => date('Y-m-d'),
-                'timestamp' => date('Y-m-d H:i:s')
-            ];
-
-            $outputModel = new \App\Models\OutputModel();
-            $insertResult = $outputModel->save($testData);
-
-            return $this->response->setJSON([
-                'success' => true,
-                'table_structure' => $columns,
-                'has_primary_key' => $hasPrimaryKey,
-                'record_count' => $count['count'],
-                'test_insert' => $insertResult,
-                'insert_id' => $insertResult ? $outputModel->getInsertID() : null,
-                'validation_errors' => $outputModel->errors()
-            ]);
-
-        } catch (\Exception $e) {
-            return $this->response->setJSON([
-                'success' => false,
-                'error' => $e->getMessage(),
-                'trace' => $e->getTraceAsString()
-            ]);
-        }
-    }
 
     public function consolidatedAccomplishment()
     {
