@@ -144,6 +144,7 @@ $routes->post('GadPlanController/deleteGadPlan/(:num)', 'GadPlanController::dele
 $routes->post('GadPlanController/save(/:num)?', 'GadPlanController::save/$1');
 $routes->post('GadPlanController/save-draft', 'GadPlanController::saveDraft');
 $routes->post('GadMandateController/getMandates', 'GadMandateController::getMandates');
+$routes->post('GadPlanController/getMandates', 'GadPlanController::getMandates');
 $routes->post('GadMandateController/save', 'GadMandateController::save');
 $routes->post('GadMandateController/delete/(:num)', 'GadMandateController::delete/$1');
 $routes->get('GadMandateController/getMandate/(:num)', 'GadMandateController::getMandate/$1');

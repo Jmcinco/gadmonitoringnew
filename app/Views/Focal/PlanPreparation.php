@@ -451,6 +451,41 @@ if (!session()->get('isLoggedIn') || session()->get('role_id') != 1) {
         font-size: 0.85rem;
       }
     }
+
+    /* Fast Modal Styles */
+    .modal.fade .modal-dialog {
+      transition: transform 0.1s ease-out;
+    }
+
+    .modal-backdrop.fade {
+      transition: opacity 0.1s ease-out;
+    }
+
+    .modal-content {
+      border: none;
+      border-radius: 15px;
+      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+      transition: all 0.1s ease-out;
+    }
+
+    .modal-header {
+      border-radius: 15px 15px 0 0;
+    }
+
+    .modal-footer {
+      border-radius: 0 0 15px 15px;
+    }
+
+    /* Faster modal opening */
+    .modal.show .modal-dialog {
+      transform: none;
+    }
+
+    .modal.show .modal-backdrop {
+      opacity: 0.5;
+    }
+
+
   </style>
 </head>
 
@@ -652,9 +687,13 @@ if (!session()->get('isLoggedIn') || session()->get('role_id') != 1) {
                             $mfoPapData = !empty($plan['mfoPapData']) ? json_decode($plan['mfoPapData'], true) : [];
                             if (!empty($mfoPapData)) {
                                 $mfoPapStrings = array_map(function($item) {
-                                    return '<strong>' . esc($item['type']) . ':</strong> ' . esc($item['statement']);
+                                    $display = '<strong>' . esc($item['type']) . ':</strong> ' . esc($item['statement']);
+                                    if (!empty($item['additional'])) {
+                                        $display .= '<br><small class="text-muted">Additional: ' . esc($item['additional']) . '</small>';
+                                    }
+                                    return $display;
                                 }, $mfoPapData);
-                                echo implode('<br>', $mfoPapStrings);
+                                echo implode('<br><br>', $mfoPapStrings);
                             } else {
                                 echo 'N/A';
                             }
@@ -880,40 +919,55 @@ if (!session()->get('isLoggedIn') || session()->get('role_id') != 1) {
                           <td>
                             <select
                               class="form-select <?php echo (isset($validation) && $validation->hasError('mfoPapType_0')) ? 'is-invalid' : ''; ?>"
-                              name="mfoPapType_0">
+                              name="mfoPapType_0" onchange="updateMfoPapOptions(this, 0)">
                               <option value="" <?php echo set_select('mfoPapType_0', '', true); ?>>Select Type</option>
                               <option value="MFO" <?php echo set_select('mfoPapType_0', 'MFO'); ?>>MFO</option>
-                              <option value="MFA" <?php echo set_select('mfoPapType_0', 'MFA'); ?>>MFA</option>
+                              <option value="PAP" <?php echo set_select('mfoPapType_0', 'PAP'); ?>>PAP</option>
                             </select>
                           </td>
-                          <td><input type="text"
-                              class="form-control <?php echo (isset($validation) && $validation->hasError('mfoPapStatement_0')) ? 'is-invalid' : ''; ?>"
-                              name="mfoPapStatement_0" placeholder="Enter MFO / PAP statement..."
-                              value="<?php echo set_value('mfoPapStatement_0'); ?>"></td>
+                          <td>
+                            <select
+                              class="form-select <?php echo (isset($validation) && $validation->hasError('mfoPapStatement_0')) ? 'is-invalid' : ''; ?>"
+                              name="mfoPapStatement_0" id="mfoPapStatement_0" onchange="toggleCustomInput(this, 0)" style="display: block;">
+                              <option value="">Select MFO/PAP first</option>
+                            </select>
+                            <div id="customInputContainer_0" style="display: none;">
+                              <input
+                                type="text"
+                                class="form-control <?php echo (isset($validation) && $validation->hasError('mfoPapStatement_0')) ? 'is-invalid' : ''; ?>"
+                                name="mfoPapStatementText_0" id="mfoPapStatementText_0"
+                                placeholder="Enter custom MFO/PAP statement..."
+                                value="<?php echo set_value('mfoPapStatementText_0'); ?>">
+                              <input
+                                type="text"
+                                class="form-control mt-2 <?php echo (isset($validation) && $validation->hasError('mfoPapAdditional_0')) ? 'is-invalid' : ''; ?>"
+                                name="mfoPapAdditional_0" id="mfoPapAdditional_0"
+                                placeholder="Enter additional details/description..."
+                                value="<?php echo set_value('mfoPapAdditional_0'); ?>">
+                            </div>
+                          </td>
                           <td><button type="button" class="btn btn-danger btn-sm"
                               onclick="removeMfoPapRow(this)">Delete</button></td>
                         </tr>
                       </tbody>
                     </table>
                   </div>
-                  <button type="button" class="btn btn-secondary btn-sm mt-2" onclick="addMfoPapRow()">Add
-                    Another</button>
+                  <button type="button" class="btn btn-secondary btn-sm mt-2" onclick="addMfoPapRow()">Add Another</button>
                   <?php if (isset($validation) && $validation->hasError('mfoPap')): ?>
                   <div class="invalid-feedback d-block"><?php echo $validation->getError('mfoPap'); ?></div>
                   <?php endif; ?>
                 </div>
 
-                <div class="mb-4">
-                  <label for="activity" class="form-label"><strong>GAD ACTIVITY</strong> <span
-                      class="text-danger">*</span></label>
-                  <textarea
-                    class="form-control <?php echo (isset($validation) && $validation->hasError('activity')) ? 'is-invalid' : ''; ?>"
-                    id="activity" name="activity" rows="3" placeholder="Describe the specific GAD activity..."
-                    required><?php echo set_value('activity'); ?></textarea>
-                  <div class="invalid-feedback">
-                    <?php echo (isset($validation) && $validation->hasError('activity')) ? $validation->getError('activity') : ''; ?>
-                  </div>
-                </div>
+                <!-- Hidden data for JavaScript -->
+                <script type="text/javascript">
+                  const mfoData = <?php echo json_encode($mfos ?? []); ?>;
+                  const papData = <?php echo json_encode($paps ?? []); ?>;
+
+                  // Initialize MFO/PAP index counter
+                  window.mfoPapIndex = 1;
+                </script>
+
+
 
                 <div class="mb-4">
                   <label class="form-label"><strong>PERFORMANCE INDICATOR(S) / TARGET(S)</strong> <span
@@ -997,8 +1051,7 @@ if (!session()->get('isLoggedIn') || session()->get('role_id') != 1) {
                       <?php echo (isset($validation) && $validation->hasError('responsibleUnits')) ? $validation->getError('responsibleUnits') : 'Please select a responsible unit.'; ?>
                     </div>
                   </div>
-                  <button type="button" class="btn btn-secondary btn-sm mt-2" onclick="addResponsibleUnitRow()">Add
-                    Another</button>
+                  <button type="button" class="btn btn-secondary btn-sm mt-2" onclick="addResponsibleUnitRow()">Add Another</button>
                 </div>
 
 
@@ -1176,6 +1229,11 @@ if (!session()->get('isLoggedIn') || session()->get('role_id') != 1) {
         }
 
         function resetGadPlanModal() {
+          // Initialize modal if not already done
+          if (!window.gadPlanModal) {
+            window.gadPlanModal = new bootstrap.Modal(document.getElementById('gadPlanModal'));
+          }
+
           const form = document.getElementById('gadPlanForm');
           form.reset();
           form.action = '<?= base_url("GadPlanController/save") ?>';
@@ -1216,6 +1274,85 @@ if (!session()->get('isLoggedIn') || session()->get('role_id') != 1) {
           container.insertBefore(row, container.querySelector('button'));
         }
 
+
+
+
+
+        // Update MFO/PAP options based on type selection
+        function updateMfoPapOptions(selectElement, index) {
+          const type = selectElement.value;
+          const statementSelect = document.getElementById(`mfoPapStatement_${index}`);
+          const textInput = document.getElementById(`mfoPapStatementText_${index}`);
+
+          // Clear existing options
+          statementSelect.innerHTML = '<option value="">Select ' + (type || 'MFO/PAP') + '</option>';
+
+          // Reset display
+          statementSelect.style.display = 'block';
+          textInput.style.display = 'none';
+          textInput.value = '';
+
+          if (type === 'MFO') {
+            mfoData.forEach(mfo => {
+              const option = document.createElement('option');
+              option.value = mfo.mfo;
+              option.textContent = `${mfo.mfo_code} - ${mfo.mfo}`;
+              statementSelect.appendChild(option);
+            });
+            // Add Others option
+            const othersOption = document.createElement('option');
+            othersOption.value = 'Others';
+            othersOption.textContent = 'Others (Custom Entry)';
+            statementSelect.appendChild(othersOption);
+          } else if (type === 'PAP') {
+            papData.forEach(pap => {
+              const option = document.createElement('option');
+              option.value = pap.pap;
+              option.textContent = `${pap.mfo_code || 'N/A'} - ${pap.pap}`;
+              statementSelect.appendChild(option);
+            });
+            // Add Others option
+            const othersOption = document.createElement('option');
+            othersOption.value = 'Others';
+            othersOption.textContent = 'Others (Custom Entry)';
+            statementSelect.appendChild(othersOption);
+          }
+        }
+
+        // Toggle custom input when "Others" is selected in statement dropdown
+        function toggleCustomInput(selectElement, index) {
+          const customContainer = document.getElementById(`customInputContainer_${index}`);
+          const textInput = document.getElementById(`mfoPapStatementText_${index}`);
+          const additionalInput = document.getElementById(`mfoPapAdditional_${index}`);
+
+          if (selectElement.value === 'Others') {
+            // Show custom input container, hide dropdown
+            selectElement.style.display = 'none';
+            customContainer.style.display = 'block';
+            textInput.required = true;
+            selectElement.required = false;
+            textInput.focus();
+
+            // Add a button to go back to dropdown
+            if (!customContainer.querySelector('.back-to-dropdown')) {
+              const backBtn = document.createElement('button');
+              backBtn.type = 'button';
+              backBtn.className = 'btn btn-sm btn-outline-secondary mt-2 back-to-dropdown';
+              backBtn.textContent = 'Back to dropdown';
+              backBtn.onclick = () => {
+                selectElement.style.display = 'block';
+                customContainer.style.display = 'none';
+                textInput.value = '';
+                additionalInput.value = '';
+                textInput.required = false;
+                selectElement.required = true;
+                selectElement.value = '';
+              };
+              customContainer.appendChild(backBtn);
+            }
+          }
+        }
+
         function addMfoPapRow() {
           const idx = window.mfoPapIndex++;
           const container = document.getElementById('mfoPapTableContainer');
@@ -1231,14 +1368,22 @@ if (!session()->get('isLoggedIn') || session()->get('role_id') != 1) {
     <tbody>
       <tr>
         <td>
-          <select class="form-select" name="mfoPapType_${idx}">
+          <select class="form-select" name="mfoPapType_${idx}" onchange="updateMfoPapOptions(this, ${idx})">
             <option value="">Select Type</option>
             <option value="MFO">MFO</option>
-            <option value="MFA">MFA</option>
+            <option value="PAP">PAP</option>
           </select>
         </td>
         <td>
-          <input type="text" class="form-control" name="mfoPapStatement_${idx}" placeholder="Enter MFO / PAP statement...">
+          <select class="form-select" name="mfoPapStatement_${idx}" id="mfoPapStatement_${idx}" onchange="toggleCustomInput(this, ${idx})" style="display: block;">
+            <option value="">Select MFO/PAP first</option>
+          </select>
+          <div id="customInputContainer_${idx}" style="display: none;">
+            <input type="text" class="form-control" name="mfoPapStatementText_${idx}" id="mfoPapStatementText_${idx}"
+                   placeholder="Enter custom MFO/PAP statement...">
+            <input type="text" class="form-control mt-2" name="mfoPapAdditional_${idx}" id="mfoPapAdditional_${idx}"
+                   placeholder="Enter additional details/description...">
+          </div>
         </td>
         <td>
           <button type="button" class="btn btn-danger btn-sm" onclick="removeMfoPapRow(${idx})">Delete</button>
@@ -1248,10 +1393,14 @@ if (!session()->get('isLoggedIn') || session()->get('role_id') != 1) {
           container.appendChild(tbl);
         }
 
+
+
         function removeMfoPapRow(idx) {
           const tbl = document.getElementById(`mfoPapTable_${idx}`);
           if (tbl) tbl.remove();
         }
+
+
 
         document.getElementById('startDate').addEventListener('change', e =>
           document.getElementById('endDate').min = e.target.value
@@ -1274,18 +1423,123 @@ if (!session()->get('isLoggedIn') || session()->get('role_id') != 1) {
         })();
 
         document.addEventListener('DOMContentLoaded', function () {
-          new bootstrap.Modal(document.getElementById('gadPlanModal'));
-          new bootstrap.Modal(document.getElementById('mandateModal'));
-          new bootstrap.Modal(document.getElementById('createMandateModal'));
-          new bootstrap.Modal(document.getElementById('successModal'));
+          // Pre-initialize all modals for faster opening
+          window.modalsInitialized = false;
+          window.gadPlanModal = null;
+          window.mandateModal = null;
+          window.createMandateModal = null;
+          window.successModal = null;
+
+          // Pre-initialize modals after a short delay to avoid blocking page load
+          setTimeout(() => {
+            if (document.getElementById('gadPlanModal') &&
+                document.getElementById('mandateModal') &&
+                document.getElementById('createMandateModal') &&
+                document.getElementById('successModal')) {
+
+              window.gadPlanModal = new bootstrap.Modal(document.getElementById('gadPlanModal'), {
+                backdrop: 'static',
+                keyboard: false
+              });
+              window.mandateModal = new bootstrap.Modal(document.getElementById('mandateModal'), {
+                backdrop: 'static',
+                keyboard: false
+              });
+              window.createMandateModal = new bootstrap.Modal(document.getElementById('createMandateModal'), {
+                backdrop: 'static',
+                keyboard: false
+              });
+              window.successModal = new bootstrap.Modal(document.getElementById('successModal'), {
+                backdrop: 'static',
+                keyboard: false
+              });
+              window.modalsInitialized = true;
+              console.log('Modals pre-initialized for faster opening');
+            }
+          }, 100);
+
+          // Load mandates data
           loadMandates();
         });
 
+        // Ultra-fast modal helper functions - Pre-initialized
+        function showModal(modalId) {
+          // Use pre-initialized modal instances for instant opening
+          let modalInstance;
+
+          if (window.modalsInitialized) {
+            // Use pre-initialized modals - fastest path
+            switch(modalId) {
+              case 'gadPlanModal':
+                modalInstance = window.gadPlanModal;
+                break;
+              case 'mandateModal':
+                modalInstance = window.mandateModal;
+                break;
+              case 'createMandateModal':
+                modalInstance = window.createMandateModal;
+                break;
+              case 'successModal':
+                modalInstance = window.successModal;
+                break;
+            }
+          }
+
+          // Fallback if not pre-initialized
+          if (!modalInstance) {
+            const modalElement = document.getElementById(modalId);
+            if (!modalElement) {
+              console.error(`Modal with ID ${modalId} not found`);
+              return;
+            }
+            modalInstance = new bootstrap.Modal(modalElement, {
+              backdrop: 'static',
+              keyboard: false
+            });
+          }
+
+          // Show modal immediately - no delays
+          modalInstance.show();
+        }
+
+        function hideModal(modalId) {
+          // Use pre-initialized modal instances for faster hiding
+          let modalInstance;
+          switch(modalId) {
+            case 'gadPlanModal':
+              modalInstance = window.gadPlanModal;
+              break;
+            case 'mandateModal':
+              modalInstance = window.mandateModal;
+              break;
+            case 'createMandateModal':
+              modalInstance = window.createMandateModal;
+              break;
+            case 'successModal':
+              modalInstance = window.successModal;
+              break;
+            default:
+              const modalElement = document.getElementById(modalId);
+              if (modalElement) {
+                modalInstance = bootstrap.Modal.getInstance(modalElement);
+              }
+          }
+
+          if (modalInstance) {
+            modalInstance.hide();
+          }
+        }
+
         function loadMandates() {
+          // Initialize mandate modal if not already done
+          if (!window.mandateModal) {
+            window.mandateModal = new bootstrap.Modal(document.getElementById('mandateModal'));
+          }
+
           const year = document.getElementById('filterYear').value;
           const tb = document.getElementById('mandateTableBody');
           tb.innerHTML = `<tr><td colspan="4" class="text-center">Loading mandates...</td></tr>`;
-          fetch('<?= base_url("GadMandateController/getMandates") ?>', {
+          fetch('<?= base_url("GadPlanController/getMandates") ?>', {
               method: 'POST',
               headers: {
                 'Content-Type': 'application/x-www-form-urlencoded',
@@ -1296,10 +1550,17 @@ if (!session()->get('isLoggedIn') || session()->get('role_id') != 1) {
                 year
               })
             })
-            .then(r => r.json())
+            .then(r => {
+              if (!r.ok) {
+                throw new Error(`HTTP ${r.status}: ${r.statusText}`);
+              }
+              return r.json();
+            })
             .then(d => {
+              console.log('Mandates response:', d);
               tb.innerHTML = '';
-              if (d.success && d.mandates.length) {
+              if (d.success) {
+                if (d.mandates && d.mandates.length > 0) {
                 d.mandates.forEach(m => {
                   const desc = m.description.replace(/'/g, "\\'");
                   const tr = document.createElement('tr');
@@ -1328,31 +1589,35 @@ if (!session()->get('isLoggedIn') || session()->get('role_id') != 1) {
                   if (o.value === year) o.selected = true;
                   sel.appendChild(o);
                 });
+                } else {
+                  tb.innerHTML = `<tr><td colspan="4" class="text-center text-muted">No GAD mandates found for the selected year.</td></tr>`;
+                }
               } else {
-                tb.innerHTML = `<tr><td colspan="4" class="text-center">No GAD mandates found.</td></tr>`;
+                console.error('API Error:', d);
+                tb.innerHTML = `<tr><td colspan="4" class="text-center text-danger">Error: ${d.message || 'Failed to load mandates'}</td></tr>`;
               }
             })
-            .catch(() => tb.innerHTML = `<tr><td colspan="4" class="text-center">Failed to load mandates.</td></tr>`);
+            .catch(error => {
+              console.error('Error loading mandates:', error);
+              tb.innerHTML = `<tr><td colspan="4" class="text-center text-danger">Failed to load mandates. Error: ${error.message}</td></tr>`;
+            });
         }
 
         function selectMandate(year, desc, id) {
           document.getElementById('issue_mandate').value = desc;
-          bootstrap.Modal.getInstance(document.getElementById('mandateModal')).hide();
-          new bootstrap.Modal(document.getElementById('gadPlanModal')).show();
+          hideModal('mandateModal');
+          showModal('gadPlanModal');
         }
 
         function showAddMandateForm() {
-          const mm = document.getElementById('mandateModal');
-          const cm = document.getElementById('createMandateModal');
-          bootstrap.Modal.getInstance(mm).hide();
-          mm.addEventListener('hidden.bs.modal', function h() {
+          hideModal('mandateModal');
+
+          // Clean up any remaining backdrops - faster
+          setTimeout(() => {
             document.querySelectorAll('.modal-backdrop').forEach(n => n.remove());
             document.body.classList.remove('modal-open');
-            new bootstrap.Modal(cm).show();
-            mm.removeEventListener('hidden.bs.modal', h);
-          }, {
-            once: true
-          });
+            showModal('createMandateModal');
+          }, 150);
         }
 
         let indicatorIndex = 1;
@@ -1429,8 +1694,13 @@ if (!session()->get('isLoggedIn') || session()->get('role_id') != 1) {
                 document.getElementById('newMandateDescription').dataset.id = '';
                 const cm = document.getElementById('createMandateModal');
                 bootstrap.Modal.getInstance(cm).hide();
-                cm.addEventListener('hidden.bs.modal', function h() {
-                  new bootstrap.Modal(document.getElementById('mandateModal')).show();
+                cm.addEventListener('hidden.bs.modal', async function h() {
+                  // Clean up any remaining backdrops
+                  document.querySelectorAll('.modal-backdrop').forEach(n => n.remove());
+                  document.body.classList.remove('modal-open');
+
+                  // Show mandate modal
+                  showModal('mandateModal');
                   loadMandates();
                   cm.removeEventListener('hidden.bs.modal', h);
                 }, {
@@ -1477,11 +1747,37 @@ if (!session()->get('isLoggedIn') || session()->get('role_id') != 1) {
           document.querySelectorAll('[id^="mfoPapTable_"]').forEach(tbl => {
             const idx = tbl.id.split('_')[1];
             const t = tbl.querySelector(`[name="mfoPapType_${idx}"]`).value;
-            const s = tbl.querySelector(`[name="mfoPapStatement_${idx}"]`).value.trim();
-            if (t && s) mfoArr.push({
-              type: t,
-              statement: s
-            });
+            let s = '';
+            let additional = '';
+
+            // Check if custom input container is visible (Others selected)
+            const customContainer = tbl.querySelector(`#customInputContainer_${idx}`);
+            const textInput = tbl.querySelector(`[name="mfoPapStatementText_${idx}"]`);
+            const additionalInput = tbl.querySelector(`[name="mfoPapAdditional_${idx}"]`);
+            const selectInput = tbl.querySelector(`[name="mfoPapStatement_${idx}"]`);
+
+            if (customContainer && customContainer.style.display !== 'none') {
+              // Custom entry mode
+              s = textInput ? textInput.value.trim() : '';
+              additional = additionalInput ? additionalInput.value.trim() : '';
+            } else if (selectInput) {
+              // Dropdown selection mode
+              s = selectInput.value.trim();
+            }
+
+            if (t && s && s !== 'Others') {
+              const mfoItem = {
+                type: t,
+                statement: s
+              };
+
+              // Add additional field if it has content
+              if (additional) {
+                mfoItem.additional = additional;
+              }
+
+              mfoArr.push(mfoItem);
+            }
           });
           fd.set('mfoPapData', JSON.stringify(mfoArr));
 
@@ -1563,16 +1859,45 @@ if (!session()->get('isLoggedIn') || session()->get('role_id') != 1) {
                 const row = tbody.querySelector(trSel);
                 if (row) row.innerHTML = cells;
               } else {
+                // Clear "No GAD plans found" message if it exists
+                const noDataRow = tbody.querySelector('td[colspan]');
+                if (noDataRow) {
+                  console.log('Clearing "No GAD plans found" message');
+                  tbody.innerHTML = '';
+                }
+
                 const tr = document.createElement('tr');
                 tr.setAttribute('data-plan-id', planId);
                 tr.innerHTML = cells;
-                if (tbody.querySelector('td[colspan]')) tbody.innerHTML = '';
                 tbody.appendChild(tr);
+                console.log('New GAD plan row added to table with ID:', planId);
               }
               document.getElementById('successModalBody').textContent = d.message;
-              bootstrap.Modal.getInstance(document.getElementById('gadPlanModal')).hide();
-              new bootstrap.Modal(document.getElementById('successModal')).show();
-              resetGadPlanModal();
+
+              // Hide GAD plan modal and show success modal with smooth transition
+              const gadPlanModalInstance = bootstrap.Modal.getInstance(document.getElementById('gadPlanModal'));
+              if (gadPlanModalInstance) {
+                gadPlanModalInstance.hide();
+
+                // Wait for GAD plan modal to hide, then show success modal
+                document.getElementById('gadPlanModal').addEventListener('hidden.bs.modal', function h() {
+                  // Small delay to ensure DOM is updated
+                  setTimeout(() => {
+                    showModal('successModal');
+                    resetGadPlanModal();
+                    // Optionally refresh the page to ensure data is current
+                    // window.location.reload();
+                  }, 100);
+                  document.getElementById('gadPlanModal').removeEventListener('hidden.bs.modal', h);
+                }, { once: true });
+              } else {
+                setTimeout(() => {
+                  showModal('successModal');
+                  resetGadPlanModal();
+                  // Optionally refresh the page to ensure data is current
+                  // window.location.reload();
+                }, 100);
+              }
             })
             .catch(e => Swal.fire('Error', 'Unexpected: ' + e.message, 'error'));
         }
@@ -1609,7 +1934,6 @@ function editGadPlan(button, planId) {
         document.getElementById('issue_mandate').value = plan.issue_mandate || '';
         document.getElementById('cause').value = plan.cause || '';
         document.getElementById('gad_objective').value = (plan.gad_objective[0] || '');
-        document.getElementById('activity').value = plan.activity || '';
         document.getElementById('startDate').value = plan.startDate || '';
         document.getElementById('endDate').value = plan.endDate || '';
         document.getElementById('status').value = plan.status || 'Pending';
@@ -1658,6 +1982,16 @@ function editGadPlan(button, planId) {
             indicatorIndex = indicators.length + 1;
         }
 
+        // Helper function to check if statement exists in database
+        function isInDatabase(type, statement) {
+            if (type === 'MFO') {
+                return mfoData.some(mfo => mfo.mfo === statement);
+            } else if (type === 'PAP') {
+                return papData.some(pap => pap.pap === statement);
+            }
+            return false;
+        }
+
         // ---- Rebuild MFO/PAP rows ----
         const mfoContainer = document.getElementById('mfoPapTableContainer');
         if (mfoContainer) {
@@ -1666,6 +2000,9 @@ function editGadPlan(button, planId) {
                 const tbl = document.createElement('table');
                 tbl.className = 'table table-bordered mb-2';
                 tbl.id = `mfoPapTable_${idx}`;
+                // Check if this is a custom entry (not in database)
+                const isCustomEntry = !isInDatabase(item.type, item.statement);
+
                 tbl.innerHTML = `
                     <thead>
                         <tr><th>Type</th><th>MFO / PAP Statement</th><th>Action</th></tr>
@@ -1673,17 +2010,25 @@ function editGadPlan(button, planId) {
                     <tbody>
                         <tr>
                             <td>
-                                <select class="form-select" name="mfoPapType_${idx}">
+                                <select class="form-select" name="mfoPapType_${idx}" onchange="updateMfoPapOptions(this, ${idx})">
                                     <option value="">Select</option>
                                     <option value="MFO" ${item.type === 'MFO' ? 'selected' : ''}>MFO</option>
-                                    <option value="MFA" ${item.type === 'MFA' ? 'selected' : ''}>MFA</option>
+                                    <option value="PAP" ${item.type === 'PAP' ? 'selected' : ''}>PAP</option>
                                 </select>
                             </td>
                             <td>
-                                <input type="text"
-                                       class="form-control"
-                                       name="mfoPapStatement_${idx}"
-                                       value="${item.statement || ''}">
+                                <select class="form-select" name="mfoPapStatement_${idx}" id="mfoPapStatement_${idx}"
+                                        onchange="toggleCustomInput(this, ${idx})" style="display: ${isCustomEntry ? 'none' : 'block'};">
+                                    <option value="">Select MFO/PAP</option>
+                                </select>
+                                <div id="customInputContainer_${idx}" style="display: ${isCustomEntry ? 'block' : 'none'};">
+                                    <input type="text" class="form-control" name="mfoPapStatementText_${idx}" id="mfoPapStatementText_${idx}"
+                                           placeholder="Enter custom MFO/PAP statement..."
+                                           value="${isCustomEntry ? (item.statement || '') : ''}">
+                                    <input type="text" class="form-control mt-2" name="mfoPapAdditional_${idx}" id="mfoPapAdditional_${idx}"
+                                           placeholder="Enter additional details/description..."
+                                           value="${isCustomEntry ? (item.additional || '') : ''}">
+                                </div>
                             </td>
                             <td>
                                 <button type="button"
@@ -1695,6 +2040,25 @@ function editGadPlan(button, planId) {
                         </tr>
                     </tbody>`;
                 mfoContainer.appendChild(tbl);
+
+                // Populate the statement dropdown based on type and set selected value
+                const typeSelect = tbl.querySelector(`[name="mfoPapType_${idx}"]`);
+                const statementSelect = tbl.querySelector(`[name="mfoPapStatement_${idx}"]`);
+                const textInput = tbl.querySelector(`[name="mfoPapStatementText_${idx}"]`);
+
+                if (item.type) {
+                    updateMfoPapOptions(typeSelect, idx);
+
+                    if (isCustomEntry) {
+                        // For custom entries, the text input is already populated via the template
+                        // No additional action needed
+                    } else {
+                        // For database entries, set the dropdown value
+                        setTimeout(() => {
+                            statementSelect.value = item.statement || '';
+                        }, 10);
+                    }
+                }
             });
             window.mfoPapIndex = plan.mfoPapData.length;
         }
@@ -1738,7 +2102,8 @@ function editGadPlan(button, planId) {
             unitContainer.appendChild(addBtn);
         }
 
-        new bootstrap.Modal(document.getElementById('gadPlanModal')).show();
+        // Show GAD plan modal
+        showModal('gadPlanModal');
     })
     .catch(e => Swal.fire('Error', 'Could not load plan: ' + e.message, 'error'));
 }
@@ -1758,10 +2123,11 @@ function editGadPlan(button, planId) {
                 const ta = document.getElementById('newMandateDescription');
                 ta.value = mandate.description || '';
                 ta.dataset.id = id;
-                bootstrap.Modal.getInstance(document.getElementById('mandateModal')).hide();
+                // Hide mandate modal and show create mandate modal - faster
+                hideModal('mandateModal');
                 setTimeout(() => {
-                  new bootstrap.Modal(document.getElementById('createMandateModal')).show();
-                }, 400);
+                  showModal('createMandateModal');
+                }, 150);
               } else {
                 Swal.fire('Error', d.message || 'Failed to load mandate.', 'error');
               }

@@ -84,7 +84,6 @@ class GadPlanController extends Controller
             'issue_mandate'    => 'required|min_length[10]',
             'cause'            => 'required|min_length[10]',
             'gad_objective.*'  => 'permit_empty|min_length[10]',
-            'activity'         => 'required|min_length[10]',
             'indicator_text'   => 'required',
             'target_text'      => 'required',
             'startDate'        => 'required|valid_date',
@@ -174,7 +173,6 @@ class GadPlanController extends Controller
             'issue_mandate'       => $post['issue_mandate'],
             'cause'               => $post['cause'],
             'gad_objective'       => json_encode($objectives),
-            'activity'            => $post['activity'],
             'indicator_text'      => $post['indicator_text'],
             'target_text'         => $post['target_text'],
             'startDate'           => $post['startDate'],
@@ -196,7 +194,7 @@ class GadPlanController extends Controller
             // Log audit trail for GAD Plan activity
             $auditModel = new AuditTrailModel();
             $action = $planId ? 'UPDATE' : 'CREATE';
-            $planTitle = $post['activity'] ?? 'GAD Plan';
+            $planTitle = 'GAD Plan - ' . substr($post['issue_mandate'], 0, 50);
 
             // Get old data for updates
             $oldData = null;
@@ -289,7 +287,7 @@ class GadPlanController extends Controller
         if ($result) {
             // Log audit trail for GAD Plan deletion
             $auditModel = new AuditTrailModel();
-            $planTitle = $plan['activity'] ?? 'GAD Plan';
+            $planTitle = 'GAD Plan - ' . substr($plan['issue_mandate'], 0, 50);
 
             $auditModel->logActivity([
                 'user_id' => $this->session->get('user_id'),
@@ -364,7 +362,13 @@ class GadPlanController extends Controller
     public function getMandates()
     {
         try {
+            log_message('info', 'getMandates called - Session data: ' . json_encode([
+                'isLoggedIn' => $this->session->get('isLoggedIn'),
+                'role_id' => $this->session->get('role_id')
+            ]));
+
             if (!$this->session->get('isLoggedIn') || $this->session->get('role_id') != 1) {
+                log_message('warning', 'Unauthorized access to getMandates');
                 return $this->response->setJSON([
                     'success' => false,
                     'message' => 'Unauthorized access.'
@@ -372,11 +376,42 @@ class GadPlanController extends Controller
             }
 
             $year = $this->request->getPost('year');
+            log_message('info', 'getMandates - Year filter: ' . ($year ?: 'none'));
+
             $builder = $this->mandateModel->builder();
             if ($year) {
                 $builder->where('year', $year);
             }
             $mandates = $builder->get()->getResultArray();
+
+            log_message('info', 'getMandates - Found ' . count($mandates) . ' mandates');
+
+            // If no mandates found, let's check if table exists and has any data
+            if (empty($mandates)) {
+                $totalCount = $this->mandateModel->countAll();
+                log_message('info', 'Total mandates in database: ' . $totalCount);
+
+                // If no mandates exist at all, create some sample data
+                if ($totalCount === 0) {
+                    $sampleMandates = [
+                        ['year' => 2024, 'description' => 'Republic Act No. 9710 - Magna Carta of Women'],
+                        ['year' => 2024, 'description' => 'Republic Act No. 11313 - Safe Spaces Act (Bawal Bastos Law)'],
+                        ['year' => 2024, 'description' => 'Executive Order No. 273 - Philippine Plan for Gender-Responsive Development']
+                    ];
+
+                    foreach ($sampleMandates as $mandate) {
+                        $this->mandateModel->insert($mandate);
+                    }
+
+                    // Re-fetch mandates
+                    $builder = $this->mandateModel->builder();
+                    if ($year) {
+                        $builder->where('year', $year);
+                    }
+                    $mandates = $builder->get()->getResultArray();
+                    log_message('info', 'Created sample mandates, now found: ' . count($mandates));
+                }
+            }
 
             return $this->response->setJSON([
                 'success' => true,
