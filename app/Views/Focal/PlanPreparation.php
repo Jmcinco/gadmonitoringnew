@@ -1028,12 +1028,7 @@ if (!session()->get('isLoggedIn') || session()->get('role_id') != 1) {
                                 name="mfoPapStatementText_0" id="mfoPapStatementText_0"
                                 placeholder="Enter custom MFO/PAP statement..."
                                 value="<?php echo set_value('mfoPapStatementText_0'); ?>">
-                              <input
-                                type="text"
-                                class="form-control mt-2 <?php echo (isset($validation) && $validation->hasError('mfoPapAdditional_0')) ? 'is-invalid' : ''; ?>"
-                                name="mfoPapAdditional_0" id="mfoPapAdditional_0"
-                                placeholder="Enter additional details/description..."
-                                value="<?php echo set_value('mfoPapAdditional_0'); ?>">
+
                             </div>
                           </td>
                           <td><button type="button" class="btn btn-danger btn-sm"
@@ -1476,23 +1471,41 @@ if (!session()->get('isLoggedIn') || session()->get('role_id') != 1) {
           }
         }
 
+        function removeResponsibleUnitRow(button) {
+          try {
+            const row = button.closest('.responsible-unit-row');
+            if (row) {
+              row.remove();
+            }
+          } catch (error) {
+            console.error('Error in removeResponsibleUnitRow:', error);
+          }
+        }
+
 
 
 
 
         // Update MFO/PAP options based on type selection
-        function updateMfoPapOptions(selectElement, index) {
+        function updateMfoPapOptions(selectElement, index, preserveCustomDisplay = false) {
           const type = selectElement.value;
           const statementSelect = document.getElementById(`mfoPapStatement_${index}`);
           const textInput = document.getElementById(`mfoPapStatementText_${index}`);
+          const customContainer = document.getElementById(`customInputContainer_${index}`);
 
           // Clear existing options
           statementSelect.innerHTML = '<option value="">Select ' + (type || 'MFO/PAP') + '</option>';
 
-          // Reset display
-          statementSelect.style.display = 'block';
-          textInput.style.display = 'none';
-          textInput.value = '';
+          // Only reset display if we're not preserving custom display
+          if (!preserveCustomDisplay) {
+            statementSelect.style.display = 'block';
+            if (customContainer) {
+              customContainer.style.display = 'none';
+            }
+            if (textInput) {
+              textInput.value = '';
+            }
+          }
 
           if (type === 'MFO') {
             mfoData.forEach(mfo => {
@@ -1525,7 +1538,6 @@ if (!session()->get('isLoggedIn') || session()->get('role_id') != 1) {
         function toggleCustomInput(selectElement, index) {
           const customContainer = document.getElementById(`customInputContainer_${index}`);
           const textInput = document.getElementById(`mfoPapStatementText_${index}`);
-          const additionalInput = document.getElementById(`mfoPapAdditional_${index}`);
 
           if (selectElement.value === 'Others') {
             // Show custom input container, hide dropdown
@@ -1589,8 +1601,7 @@ if (!session()->get('isLoggedIn') || session()->get('role_id') != 1) {
           <div id="customInputContainer_${idx}" style="display: none;">
             <input type="text" class="form-control" name="mfoPapStatementText_${idx}" id="mfoPapStatementText_${idx}"
                    placeholder="Enter custom MFO/PAP statement...">
-            <input type="text" class="form-control mt-2" name="mfoPapAdditional_${idx}" id="mfoPapAdditional_${idx}"
-                   placeholder="Enter additional details/description...">
+
           </div>
         </td>
         <td>
@@ -1625,13 +1636,11 @@ if (!session()->get('isLoggedIn') || session()->get('role_id') != 1) {
           const selectElement = document.getElementById(`mfoPapStatement_${index}`);
           const customContainer = document.getElementById(`customInputContainer_${index}`);
           const textInput = document.getElementById(`mfoPapStatementText_${index}`);
-          const additionalInput = document.getElementById(`mfoPapAdditional_${index}`);
 
           if (selectElement && customContainer) {
             selectElement.style.display = 'block';
             customContainer.style.display = 'none';
             textInput.value = '';
-            additionalInput.value = '';
             textInput.required = false;
             selectElement.required = true;
             selectElement.value = '';
@@ -2039,12 +2048,10 @@ if (!session()->get('isLoggedIn') || session()->get('role_id') != 1) {
             const idx = tbl.id.split('_')[1];
             const t = tbl.querySelector(`[name="mfoPapType_${idx}"]`).value;
             let s = '';
-            let additional = '';
 
             // Check if custom input container is visible (Others selected)
             const customContainer = tbl.querySelector(`#customInputContainer_${idx}`);
             const textInput = tbl.querySelector(`[name="mfoPapStatementText_${idx}"]`);
-            const additionalInput = tbl.querySelector(`[name="mfoPapAdditional_${idx}"]`);
             const selectInput = tbl.querySelector(`[name="mfoPapStatement_${idx}"]`);
 
             // Check if we're in custom entry mode (custom container is visible)
@@ -2098,25 +2105,13 @@ if (!session()->get('isLoggedIn') || session()->get('role_id') != 1) {
 
               console.log(`Custom mode - final textValue: "${textValue}"`);
 
-              // Get additional field value
-              const additionalValue = additionalInput ? additionalInput.value.trim() : '';
-              console.log(`Additional field value: "${additionalValue}"`);
-            console.log(`About to check conditions: textValue="${textValue}", additionalValue="${additionalValue}"`);
-
               if (textValue) {
                 s = textValue;
-                additional = additionalValue;
-                console.log(`Using main field: statement="${s}", additional="${additional}"`);
-              } else if (additionalValue) {
-                // If main field is empty but additional has content, use additional as main
-                s = additionalValue;
-                additional = '';
-                console.log(`Moving additional to main: statement="${s}"`);
-                console.log(`After move - s="${s}", additional="${additional}"`);
+                console.log(`Using custom text: statement="${s}"`);
               } else {
-                console.log(`Both fields are empty - textValue="${textValue}", additionalValue="${additionalValue}"`);
+                console.log(`Custom text field is empty - textValue="${textValue}"`);
               }
-              console.log(`Final values for table ${idx}: type="${t}", statement="${s}", additional="${additional}"`);
+              console.log(`Final values for table ${idx}: type="${t}", statement="${s}"`);
             } else if (selectInput && selectInput.value && selectInput.value !== 'Others') {
               // Dropdown selection mode - get value from select
               s = selectInput.value.trim();
@@ -2125,27 +2120,14 @@ if (!session()->get('isLoggedIn') || session()->get('role_id') != 1) {
               console.log(`No valid input found for table ${idx}`);
             }
 
-            // Only add to array if we have type and either statement or additional content
-            // For custom entries, accept if either main statement or additional field has content
+            // Only add to array if we have type and statement content
             const hasValidContent = s && s !== 'Others' && s !== '';
-            const hasAdditionalContent = additional && additional !== '';
 
-            if (t && (hasValidContent || hasAdditionalContent)) {
-              // If main statement is empty but additional has content, use additional as statement
-              if (!hasValidContent && hasAdditionalContent) {
-                s = additional;
-                additional = '';
-                console.log(`Moved additional content to main statement: "${s}"`);
-              }
+            if (t && hasValidContent) {
               const mfoItem = {
                 type: t,
                 statement: s
               };
-
-              // Add additional field if it has content
-              if (additional) {
-                mfoItem.additional = additional;
-              }
 
               console.log(`Adding MFO/PAP item:`, mfoItem);
               mfoArr.push(mfoItem);
@@ -2285,8 +2267,6 @@ if (!session()->get('isLoggedIn') || session()->get('role_id') != 1) {
             .catch(e => Swal.fire('Error', 'Unexpected: ' + e.message, 'error'));
         }
 
-
-
         function saveAsDraft() {
           submitGadPlan(true)
         }
@@ -2368,116 +2348,203 @@ function editGadPlan(button, planId) {
 
         // Helper function to check if statement exists in database
         function isInDatabase(type, statement) {
-            console.log(`Checking isInDatabase: type="${type}", statement="${statement}"`);
+            console.log(`[DEBUG] isInDatabase called: type="${type}", statement="${statement}"`);
+            console.log(`[DEBUG] Call stack:`, new Error().stack);
 
             if (!statement || statement.trim() === '') {
-                console.log(`Empty statement, returning false`);
+                console.log(`[DEBUG] Empty statement, returning false`);
                 return false;
             }
 
             if (type === 'MFO') {
-                const found = mfoData.some(mfo => mfo.mfo === statement);
-                console.log(`MFO check result: ${found}`, mfoData);
+                console.log(`[DEBUG] Checking MFO data:`, mfoData);
+                const found = mfoData.some(mfo => {
+                    const match = mfo.mfo === statement;
+                    console.log(`[DEBUG] Comparing "${mfo.mfo}" === "${statement}": ${match}`);
+                    if (match) {
+                        console.log(`[DEBUG] Found MFO match: "${mfo.mfo}" === "${statement}"`);
+                    }
+                    return match;
+                });
+                console.log(`[DEBUG] MFO check final result: ${found} for statement: "${statement}"`);
                 return found;
             } else if (type === 'PAP') {
-                const found = papData.some(pap => pap.pap === statement);
-                console.log(`PAP check result: ${found}`, papData);
+                console.log(`[DEBUG] Checking PAP data:`, papData);
+                const found = papData.some(pap => {
+                    const match = pap.pap === statement;
+                    console.log(`[DEBUG] Comparing "${pap.pap}" === "${statement}": ${match}`);
+                    if (match) {
+                        console.log(`[DEBUG] Found PAP match: "${pap.pap}" === "${statement}"`);
+                    }
+                    return match;
+                });
+                console.log(`[DEBUG] PAP check final result: ${found} for statement: "${statement}"`);
                 return found;
             }
-            console.log(`Unknown type, returning false`);
+            console.log(`[DEBUG] Unknown type, returning false`);
             return false;
+        }
+
+        // ---- Parse MFO/PAP data ----
+        let mfoPapDataArray = [];
+        if (plan.mfoPapData) {
+            try {
+                console.log('[DEBUG] Raw plan.mfoPapData:', plan.mfoPapData);
+                mfoPapDataArray = typeof plan.mfoPapData === 'string' ? JSON.parse(plan.mfoPapData) : plan.mfoPapData;
+                console.log('[DEBUG] Parsed mfoPapDataArray:', mfoPapDataArray);
+                console.log('[DEBUG] Array length:', mfoPapDataArray.length);
+                mfoPapDataArray.forEach((item, idx) => {
+                    console.log(`[DEBUG] Item ${idx}:`, item);
+                });
+                if (!Array.isArray(mfoPapDataArray)) {
+                    mfoPapDataArray = [];
+                }
+            } catch (e) {
+                console.error('Error parsing MFO/PAP data:', e);
+                mfoPapDataArray = [];
+            }
+        } else {
+            console.log('[DEBUG] No plan.mfoPapData found');
         }
 
         // ---- Rebuild MFO/PAP rows ----
         const mfoContainer = document.getElementById('mfoPapTableContainer');
         if (mfoContainer) {
             mfoContainer.innerHTML = '';
-            console.log('Rebuilding MFO/PAP rows from saved data:', plan.mfoPapData);
+            console.log('Rebuilding MFO/PAP rows from saved data:', mfoPapDataArray);
             console.log('Available MFO data:', mfoData);
             console.log('Available PAP data:', papData);
-            plan.mfoPapData.forEach((item, idx) => {
+            mfoPapDataArray.forEach((item, idx) => {
                 console.log(`Processing item ${idx}:`, item);
+                console.log(`Item ${idx} raw data:`, JSON.stringify(item));
+
                 const tbl = document.createElement('table');
                 tbl.className = 'table table-bordered mb-2';
                 tbl.id = `mfoPapTable_${idx}`;
+
                 // Check if this is a custom entry (not in database)
-                const isCustomEntry = !isInDatabase(item.type, item.statement);
-                console.log(`Item ${idx} isCustomEntry: ${isCustomEntry}`, {
+                const isInDatabaseResult = isInDatabase(item.type, item.statement);
+                const isCustomEntry = !isInDatabaseResult;
+                console.log(`FIXED CODE: Item ${idx} - isInDatabase: ${isInDatabaseResult}, isCustomEntry: ${isCustomEntry}`, {
                     type: item.type,
                     statement: item.statement,
                     additional: item.additional
                 });
-                console.log(`Item ${idx} statement value for input: "${isCustomEntry ? (item.statement || '').replace(/"/g, '&quot;') : ''}"`);
-                console.log(`Item ${idx} additional value for input: "${isCustomEntry ? (item.additional || '').replace(/"/g, '&quot;') : ''}"`);
-                console.log(`Item ${idx} raw statement: "${item.statement}"`);
-                console.log(`Item ${idx} raw additional: "${item.additional}"`);
 
-                tbl.innerHTML = `
-                    <thead>
-                        <tr><th>Type</th><th>MFO / PAP Statement</th><th>Action</th></tr>
-                    </thead>
-                    <tbody>
-                        <tr>
-                            <td>
-                                <select class="form-select" name="mfoPapType_${idx}" onchange="updateMfoPapOptions(this, ${idx})">
-                                    <option value="">Select</option>
-                                    <option value="MFO" ${item.type === 'MFO' ? 'selected' : ''}>MFO</option>
-                                    <option value="PAP" ${item.type === 'PAP' ? 'selected' : ''}>PAP</option>
-                                </select>
-                            </td>
-                            <td>
-                                <select class="form-select" name="mfoPapStatement_${idx}" id="mfoPapStatement_${idx}"
-                                        onchange="toggleCustomInput(this, ${idx})" style="display: ${isCustomEntry ? 'none' : 'block'};">
-                                    <option value="">Select MFO/PAP</option>
-                                </select>
-                                <div id="customInputContainer_${idx}" style="display: ${isCustomEntry ? 'block' : 'none'};">
-                                    <input type="text" class="form-control" name="mfoPapStatementText_${idx}" id="mfoPapStatementText_${idx}"
-                                           placeholder="Enter custom MFO/PAP statement..."
-                                           value="${isCustomEntry ? (item.statement || '').replace(/"/g, '&quot;') : ''}">
-                                    <input type="text" class="form-control mt-2" name="mfoPapAdditional_${idx}" id="mfoPapAdditional_${idx}"
-                                           placeholder="Enter additional details/description..."
-                                           value="${isCustomEntry ? (item.additional || '').replace(/"/g, '&quot;') : ''}">
-                                    ${isCustomEntry ? '<button type="button" class="btn btn-sm btn-outline-secondary mt-2 back-to-dropdown" onclick="backToDropdown(' + idx + ')">Back to dropdown</button>' : ''}
-                                </div>
-                            </td>
-                            <td>
-                                <button type="button"
-                                        class="btn btn-danger btn-sm"
-                                        onclick="removeMfoPapRow(this)">
-                                    Delete
-                                </button>
-                            </td>
-                        </tr>
-                    </tbody>`;
+                // Create the table structure step by step to avoid template literal issues
+                const thead = document.createElement('thead');
+                thead.innerHTML = '<tr><th>Type</th><th>MFO / PAP Statement</th><th>Action</th></tr>';
+
+                const tbody = document.createElement('tbody');
+                const row = document.createElement('tr');
+
+                // Type column
+                const typeCell = document.createElement('td');
+                const typeSelect = document.createElement('select');
+                typeSelect.className = 'form-select';
+                typeSelect.name = `mfoPapType_${idx}`;
+                typeSelect.onchange = function() { updateMfoPapOptions(this, idx); };
+                typeSelect.innerHTML = `
+                    <option value="">Select</option>
+                    <option value="MFO" ${item.type === 'MFO' ? 'selected' : ''}>MFO</option>
+                    <option value="PAP" ${item.type === 'PAP' ? 'selected' : ''}>PAP</option>
+                `;
+                typeCell.appendChild(typeSelect);
+
+                // Statement column
+                const statementCell = document.createElement('td');
+
+                // Dropdown
+                const statementSelect = document.createElement('select');
+                statementSelect.className = 'form-select';
+                statementSelect.name = `mfoPapStatement_${idx}`;
+                statementSelect.id = `mfoPapStatement_${idx}`;
+                statementSelect.onchange = function() { toggleCustomInput(this, idx); };
+                statementSelect.style.display = isCustomEntry ? 'none' : 'block';
+                statementSelect.innerHTML = '<option value="">Select MFO/PAP</option>';
+
+                // Custom input container
+                const customContainer = document.createElement('div');
+                customContainer.id = `customInputContainer_${idx}`;
+                customContainer.style.display = isCustomEntry ? 'block' : 'none';
+
+                // Statement input
+                const statementInput = document.createElement('input');
+                statementInput.type = 'text';
+                statementInput.className = 'form-control';
+                statementInput.name = `mfoPapStatementText_${idx}`;
+                statementInput.id = `mfoPapStatementText_${idx}`;
+                statementInput.placeholder = 'Enter custom MFO/PAP statement...';
+
+                // Set values after creating the inputs
+                console.log(`Setting values for item ${idx}: statement="${item.statement}"`);
+                if (isCustomEntry) {
+                    statementInput.value = item.statement || '';
+                    console.log(`Values set: statement="${statementInput.value}"`);
+                }
+
+                customContainer.appendChild(statementInput);
+
+                // Back to dropdown button
+                if (isCustomEntry) {
+                    const backButton = document.createElement('button');
+                    backButton.type = 'button';
+                    backButton.className = 'btn btn-sm btn-outline-secondary mt-2 back-to-dropdown';
+                    backButton.onclick = function() { backToDropdown(idx); };
+                    backButton.textContent = 'Back to dropdown';
+                    customContainer.appendChild(backButton);
+                }
+
+                statementCell.appendChild(statementSelect);
+                statementCell.appendChild(customContainer);
+
+                // Action column
+                const actionCell = document.createElement('td');
+                const deleteButton = document.createElement('button');
+                deleteButton.type = 'button';
+                deleteButton.className = 'btn btn-danger btn-sm';
+                deleteButton.onclick = function() { removeMfoPapRow(this); };
+                deleteButton.textContent = 'Delete';
+                actionCell.appendChild(deleteButton);
+
+                row.appendChild(typeCell);
+                row.appendChild(statementCell);
+                row.appendChild(actionCell);
+                tbody.appendChild(row);
+
+                tbl.appendChild(thead);
+                tbl.appendChild(tbody);
                 mfoContainer.appendChild(tbl);
 
-                // Populate the statement dropdown based on type and set selected value
-                const typeSelect = tbl.querySelector(`[name="mfoPapType_${idx}"]`);
-                const statementSelect = tbl.querySelector(`[name="mfoPapStatement_${idx}"]`);
-                const textInput = tbl.querySelector(`[name="mfoPapStatementText_${idx}"]`);
+                // Elements are already created above, just get references
+                const typeSelectRef = tbl.querySelector(`[name="mfoPapType_${idx}"]`);
+                const statementSelectRef = tbl.querySelector(`[name="mfoPapStatement_${idx}"]`);
+                const textInputRef = tbl.querySelector(`[name="mfoPapStatementText_${idx}"]`);
 
                 if (item.type) {
-                    updateMfoPapOptions(typeSelect, idx);
-
                     if (isCustomEntry) {
-                        // For custom entries, the text input is already populated via the template
-                        console.log(`Custom entry ${idx}: statement="${item.statement}", additional="${item.additional}"`);
+                        // For custom entries, populate the dropdown but preserve custom display
+                        updateMfoPapOptions(typeSelectRef, idx, true);
+
+                        // Values are already set above in lines 2520-2524, but ensure they're set
+                        console.log(`Custom entry ${idx}: display preserved - statement="${item.statement}", additional="${item.additional}"`);
                     } else {
-                        // For database entries, set the dropdown value
+                        // For database entries, normal flow
+                        updateMfoPapOptions(typeSelectRef, idx);
                         setTimeout(() => {
-                            statementSelect.value = item.statement || '';
+                            statementSelectRef.value = item.statement || '';
                             console.log(`Database entry ${idx}: set dropdown to "${item.statement}"`);
-                        }, 50); // Increased timeout to ensure dropdown is populated
+                        }, 50);
                     }
                 }
             });
-            window.mfoPapIndex = plan.mfoPapData.length;
+            window.mfoPapIndex = mfoPapDataArray.length;
         }
 
         // ---- Rebuild Responsible Units rows ----
         const unitContainer = document.getElementById('responsibleUnitsContainer');
         if (unitContainer) {
-            unitContainer.innerHTML = ''; 
+            unitContainer.innerHTML = '<label for="responsibleUnits" class="form-label"><strong>RESPONSIBLE UNIT(S)/OFFICE(S)</strong> <span class="text-danger">*</span></label>';
             let responsibleUnits = [];
             if (plan.responsible_units) {
                 try {
@@ -2493,21 +2560,28 @@ function editGadPlan(button, planId) {
                 <?php foreach($divisions as $d): ?>
                     options += `<option value="<?= esc($d->division) ?>" ${selectedValue === "<?= esc($d->division) ?>" ? "selected" : ""}><?= esc($d->division) ?></option>`;
                 <?php endforeach; ?>
+
                 let row = document.createElement('div');
-                row.className = 'responsible-unit-row additional-row mt-2';
-                row.innerHTML = `
+                row.className = 'responsible-unit-row mb-2';
+
+                let flexDiv = document.createElement('div');
+                flexDiv.className = 'd-flex gap-2 align-items-start';
+
+                flexDiv.innerHTML = `
                     <select class="form-select" name="responsibleUnits[]" required>
                         ${options}
                     </select>
+                    ${idx > 0 ? '<button type="button" class="btn btn-outline-danger" onclick="removeResponsibleUnitRow(this)"><i class="bi bi-trash"></i></button>' : ''}
                     <div class="invalid-feedback">Please select a responsible unit.</div>
-                    <span class="remove-row" onclick="this.parentNode.remove()">Remove</span>
                 `;
+
+                row.appendChild(flexDiv);
                 unitContainer.appendChild(row);
             });
 
             const addBtn = document.createElement('button');
             addBtn.type = 'button';
-            addBtn.className = 'btn btn-secondary btn-sm mt-2';
+            addBtn.className = 'btn btn-secondary';
             addBtn.onclick = addResponsibleUnitRow;
             addBtn.textContent = 'Add Another';
             unitContainer.appendChild(addBtn);
@@ -2518,8 +2592,6 @@ function editGadPlan(button, planId) {
     })
     .catch(e => Swal.fire('Error', 'Could not load plan: ' + e.message, 'error'));
 }
-
-
         function editMandate(id, year, desc) {
           fetch('<?= base_url("GadMandateController/getMandate/") ?>' + id, {
               method: 'GET',
@@ -2585,8 +2657,6 @@ function editGadPlan(button, planId) {
     }
   });
 }
-
-
         function viewMultipleAttachments(planId) {
           // Fetch attachments for the specific plan
           fetch(`<?= base_url("Focal/getAttachments") ?>?plan=${planId}`, {
@@ -2862,11 +2932,7 @@ function editGadPlan(button, planId) {
           // Show modal
           showModal('viewPlanModal');
         }
-
-
       </script>
-
-
 </body>
 
 </html>
