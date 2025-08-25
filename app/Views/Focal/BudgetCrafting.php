@@ -600,7 +600,7 @@
             let total = 0;
 
             rows.forEach(row => {
-                const amountText = row.cells[5].textContent.replace('₱', '').replace(/,/g, '');
+                const amountText = row.cells[6].textContent.replace('₱', '').replace(/,/g, '');
                 total += parseFloat(amountText) || 0;
             });
 
