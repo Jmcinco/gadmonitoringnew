@@ -125,7 +125,7 @@
     <nav id="sidebar" class="sidebar">
         <div class="sidebar-header">
             <h4 class="text-white mb-0">
-                <i class="bi bi-shield-check"></i> GAD Monitoring System
+                <i class="bi bi-gender-ambiguous" style="font-size: 2rem; color: rgb(255, 255, 255);"></i> GAD Monitoring System
             </h4>
         </div>
         <div class="sidebar-content">
@@ -133,8 +133,9 @@
                 <div class="text-white d-flex align-items-center">
                     <i class="bi bi-person-circle fs-4 me-2"></i>
                     <div>
-                        <div class="fw-bold">Admin User</div>
-                        <small class="text-light">Administrator</small>
+                        <div class="fw-bold"><?php echo esc(($first_name ?? 'Admin') . ' ' . ($last_name ?? 'User')); ?></div>
+                        <small class="text-light d-block"><?php echo esc($role_name ?? 'Focal Person'); ?></small>
+                        <small class="text-light opacity-75"><?php echo esc($division_name ?? 'GAD Office'); ?></small>
                     </div>
                 </div>
             </div>
@@ -232,6 +233,7 @@
                                 <thead class="table-dark">
                                     <tr>
                                         <th>GAD Activity ID</th>
+                                        <th>GAD Activity</th>
                                         <th>Particulars/Items of Expense</th>
                                         <th>Type of Expense</th>
                                         <th>Object of Expenses</th>
@@ -242,14 +244,15 @@
                                 </thead>
                                 <tbody id="budgetTableBody">
                                     <?php if (empty($budgetItems)): ?>
-                                        <tr><td colspan="7" class="text-center">No budget items found.</td></tr>
+                                        <tr><td colspan="8" class="text-center">No budget items found.</td></tr>
                                     <?php else: ?>
                                         <?php foreach ($budgetItems as $item): ?>
-                                            <tr data-act-id="<?= esc($item['act_id']) ?>" 
-                                                data-plan-id="<?= esc($item['plan_id']) ?>" 
-                                                data-obj-id="<?= esc($item['obj_id']) ?>" 
+                                            <tr data-act-id="<?= esc($item['act_id']) ?>"
+                                                data-plan-id="<?= esc($item['plan_id']) ?>"
+                                                data-obj-id="<?= esc($item['obj_id']) ?>"
                                                 data-src-id="<?= esc($item['src_id']) ?>">
-                                                <td><?= esc($item['act_id']) ?></td>
+                                                <td><?= esc($item['gad_activity_id'] ?? 'N/A') ?></td>
+                                                <td><?= esc($item['gad_activity'] ?? 'N/A') ?></td>
                                                 <td><?= esc($item['particulars']) ?></td>
                                                 <td><?= esc($item['type_of_expense']) ?></td>
                                                 <td><?= esc($item['object_name'] ?? 'N/A') ?></td>
@@ -269,7 +272,7 @@
                                 </tbody>
                                 <tfoot class="table-light">
                                     <tr>
-                                        <th colspan="5" class="text-end">Total Budget:</th>
+                                        <th colspan="6" class="text-end">Total Budget:</th>
                                         <th id="totalBudget">₱0.00</th>
                                         <th></th>
                                     </tr>
@@ -295,21 +298,21 @@
                 <div class="modal-body">
                     <form id="addBudgetItemForm" class="needs-validation" novalidate>
                         <div class="mb-3">
-                            <label for="planId" class="form-label">Plan ID *</label>
+                            <label for="planId" class="form-label">GAD Activity *</label>
                             <select class="form-select" id="planId" name="plan_id" required>
-                                <option value="">Select Plan</option>
+                                <option value="">Select GAD Activity</option>
                                 <?php if (empty($plans)): ?>
-                                    <option value="" disabled>No plans available</option>
+                                    <option value="" disabled>No GAD activities available</option>
                                 <?php else: ?>
                                     <?php foreach ($plans as $plan): ?>
                                         <option value="<?= esc($plan['plan_id']) ?>">
-                                            GAD-<?= str_pad($plan['plan_id'], 3, '0', STR_PAD_LEFT) ?>: <?= esc($plan['issue_mandate'] ?? $plan['activity'] ?? 'Plan ' . $plan['plan_id']) ?>
+                                            GAD-<?= str_pad($plan['plan_id'], 3, '0', STR_PAD_LEFT) ?>: <?= esc($plan['activity']) ?>
                                         </option>
                                     <?php endforeach; ?>
                                 <?php endif; ?>
                             </select>
                             <div class="invalid-feedback">
-                                Please select a valid Plan ID.
+                                Please select a valid GAD Activity.
                             </div>
                         </div>
                         <div class="mb-3">
@@ -394,17 +397,17 @@
                     <form id="editBudgetItemForm" class="needs-validation" novalidate>
                         <input type="hidden" id="editBudgetItemId" name="act_id">
                         <div class="mb-3">
-                            <label for="editPlanId" class="form-label">Plan ID *</label>
+                            <label for="editPlanId" class="form-label">GAD Activity *</label>
                             <select class="form-select" id="editPlanId" name="plan_id" required>
-                                <option value="">Select Plan</option>
+                                <option value="">Select GAD Activity</option>
                                 <?php foreach ($plans as $plan): ?>
                                     <option value="<?= esc($plan['plan_id']) ?>">
-                                        GAD-<?= str_pad($plan['plan_id'], 3, '0', STR_PAD_LEFT) ?>: <?= esc($plan['issue_mandate'] ?? $plan['activity'] ?? 'Plan ' . $plan['plan_id']) ?>
+                                        GAD-<?= str_pad($plan['plan_id'], 3, '0', STR_PAD_LEFT) ?>: <?= esc($plan['activity']) ?>
                                     </option>
                                 <?php endforeach; ?>
                             </select>
                             <div class="invalid-feedback">
-                                Please select a valid Plan ID.
+                                Please select a valid GAD Activity.
                             </div>
                         </div>
                         <div class="mb-3">
@@ -551,11 +554,11 @@
             if (row) {
                 document.getElementById('editBudgetItemId').value = actId;
                 document.getElementById('editPlanId').value = row.dataset.planId;
-                document.getElementById('editParticulars').value = row.cells[1].textContent;
-                document.getElementById('editExpenseType').value = row.cells[2].textContent;
+                document.getElementById('editParticulars').value = row.cells[2].textContent; // Updated index: GAD Activity ID (0), GAD Activity (1), Particulars (2)
+                document.getElementById('editExpenseType').value = row.cells[3].textContent; // Updated index: Type of Expense (3)
                 document.getElementById('editObjectOfExpenses').value = row.dataset.objId;
                 document.getElementById('editSourceOfBudget').value = row.dataset.srcId;
-                const amountText = row.cells[5].textContent.replace('₱', '').replace(/,/g, '');
+                const amountText = row.cells[6].textContent.replace('₱', '').replace(/,/g, ''); // Updated index: Amount (6)
                 document.getElementById('editAmount').value = parseFloat(amountText);
                 modal.show();
             } else {

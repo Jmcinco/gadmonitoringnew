@@ -481,6 +481,83 @@ if (!session()->get('isLoggedIn') || session()->get('role_id') != 1) {
       transform: none;
     }
 
+    /* Responsible Units Styling */
+    .responsible-unit-row {
+      margin-bottom: 0.5rem;
+    }
+
+    .responsible-unit-row .d-flex {
+      align-items: flex-start;
+    }
+
+    .responsible-unit-row .form-select {
+      flex: 1;
+    }
+
+    .responsible-unit-row .btn {
+      flex-shrink: 0;
+      min-width: 40px;
+    }
+
+    .responsible-unit-row .invalid-feedback {
+      width: 100%;
+      margin-top: 0.25rem;
+    }
+
+    /* Remove button styling */
+    .responsible-unit-row .btn-outline-danger {
+      border-color: #dc3545;
+      color: #dc3545;
+    }
+
+    .responsible-unit-row .btn-outline-danger:hover {
+      background-color: #dc3545;
+      border-color: #dc3545;
+      color: white;
+    }
+
+    /* Add Another button styling */
+    #responsibleUnitsContainer .btn-secondary {
+      margin-top: 0.5rem;
+    }
+
+    /* 2-Column Form Improvements */
+    .modal-xl .modal-body {
+      padding: 1.5rem;
+    }
+
+    .modal-xl .row {
+      margin-bottom: 0;
+    }
+
+    .modal-xl .col-md-6 {
+      padding-left: 0.75rem;
+      padding-right: 0.75rem;
+    }
+
+    /* Ensure consistent height for form elements in rows */
+    .modal-xl .row .form-control,
+    .modal-xl .row .form-select {
+      min-height: 38px;
+    }
+
+    /* Better spacing for textarea elements */
+    .modal-xl textarea.form-control {
+      resize: vertical;
+      min-height: 80px;
+    }
+
+    /* Improve button spacing in input groups */
+    .modal-xl .input-group .btn {
+      white-space: nowrap;
+    }
+
+    /* Better alignment for form labels */
+    .modal-xl .form-label {
+      margin-bottom: 0.5rem;
+      font-weight: 600;
+    }
+
     .modal.show .modal-backdrop {
       opacity: 0.5;
     }
@@ -513,7 +590,7 @@ if (!session()->get('isLoggedIn') || session()->get('role_id') != 1) {
   <nav id="sidebar" class="sidebar">
     <div class="sidebar-header">
       <h4 class="text-white mb-0">
-        <i class="bi bi-clipboard-data"></i> GAD System
+        <i class="bi bi-gender-ambiguous" style="font-size: 2rem; color: rgb(255, 255, 255);"></i> GAD Monitoring System
       </h4>
     </div>
 
@@ -523,10 +600,9 @@ if (!session()->get('isLoggedIn') || session()->get('role_id') != 1) {
         <div class="text-white d-flex align-items-center">
           <i class="bi bi-person-circle fs-4 me-2"></i>
           <div>
-            <div class="fw-bold"><?php echo esc(session()->get('first_name') . ' ' . session()->get('last_name')); ?>
-            </div>
-            <small class="text-light">Secretariat</small>
-            <br><small class="text-light">Executive Division</small>
+            <div class="fw-bold"><?php echo esc(($first_name ?? 'Admin') . ' ' . ($last_name ?? 'User')); ?></div>
+            <small class="text-light d-block"><?php echo esc($role_name ?? 'Focal Person'); ?></small>
+            <small class="text-light opacity-75"><?php echo esc($division_name ?? 'GAD Office'); ?></small>
           </div>
         </div>
       </div>
@@ -854,22 +930,21 @@ if (!session()->get('isLoggedIn') || session()->get('role_id') != 1) {
               <input type="hidden" name="target_text" id="target_text">
               <input type="hidden" name="is_draft" id="is_draft" value="0">
               <input type="hidden" name="status" id="status" value="">
+
+              <!-- Row 1: Plan ID and GAD Mandate -->
               <div class="row g-3 mb-4">
                 <div class="col-md-6">
                   <label for="displayPlanId" class="form-label"><strong>PLAN ID</strong></label>
                   <input type="text" class="form-control" id="displayPlanId" readonly>
                   <div class="form-text">Plan ID is automatically assigned and cannot be edited.</div>
                 </div>
-
-
-                <div class="mb-4 position-relative">
-                  <label for="issue_mandate" class="form-label"><strong>INDICATE THE GAD MANDATE / GENDER ISSUE BEING
-                      ADDRESSED BY THE ACTIVITY</strong> <span class="text-danger">*</span></label>
+                <div class="col-md-6 position-relative">
+                  <label for="issue_mandate" class="form-label"><strong>GAD MANDATE / GENDER ISSUE</strong> <span class="text-danger">*</span></label>
                   <div class="input-group">
                     <textarea
                       class="form-control <?php echo (isset($validation) && $validation->hasError('issue_mandate')) ? 'is-invalid' : ''; ?>"
                       id="issue_mandate" name="issue_mandate" rows="3"
-                      placeholder="Describe the gender issue or GAD mandate to be addressed..."
+                      placeholder="Describe the gender issue or GAD mandate..."
                       required><?php echo set_value('issue_mandate'); ?></textarea>
                     <button type="button" class="btn btn-outline-primary mandate-icon" data-bs-toggle="modal"
                       data-bs-target="#mandateModal" onclick="loadMandates()">
@@ -880,10 +955,12 @@ if (!session()->get('isLoggedIn') || session()->get('role_id') != 1) {
                     <?php echo (isset($validation) && $validation->hasError('issue_mandate')) ? $validation->getError('issue_mandate') : 'Please provide a gender issue or GAD mandate (min 10 characters).'; ?>
                   </div>
                 </div>
+              </div>
 
-                <div class="mb-4" id="causeContainer">
-                  <label for="cause" class="form-label"><strong>INDICATE THE CAUSE OF GENDER ISSUE</strong> <span
-                      class="text-danger">*</span></label>
+              <!-- Row 2: Cause and GAD Objective -->
+              <div class="row g-3 mb-4">
+                <div class="col-md-6" id="causeContainer">
+                  <label for="cause" class="form-label"><strong>CAUSE OF GENDER ISSUE</strong> <span class="text-danger">*</span></label>
                   <input type="text"
                     class="form-control <?php echo (isset($validation) && $validation->hasError('cause')) ? 'is-invalid' : ''; ?>"
                     id="cause" name="cause" placeholder="Identify the root cause..." required
@@ -892,10 +969,8 @@ if (!session()->get('isLoggedIn') || session()->get('role_id') != 1) {
                     <?php echo (isset($validation) && $validation->hasError('cause')) ? $validation->getError('cause') : 'Please provide a cause of the gender issue.'; ?>
                   </div>
                 </div>
-
-                <div class="mb-4">
-                  <label for="gad_objective" class="form-label"><strong>GAD RESULT/STATEMENT OR GAD OBJECTIVE</strong>
-                    <span class="text-danger">*</span></label>
+                <div class="col-md-6">
+                  <label for="gad_objective" class="form-label"><strong>GAD RESULT/OBJECTIVE</strong> <span class="text-danger">*</span></label>
                   <textarea
                     class="form-control <?php echo (isset($validation) && $validation->hasError('gad_objective')) ? 'is-invalid' : ''; ?>"
                     id="gad_objective" name="gad_objective" rows="3" placeholder="Define the expected GAD result..."
@@ -904,6 +979,19 @@ if (!session()->get('isLoggedIn') || session()->get('role_id') != 1) {
                     <?php echo (isset($validation) && $validation->hasError('gad_objective')) ? $validation->getError('gad_objective') : ''; ?>
                   </div>
                 </div>
+              </div>
+
+              <!-- Row 3: GAD Activity (Full Width) -->
+              <div class="mb-4">
+                <label for="activity" class="form-label"><strong>GAD ACTIVITY</strong> <span class="text-danger">*</span></label>
+                <textarea
+                  class="form-control <?php echo (isset($validation) && $validation->hasError('activity')) ? 'is-invalid' : ''; ?>"
+                  id="activity" name="activity" rows="3" placeholder="Describe the specific GAD activity..."
+                  required><?php echo set_value('activity'); ?></textarea>
+                <div class="invalid-feedback">
+                  <?php echo (isset($validation) && $validation->hasError('activity')) ? $validation->getError('activity') : ''; ?>
+                </div>
+              </div>
 
                 <div class="mb-4">
                   <label><strong>RELEVANT ORGANIZATION/MFO/PAP</strong></label>
@@ -1030,83 +1118,86 @@ if (!session()->get('isLoggedIn') || session()->get('role_id') != 1) {
                   </div>
                 </div>
 
-                <div class="mb-4" id="responsibleUnitsContainer">
-                  <label for="responsibleUnits" class="form-label"><strong>RESPONSIBLE UNIT(S)/OFFICE(S)</strong> <span
-                      class="text-danger">*</span></label>
-                  <div class="responsible-unit-row">
-                    <select
-                      class="form-select <?php echo (isset($validation) && $validation->hasError('responsibleUnits')) ? 'is-invalid' : ''; ?>"
-                      name="responsibleUnits[]" required>
-                      <option value="">Select Responsible Unit</option>
-                      <?php if (isset($divisions) && !empty($divisions)): ?>
-                      <?php foreach ($divisions as $division): ?>
-                      <option value="<?= esc($division->division) ?>"
-                        <?= set_select('responsibleUnits[]', $division->division) ?>>
-                        <?= esc($division->division) ?>
-                      </option>
-                      <?php endforeach; ?>
-                      <?php else: ?>
-                      <option value="">No divisions available</option>
-                      <?php endif; ?>
-                    </select>
-                    <div class="invalid-feedback">
-                      <?php echo (isset($validation) && $validation->hasError('responsibleUnits')) ? $validation->getError('responsibleUnits') : 'Please select a responsible unit.'; ?>
+                <!-- Row 4: Responsible Units and Budget -->
+                <div class="row g-3 mb-4">
+                  <div class="col-md-6" id="responsibleUnitsContainer">
+                    <label for="responsibleUnits" class="form-label"><strong>RESPONSIBLE UNIT(S)/OFFICE(S)</strong> <span class="text-danger">*</span></label>
+                    <div class="responsible-unit-row mb-2">
+                      <div class="d-flex gap-2 align-items-start">
+                        <select
+                          class="form-select <?php echo (isset($validation) && $validation->hasError('responsibleUnits')) ? 'is-invalid' : ''; ?>"
+                          name="responsibleUnits[]" required>
+                          <option value="">Select Responsible Unit</option>
+                          <?php if (isset($divisions) && !empty($divisions)): ?>
+                          <?php foreach ($divisions as $division): ?>
+                          <option value="<?= esc($division->division) ?>"
+                            <?= set_select('responsibleUnits[]', $division->division) ?>>
+                            <?= esc($division->division) ?>
+                          </option>
+                          <?php endforeach; ?>
+                          <?php else: ?>
+                          <option value="">No divisions available</option>
+                          <?php endif; ?>
+                        </select>
+                      </div>
+                      <div class="invalid-feedback">
+                        <?php echo (isset($validation) && $validation->hasError('responsibleUnits')) ? $validation->getError('responsibleUnits') : 'Please select a responsible unit.'; ?>
+                      </div>
                     </div>
-                  </div>
-                  <button type="button" class="btn btn-secondary btn-sm mt-2" onclick="addResponsibleUnitRow()">Add Another</button>
-                </div>
-
-
-                <div class="mb-4">
-                  <label for="budgetAmount" class="form-label"><strong>TOTAL BUDGET</strong> <span
-                      class="text-danger">*</span></label>
-                  <div class="input-group">
-                    <span class="input-group-text">₱</span>
-                    <input type="number"
-                      class="form-control <?php echo (isset($validation) && $validation->hasError('budgetAmount')) ? 'is-invalid' : ''; ?>"
-                      id="budgetAmount" name="budgetAmount" step="0.01" min="0"
-                      value="<?php echo set_value('budgetAmount'); ?>" required>
-                    <button class="btn btn-outline-secondary" type="button" onclick="linkToBudgetCrafting()">
-                      <i class="bi bi-link-45deg"></i> Link to Budget Crafting
+                    <button type="button" class="btn btn-secondary btn-sm" onclick="addResponsibleUnitRow()">
+                      <i class="bi bi-plus-circle"></i> Add Another
                     </button>
                   </div>
-                  <div class="form-text">
-                    <i class="bi bi-info-circle"></i> Budget will be linked to the GAD Budget Crafting module.
-                  </div>
-                  <div class="invalid-feedback">
-                    <?php echo (isset($validation) && $validation->hasError('budgetAmount')) ? $validation->getError('budgetAmount') : ''; ?>
+                  <div class="col-md-6">
+                    <label for="budgetAmount" class="form-label"><strong>TOTAL BUDGET</strong> <span class="text-danger">*</span></label>
+                    <div class="input-group">
+                      <span class="input-group-text">₱</span>
+                      <input type="number"
+                        class="form-control <?php echo (isset($validation) && $validation->hasError('budgetAmount')) ? 'is-invalid' : ''; ?>"
+                        id="budgetAmount" name="budgetAmount" step="0.01" min="0"
+                        value="<?php echo set_value('budgetAmount'); ?>" required>
+                      <button class="btn btn-outline-secondary" type="button" onclick="linkToBudgetCrafting()">
+                        <i class="bi bi-link-45deg"></i> Link
+                      </button>
+                    </div>
+                    <div class="form-text">
+                      <i class="bi bi-info-circle"></i> Budget will be linked to the GAD Budget Crafting module.
+                    </div>
+                    <div class="invalid-feedback">
+                      <?php echo (isset($validation) && $validation->hasError('budgetAmount')) ? $validation->getError('budgetAmount') : ''; ?>
+                    </div>
                   </div>
                 </div>
 
-                <div class="mb-4">
-                  <label for="hgdgScore" class="form-label"><strong>HGDG SCORE</strong> <span
-                      class="text-danger">*</span></label>
-                  <input type="number"
-                    class="form-control <?php echo (isset($validation) && $validation->hasError('hgdgScore')) ? 'is-invalid' : ''; ?>"
-                    id="hgdgScore" name="hgdgScore" step="0.01" min="0" max="100"
-                    value="<?php echo set_value('hgdgScore'); ?>" required>
-                  <div class="form-text">Enter the HGDG score (0.00 to 100.00).</div>
-                  <div class="invalid-feedback">
-                    <?php echo (isset($validation) && $validation->hasError('hgdgScore')) ? $validation->getError('hgdgScore') : 'Please enter a valid HGDG score between 0 and 100.'; ?>
+                <!-- Row 5: HGDG Score and Additional Field -->
+                <div class="row g-3 mb-4">
+                  <div class="col-md-6">
+                    <label for="hgdgScore" class="form-label"><strong>HGDG SCORE</strong> <span class="text-danger">*</span></label>
+                    <input type="number"
+                      class="form-control <?php echo (isset($validation) && $validation->hasError('hgdgScore')) ? 'is-invalid' : ''; ?>"
+                      id="hgdgScore" name="hgdgScore" step="0.01" min="0" max="100"
+                      value="<?php echo set_value('hgdgScore'); ?>" required>
+                    <div class="form-text">Enter the HGDG score (0.00 to 100.00).</div>
+                    <div class="invalid-feedback">
+                      <?php echo (isset($validation) && $validation->hasError('hgdgScore')) ? $validation->getError('hgdgScore') : 'Please enter a valid HGDG score between 0 and 100.'; ?>
+                    </div>
                   </div>
-                </div>
-
-                <div class="mb-4">
-                  <label for="fileAttachments" class="form-label">
-                    <strong>FILE ATTACHMENT(S) (Approved Projects/Programs)</strong>
-                  </label>
-                  <input type="file"
-                    class="form-control <?= (isset($validation) && $validation->hasError('fileAttachments')) ? 'is-invalid' : ''; ?>"
-                    id="fileAttachments" name="fileAttachments[]" multiple accept=".pdf,.doc,.docx,.jpg,.png">
-                  <div class="form-text">
-                    Upload approved project/program documents (PDF, DOC, DOCX, JPG, PNG).
+                  <div class="col-md-6">
+                    <label for="fileAttachments" class="form-label">
+                      <strong>FILE ATTACHMENT(S)</strong>
+                    </label>
+                    <input type="file"
+                      class="form-control <?= (isset($validation) && $validation->hasError('fileAttachments')) ? 'is-invalid' : ''; ?>"
+                      id="fileAttachments" name="fileAttachments[]" multiple accept=".pdf,.doc,.docx,.jpg,.png">
+                    <div class="form-text">
+                      Upload approved project/program documents (PDF, DOC, DOCX, JPG, PNG).
+                    </div>
+                    <div class="invalid-feedback">
+                      <?= (isset($validation) && $validation->hasError('fileAttachments'))
+              ? $validation->getError('fileAttachments')
+              : '' ?>
+                    </div>
                   </div>
-                  <div class="invalid-feedback">
-                    <?= (isset($validation) && $validation->hasError('fileAttachments'))
-            ? $validation->getError('fileAttachments')
-            : '' ?>
-                  </div>
-
                 </div>
 
 
@@ -1286,19 +1377,103 @@ if (!session()->get('isLoggedIn') || session()->get('role_id') != 1) {
         }
 
         function addResponsibleUnitRow() {
-          const container = document.getElementById('responsibleUnitsContainer');
-          const row = document.createElement('div');
-          row.className = 'responsible-unit-row additional-row mt-2';
-          row.innerHTML =
-            '<select class="form-select" name="responsibleUnits[]">' +
-            '<option value="">Select Responsible Unit</option>' +
-            '<?php foreach($divisions as $d): ?>' +
-            '<option value="<?= esc($d->division) ?>"><?= esc($d->division) ?></option>' +
-            '<?php endforeach; ?>' +
-            '</select>' +
-            '<div class="invalid-feedback">Please select a responsible unit.</div>' +
-            '<span class="remove-row" onclick="this.parentNode.remove()">Remove</span>';
-          container.insertBefore(row, container.querySelector('button'));
+          try {
+            console.log('addResponsibleUnitRow called'); // Debug log
+
+            const container = document.getElementById('responsibleUnitsContainer');
+            if (!container) {
+              console.error('Container not found');
+              return;
+            }
+
+            // Check if we already have too many rows (optional limit)
+            const existingRows = container.querySelectorAll('.responsible-unit-row');
+            console.log('Existing rows:', existingRows.length); // Debug log
+
+            if (existingRows.length >= 10) { // Set a reasonable limit
+              alert('Maximum of 10 responsible units allowed.');
+              return;
+            }
+
+            const row = document.createElement('div');
+            row.className = 'responsible-unit-row mb-2';
+
+            // Create the flex container
+            const flexDiv = document.createElement('div');
+            flexDiv.className = 'd-flex gap-2 align-items-start';
+
+            // Create the select element
+            const select = document.createElement('select');
+            select.className = 'form-select';
+            select.name = 'responsibleUnits[]';
+            select.required = true;
+
+            // Add default option
+            const defaultOption = document.createElement('option');
+            defaultOption.value = '';
+            defaultOption.textContent = 'Select Responsible Unit';
+            select.appendChild(defaultOption);
+
+            // Add division options from the existing select
+            const existingSelect = container.querySelector('select[name="responsibleUnits[]"]');
+            if (existingSelect) {
+              console.log('Found existing select with', existingSelect.options.length, 'options'); // Debug log
+              for (let i = 1; i < existingSelect.options.length; i++) {
+                const option = document.createElement('option');
+                option.value = existingSelect.options[i].value;
+                option.textContent = existingSelect.options[i].textContent;
+                select.appendChild(option);
+              }
+            } else {
+              console.error('No existing select found');
+            }
+
+            // Create remove button
+            const removeBtn = document.createElement('button');
+            removeBtn.type = 'button';
+            removeBtn.className = 'btn btn-outline-danger btn-sm';
+            removeBtn.title = 'Remove this unit';
+            removeBtn.setAttribute('aria-label', 'Remove this unit');
+            removeBtn.style.minWidth = '40px'; // Ensure button is visible
+
+            // Create the icon element
+            const icon = document.createElement('i');
+            icon.className = 'bi bi-trash';
+            removeBtn.appendChild(icon);
+
+            removeBtn.onclick = function() {
+              console.log('Remove button clicked'); // Debug log
+              row.remove();
+            };
+
+            // Create invalid feedback div
+            const invalidFeedback = document.createElement('div');
+            invalidFeedback.className = 'invalid-feedback';
+            invalidFeedback.textContent = 'Please select a responsible unit.';
+
+            // Assemble the row
+            flexDiv.appendChild(select);
+            flexDiv.appendChild(removeBtn);
+            row.appendChild(flexDiv);
+            row.appendChild(invalidFeedback);
+
+            // Insert before the "Add Another" button
+            const addButton = container.querySelector('button[onclick="addResponsibleUnitRow()"]');
+            if (addButton && addButton.parentNode === container) {
+              container.insertBefore(row, addButton);
+              console.log('Successfully added new row before button'); // Debug log
+            } else {
+              // Alternative: append to container and move button to end
+              container.appendChild(row);
+              if (addButton) {
+                container.appendChild(addButton); // Move button to end
+              }
+              console.log('Successfully added new row at end'); // Debug log
+            }
+
+          } catch (error) {
+            console.error('Error in addResponsibleUnitRow:', error);
+          }
         }
 
 
@@ -2142,6 +2317,7 @@ function editGadPlan(button, planId) {
         document.getElementById('issue_mandate').value = plan.issue_mandate || '';
         document.getElementById('cause').value = plan.cause || '';
         document.getElementById('gad_objective').value = (plan.gad_objective[0] || '');
+        document.getElementById('activity').value = plan.activity || '';
         document.getElementById('startDate').value = plan.startDate || '';
         document.getElementById('endDate').value = plan.endDate || '';
         document.getElementById('status').value = plan.status || 'Pending';

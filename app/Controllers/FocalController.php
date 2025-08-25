@@ -155,10 +155,32 @@ class FocalController extends Controller
         }
     }
 
+    // Get user role and division information
+    $db = \Config\Database::connect();
+    $userInfo = $db->table('employees e')
+        ->select('e.first_name, e.last_name, e.role_id, r.role as role_name, d.division as division_name')
+        ->join('roles r', 'e.role_id = r.role_id', 'left')
+        ->join('divisions d', 'e.div_id = d.div_id', 'left')
+        ->where('e.emp_id', $this->session->get('user_id'))
+        ->get()
+        ->getRowArray();
+
+    // Set appropriate fallbacks based on role_id
+    $roleId = $this->session->get('role_id');
+    $defaultRoleName = 'User';
+    switch($roleId) {
+        case 1: $defaultRoleName = 'Focal Person'; break;
+        case 2: $defaultRoleName = 'GAD Member'; break;
+        case 3: $defaultRoleName = 'Secretariat'; break;
+        case 4: $defaultRoleName = 'Administrator'; break;
+    }
+
     $data = [
         'gadPlans'   => $gadPlans,
-        'first_name' => $this->session->get('first_name'),
-        'last_name'  => $this->session->get('last_name'),
+        'first_name' => $userInfo['first_name'] ?? $this->session->get('first_name'),
+        'last_name'  => $userInfo['last_name'] ?? $this->session->get('last_name'),
+        'role_name' => $userInfo['role_name'] ?? $defaultRoleName,
+        'division_name' => $userInfo['division_name'] ?? 'Unknown Division',
         'divisions'  => $divisions,
         'mfos'       => $mfos,
         'paps'       => $paps
@@ -180,13 +202,35 @@ public function budgetCrafting()
         $sourceOfFundModel = new \App\Models\SourceOfFundModel();
         $focalModel = new \App\Models\FocalModel();
 
+        // Get user role and division information
+        $db = \Config\Database::connect();
+        $userInfo = $db->table('employees e')
+            ->select('e.first_name, e.last_name, e.role_id, r.role as role_name, d.division as division_name')
+            ->join('roles r', 'e.role_id = r.role_id', 'left')
+            ->join('divisions d', 'e.div_id = d.div_id', 'left')
+            ->where('e.emp_id', $this->session->get('user_id'))
+            ->get()
+            ->getRowArray();
+
+        // Set appropriate fallbacks based on role_id
+        $roleId = $this->session->get('role_id');
+        $defaultRoleName = 'User';
+        switch($roleId) {
+            case 1: $defaultRoleName = 'Focal Person'; break;
+            case 2: $defaultRoleName = 'GAD Member'; break;
+            case 3: $defaultRoleName = 'Secretariat'; break;
+            case 4: $defaultRoleName = 'Administrator'; break;
+        }
+
         $data = [
             'budgetItems' => $budgetModel->getBudgetItems(),
             'objectsOfExpense' => $objectOfExpenseModel->findAll(),
             'sourcesOfFund' => $sourceOfFundModel->findAll(),
             'plans' => $focalModel->getGadPlans(),
-            'first_name' => $this->session->get('first_name') ?? 'Admin',
-            'last_name' => $this->session->get('last_name') ?? 'User'
+            'first_name' => $userInfo['first_name'] ?? $this->session->get('first_name'),
+            'last_name' => $userInfo['last_name'] ?? $this->session->get('last_name'),
+            'role_name' => $userInfo['role_name'] ?? $defaultRoleName,
+            'division_name' => $userInfo['division_name'] ?? 'Unknown Division'
         ];
 
         return view('Focal/BudgetCrafting', $data);
@@ -418,19 +462,50 @@ public function budgetCrafting()
             $totalBudget = array_sum(array_map(fn($p) => $p['budget_allocation'] ?? 0, $approvedPlans));
             $divisionsCount = count(array_unique(array_column($approvedPlans, 'office_name')));
 
+            // Get user role and division information
+            $userInfo = $db->table('employees e')
+                ->select('e.first_name, e.last_name, e.role_id, r.role as role_name, d.division as division_name')
+                ->join('roles r', 'e.role_id = r.role_id', 'left')
+                ->join('divisions d', 'e.div_id = d.div_id', 'left')
+                ->where('e.emp_id', $this->session->get('user_id'))
+                ->get()
+                ->getRowArray();
+
+            // Set appropriate fallbacks based on role_id
+            $roleId = $this->session->get('role_id');
+            $defaultRoleName = 'User';
+            switch($roleId) {
+                case 1: $defaultRoleName = 'Focal Person'; break;
+                case 2: $defaultRoleName = 'GAD Member'; break;
+                case 3: $defaultRoleName = 'Secretariat'; break;
+                case 4: $defaultRoleName = 'Administrator'; break;
+            }
+
             $data = [
                 'gadPlans' => $gadPlans,
                 'divisions' => $divisions,
                 'approvedPlansCount' => $approvedPlansCount,
                 'totalBudget' => $totalBudget,
                 'divisionsCount' => $divisionsCount,
-                'first_name' => $this->session->get('first_name'),
-                'last_name' => $this->session->get('last_name')
+                'first_name' => $userInfo['first_name'] ?? $this->session->get('first_name'),
+                'last_name' => $userInfo['last_name'] ?? $this->session->get('last_name'),
+                'role_name' => $userInfo['role_name'] ?? $defaultRoleName,
+                'division_name' => $userInfo['division_name'] ?? 'Unknown Division'
             ];
 
             return view('Focal/ConsolidatedPlan', $data);
         } catch (\Exception $e) {
             log_message('error', 'Error in consolidatedPlan: ' . $e->getMessage());
+
+            // Set appropriate fallbacks based on role_id
+            $roleId = $this->session->get('role_id');
+            $defaultRoleName = 'User';
+            switch($roleId) {
+                case 1: $defaultRoleName = 'Focal Person'; break;
+                case 2: $defaultRoleName = 'GAD Member'; break;
+                case 3: $defaultRoleName = 'Secretariat'; break;
+                case 4: $defaultRoleName = 'Administrator'; break;
+            }
 
             $data = [
                 'gadPlans' => [],
@@ -439,7 +514,9 @@ public function budgetCrafting()
                 'totalBudget' => 0,
                 'divisionsCount' => 0,
                 'first_name' => $this->session->get('first_name'),
-                'last_name' => $this->session->get('last_name')
+                'last_name' => $this->session->get('last_name'),
+                'role_name' => $defaultRoleName,
+                'division_name' => 'Unknown Division'
             ];
 
             return view('Focal/ConsolidatedPlan', $data);
@@ -474,10 +551,31 @@ public function budgetCrafting()
 
         $gadPlans = $builder->get()->getResultArray();
 
+        // Get user role and division information
+        $userInfo = $db->table('employees e')
+            ->select('e.first_name, e.last_name, e.role_id, r.role as role_name, d.division as division_name')
+            ->join('roles r', 'e.role_id = r.role_id', 'left')
+            ->join('divisions d', 'e.div_id = d.div_id', 'left')
+            ->where('e.emp_id', $this->session->get('user_id'))
+            ->get()
+            ->getRowArray();
+
+        // Set appropriate fallbacks based on role_id
+        $roleId = $this->session->get('role_id');
+        $defaultRoleName = 'User';
+        switch($roleId) {
+            case 1: $defaultRoleName = 'Focal Person'; break;
+            case 2: $defaultRoleName = 'GAD Member'; break;
+            case 3: $defaultRoleName = 'Secretariat'; break;
+            case 4: $defaultRoleName = 'Administrator'; break;
+        }
+
         $data = [
             'gadPlans' => $gadPlans,
-            'first_name' => $this->session->get('first_name'),
-            'last_name' => $this->session->get('last_name')
+            'first_name' => $userInfo['first_name'] ?? $this->session->get('first_name'),
+            'last_name' => $userInfo['last_name'] ?? $this->session->get('last_name'),
+            'role_name' => $userInfo['role_name'] ?? $defaultRoleName,
+            'division_name' => $userInfo['division_name'] ?? 'Unknown Division'
         ];
 
         return view('Focal/PlanReview', $data);
@@ -501,22 +599,56 @@ public function budgetCrafting()
                 return in_array(strtolower($acc['status']), ['completed', 'under review', 'approved', 'returned']);
             });
 
+            // Get user role and division information
+            $db = \Config\Database::connect();
+            $userInfo = $db->table('employees e')
+                ->select('e.first_name, e.last_name, e.role_id, r.role as role_name, d.division as division_name')
+                ->join('roles r', 'e.role_id = r.role_id', 'left')
+                ->join('divisions d', 'e.div_id = d.div_id', 'left')
+                ->where('e.emp_id', $this->session->get('user_id'))
+                ->get()
+                ->getRowArray();
+
+            // Set appropriate fallbacks based on role_id
+            $roleId = $this->session->get('role_id');
+            $defaultRoleName = 'User';
+            switch($roleId) {
+                case 1: $defaultRoleName = 'Focal Person'; break;
+                case 2: $defaultRoleName = 'GAD Member'; break;
+                case 3: $defaultRoleName = 'Secretariat'; break;
+                case 4: $defaultRoleName = 'Administrator'; break;
+            }
+
             $data = [
                 'accomplishments' => $accomplishments,
                 'gadPlans' => $outputModel->getAvailableGadPlans() ?? [],
-                'first_name' => $this->session->get('first_name'),
-                'last_name' => $this->session->get('last_name')
+                'first_name' => $userInfo['first_name'] ?? $this->session->get('first_name'),
+                'last_name' => $userInfo['last_name'] ?? $this->session->get('last_name'),
+                'role_name' => $userInfo['role_name'] ?? $defaultRoleName,
+                'division_name' => $userInfo['division_name'] ?? 'Unknown Division'
             ];
 
             return view('Focal/ReviewApproval', $data);
         } catch (\Exception $e) {
             log_message('error', 'Error in Focal reviewApproval: ' . $e->getMessage());
 
+            // Set appropriate fallbacks based on role_id
+            $roleId = $this->session->get('role_id');
+            $defaultRoleName = 'User';
+            switch($roleId) {
+                case 1: $defaultRoleName = 'Focal Person'; break;
+                case 2: $defaultRoleName = 'GAD Member'; break;
+                case 3: $defaultRoleName = 'Secretariat'; break;
+                case 4: $defaultRoleName = 'Administrator'; break;
+            }
+
             $data = [
                 'accomplishments' => [],
                 'gadPlans' => [],
                 'first_name' => $this->session->get('first_name'),
-                'last_name' => $this->session->get('last_name')
+                'last_name' => $this->session->get('last_name'),
+                'role_name' => $defaultRoleName,
+                'division_name' => 'Unknown Division'
             ];
 
             return view('Focal/ReviewApproval', $data);
@@ -551,11 +683,35 @@ public function budgetCrafting()
                 'Returned' => $returnedAccomplishments
             ];
 
+            // Get user role and division information
+            $db = \Config\Database::connect();
+            $userInfo = $db->table('employees e')
+                ->select('e.first_name, e.last_name, e.role_id, r.role as role_name, d.division as division_name')
+                ->join('roles r', 'e.role_id = r.role_id', 'left')
+                ->join('divisions d', 'e.div_id = d.div_id', 'left')
+                ->where('e.emp_id', $this->session->get('user_id'))
+                ->get()
+                ->getRowArray();
+
+            // Set appropriate fallbacks based on role_id
+            $roleId = $this->session->get('role_id');
+            $defaultRoleName = 'User';
+            switch($roleId) {
+                case 1: $defaultRoleName = 'Focal Person'; break;
+                case 2: $defaultRoleName = 'GAD Member'; break;
+                case 3: $defaultRoleName = 'Secretariat'; break;
+                case 4: $defaultRoleName = 'Administrator'; break;
+            }
+
             $data = [
                 'accomplishments' => $outputModel->getAccomplishmentsWithDetails() ?? [],
                 'gadPlans' => $outputModel->getAvailableGadPlans() ?? [],
                 'divisions' => $outputModel->getDivisions() ?? [],
-                'statistics' => $statistics
+                'statistics' => $statistics,
+                'first_name' => $userInfo['first_name'] ?? $this->session->get('first_name'),
+                'last_name' => $userInfo['last_name'] ?? $this->session->get('last_name'),
+                'role_name' => $userInfo['role_name'] ?? $defaultRoleName,
+                'division_name' => $userInfo['division_name'] ?? 'Unknown Division'
             ];
 
             return view('Focal/AccomplishmentSubmission', $data);
@@ -571,11 +727,25 @@ public function budgetCrafting()
                 'Returned' => 0
             ];
 
+            // Set appropriate fallbacks based on role_id
+            $roleId = $this->session->get('role_id');
+            $defaultRoleName = 'User';
+            switch($roleId) {
+                case 1: $defaultRoleName = 'Focal Person'; break;
+                case 2: $defaultRoleName = 'GAD Member'; break;
+                case 3: $defaultRoleName = 'Secretariat'; break;
+                case 4: $defaultRoleName = 'Administrator'; break;
+            }
+
             $data = [
                 'accomplishments' => [],
                 'gadPlans' => [],
                 'divisions' => [],
-                'statistics' => $statistics
+                'statistics' => $statistics,
+                'first_name' => $this->session->get('first_name'),
+                'last_name' => $this->session->get('last_name'),
+                'role_name' => $defaultRoleName,
+                'division_name' => 'Unknown Division'
             ];
 
             return view('Focal/AccomplishmentSubmission', $data);
@@ -605,7 +775,7 @@ public function budgetCrafting()
                     break;
                 case 'submitted':
                 case 'submit for review':
-                    $dbStatus = 'completed'; // This means submitted and awaiting review
+                    $dbStatus = 'under review'; // Submitted and awaiting GAD Member review
                     break;
                 default:
                     $dbStatus = strtolower($formStatus);
@@ -622,8 +792,8 @@ public function budgetCrafting()
         ];
 
         // TODO: Add submitted_at timestamp when database migration is complete
-        // Set submitted_at timestamp if status is submitted (completed)
-        // if ($dbStatus === 'completed') {
+        // Set submitted_at timestamp if status is submitted (under review)
+        // if ($dbStatus === 'under review') {
         //     $data['submitted_at'] = date('Y-m-d H:i:s');
         // }
 
@@ -711,7 +881,7 @@ public function budgetCrafting()
                     break;
                 case 'submitted':
                 case 'submit for review':
-                    $dbStatus = 'completed'; // This means submitted and awaiting review
+                    $dbStatus = 'under review'; // Submitted and awaiting GAD Member review
                     break;
                 default:
                     $dbStatus = strtolower($formStatus);
@@ -727,8 +897,8 @@ public function budgetCrafting()
         ];
 
         // TODO: Add submitted_at timestamp when database migration is complete
-        // Set submitted_at timestamp if status is submitted (completed)
-        // if ($dbStatus === 'completed') {
+        // Set submitted_at timestamp if status is submitted (under review)
+        // if ($dbStatus === 'under review') {
         //     $data['submitted_at'] = date('Y-m-d H:i:s');
         // }
 
@@ -831,7 +1001,7 @@ public function budgetCrafting()
                     $dbStatus = 'pending';
                     break;
                 case 'submitted':
-                    $dbStatus = 'completed';
+                    $dbStatus = 'under review';
                     break;
                 default:
                     $dbStatus = strtolower($status);
@@ -980,19 +1150,51 @@ public function budgetCrafting()
                 $totalBudget += floatval($accomplishment['budget_allocation'] ?? 0);
             }
 
+            // Get user role and division information
+            $db = \Config\Database::connect();
+            $userInfo = $db->table('employees e')
+                ->select('e.first_name, e.last_name, e.role_id, r.role as role_name, d.division as division_name')
+                ->join('roles r', 'e.role_id = r.role_id', 'left')
+                ->join('divisions d', 'e.div_id = d.div_id', 'left')
+                ->where('e.emp_id', $this->session->get('user_id'))
+                ->get()
+                ->getRowArray();
+
+            // Set appropriate fallbacks based on role_id
+            $roleId = $this->session->get('role_id');
+            $defaultRoleName = 'User';
+            switch($roleId) {
+                case 1: $defaultRoleName = 'Focal Person'; break;
+                case 2: $defaultRoleName = 'GAD Member'; break;
+                case 3: $defaultRoleName = 'Secretariat'; break;
+                case 4: $defaultRoleName = 'Administrator'; break;
+            }
+
             $data = [
                 'accomplishments' => $approvedAccomplishments,
                 'divisions' => $divisions,
                 'totalAccomplishments' => count($approvedAccomplishments),
                 'totalBudget' => $totalBudget,
                 'divisionsCount' => count($divisions),
-                'first_name' => $this->session->get('first_name') ?? 'Admin',
-                'last_name' => $this->session->get('last_name') ?? 'User'
+                'first_name' => $userInfo['first_name'] ?? $this->session->get('first_name'),
+                'last_name' => $userInfo['last_name'] ?? $this->session->get('last_name'),
+                'role_name' => $userInfo['role_name'] ?? $defaultRoleName,
+                'division_name' => $userInfo['division_name'] ?? 'Unknown Division'
             ];
 
             return view('Focal/ConsolidatedAccomplishment', $data);
         } catch (\Exception $e) {
             log_message('error', 'Error in consolidatedAccomplishment: ' . $e->getMessage());
+
+            // Set appropriate fallbacks based on role_id
+            $roleId = $this->session->get('role_id');
+            $defaultRoleName = 'User';
+            switch($roleId) {
+                case 1: $defaultRoleName = 'Focal Person'; break;
+                case 2: $defaultRoleName = 'GAD Member'; break;
+                case 3: $defaultRoleName = 'Secretariat'; break;
+                case 4: $defaultRoleName = 'Administrator'; break;
+            }
 
             $data = [
                 'accomplishments' => [],
@@ -1000,8 +1202,10 @@ public function budgetCrafting()
                 'totalAccomplishments' => 0,
                 'totalBudget' => 0,
                 'divisionsCount' => 0,
-                'first_name' => $this->session->get('first_name') ?? 'Admin',
-                'last_name' => $this->session->get('last_name') ?? 'User'
+                'first_name' => $this->session->get('first_name'),
+                'last_name' => $this->session->get('last_name'),
+                'role_name' => $defaultRoleName,
+                'division_name' => 'Unknown Division'
             ];
 
             return view('Focal/ConsolidatedAccomplishment', $data);
@@ -1067,9 +1271,9 @@ public function budgetCrafting()
             ])->setStatusCode(403);
         }
 
-        $planId = $this->request->getPost('planId');
-        $status = $this->request->getPost('status');
-        $remarks = $this->request->getPost('remarks');
+        $planId = $this->request->getPost('reviewPlanId') ?: $this->request->getPost('planId');
+        $status = $this->request->getPost('reviewStatus') ?: $this->request->getPost('status');
+        $remarks = $this->request->getPost('reviewRemarks') ?: $this->request->getPost('remarks');
 
         if (!$planId || !$status) {
             return $this->response->setJSON([

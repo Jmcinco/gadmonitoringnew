@@ -127,6 +127,59 @@ $gadPlans = $gadPlans ?? [];
             }
         }
 
+        /* AdminLTE-style Statistics Cards */
+        .border-left-primary {
+            border-left: 0.25rem solid #4e73df !important;
+        }
+        .border-left-secondary {
+            border-left: 0.25rem solid #858796 !important;
+        }
+        .border-left-warning {
+            border-left: 0.25rem solid #f6c23e !important;
+        }
+        .border-left-info {
+            border-left: 0.25rem solid #36b9cc !important;
+        }
+        .border-left-success {
+            border-left: 0.25rem solid #1cc88a !important;
+        }
+        .border-left-danger {
+            border-left: 0.25rem solid #e74a3b !important;
+        }
+
+        .text-xs {
+            font-size: 0.75rem !important;
+            font-weight: 700 !important;
+            letter-spacing: 0.05em;
+        }
+
+        .font-weight-bold {
+            font-weight: 700 !important;
+        }
+
+        .text-gray-800 {
+            color: #5a5c69 !important;
+        }
+
+        .text-gray-300 {
+            color: #dddfeb !important;
+        }
+
+        .fa-2x {
+            font-size: 2em !important;
+        }
+
+        .no-gutters {
+            margin-right: 0;
+            margin-left: 0;
+        }
+
+        .no-gutters > .col,
+        .no-gutters > [class*="col-"] {
+            padding-right: 0;
+            padding-left: 0;
+        }
+
         .main-content {
             margin-left: var(--sidebar-width);
             min-height: 100vh;
@@ -136,16 +189,12 @@ $gadPlans = $gadPlans ?? [];
 
         .card {
             border: none;
-            border-radius: 0.75rem;
+            border-radius: 0.5rem;
             box-shadow: 0 0.15rem 1.75rem 0 rgba(58, 59, 69, 0.15);
-            margin-bottom: 2rem;
         }
-
         .card-header {
             background-color: #f8f9fc;
             border-bottom: 1px solid #e3e6f0;
-            border-radius: 0.75rem 0.75rem 0 0 !important;
-            padding: 1.25rem 1.5rem;
         }
 
         .table th {
@@ -230,7 +279,7 @@ $gadPlans = $gadPlans ?? [];
     <nav id="sidebar" class="sidebar">
         <div class="sidebar-header">
             <h4 class="text-white mb-0">
-                <i class="bi bi-shield-check"></i> GAD Management System
+               <i class="bi bi-gender-ambiguous" style="font-size: 2rem; color: rgb(255, 255, 255);"></i> GAD Monitoring System
             </h4>
         </div>
         <div class="sidebar-content">
@@ -239,7 +288,8 @@ $gadPlans = $gadPlans ?? [];
                     <i class="bi bi-person-circle fs-4 me-2"></i>
                     <div>
                         <div class="fw-bold"><?php echo esc(($first_name ?? 'Admin') . ' ' . ($last_name ?? 'User')); ?></div>
-                        <small class="text-light">Administrator</small>
+                        <small class="text-light d-block"><?php echo esc($role_name ?? 'Administrator'); ?></small>
+                        <small class="text-light opacity-75"><?php echo esc($division_name ?? 'GAD Office'); ?></small>
                     </div>
                 </div>
             </div>
@@ -320,16 +370,14 @@ $gadPlans = $gadPlans ?? [];
             </div>
 
             <!-- Statistics Cards -->
-            <div class="row mb-4">
+          <div class="row mb-4">
                 <div class="col-xl-2 col-md-4 col-sm-6 mb-3">
                     <div class="card border-left-primary shadow h-100 py-2">
                         <div class="card-body">
                             <div class="row no-gutters align-items-center">
                                 <div class="col mr-2">
                                     <div class="text-xs font-weight-bold text-primary text-uppercase mb-1">Total</div>
-                                    <div class="h5 mb-0 font-weight-bold text-gray-800" id="totalCount">
-                                        <?= count($accomplishments) ?>
-                                    </div>
+                                    <div class="h5 mb-0 font-weight-bold text-gray-800" id="totalCount">0</div>
                                 </div>
                                 <div class="col-auto">
                                     <i class="bi bi-clipboard-data fa-2x text-gray-300"></i>
@@ -338,13 +386,12 @@ $gadPlans = $gadPlans ?? [];
                         </div>
                     </div>
                 </div>
-
                 <div class="col-xl-2 col-md-4 col-sm-6 mb-3">
-                    <div class="card border-left-warning shadow h-100 py-2">
+                    <div class="card border-left-secondary shadow h-100 py-2">
                         <div class="card-body">
                             <div class="row no-gutters align-items-center">
                                 <div class="col mr-2">
-                                    <div class="text-xs font-weight-bold text-warning text-uppercase mb-1">Draft</div>
+                                    <div class="text-xs font-weight-bold text-secondary text-uppercase mb-1">Draft</div>
                                     <div class="h5 mb-0 font-weight-bold text-gray-800" id="draftCount">0</div>
                                 </div>
                                 <div class="col-auto">
@@ -354,13 +401,12 @@ $gadPlans = $gadPlans ?? [];
                         </div>
                     </div>
                 </div>
-
                 <div class="col-xl-2 col-md-4 col-sm-6 mb-3">
-                    <div class="card border-left-info shadow h-100 py-2">
+                    <div class="card border-left-warning shadow h-100 py-2">
                         <div class="card-body">
                             <div class="row no-gutters align-items-center">
                                 <div class="col mr-2">
-                                    <div class="text-xs font-weight-bold text-info text-uppercase mb-1">Submitted</div>
+                                    <div class="text-xs font-weight-bold text-warning text-uppercase mb-1">Submitted</div>
                                     <div class="h5 mb-0 font-weight-bold text-gray-800" id="submittedCount">0</div>
                                 </div>
                                 <div class="col-auto">
@@ -370,23 +416,21 @@ $gadPlans = $gadPlans ?? [];
                         </div>
                     </div>
                 </div>
-
                 <div class="col-xl-2 col-md-4 col-sm-6 mb-3">
-                    <div class="card border-left-warning shadow h-100 py-2">
+                    <div class="card border-left-info shadow h-100 py-2">
                         <div class="card-body">
                             <div class="row no-gutters align-items-center">
                                 <div class="col mr-2">
-                                    <div class="text-xs font-weight-bold text-warning text-uppercase mb-1">Under Review</div>
-                                    <div class="h5 mb-0 font-weight-bold text-gray-800" id="underReviewCount">0</div>
+                                    <div class="text-xs font-weight-bold text-info text-uppercase mb-1">Reviewed</div>
+                                    <div class="h5 mb-0 font-weight-bold text-gray-800" id="reviewedCount">0</div>
                                 </div>
                                 <div class="col-auto">
-                                    <i class="bi bi-clock fa-2x text-gray-300"></i>
+                                    <i class="bi bi-eye fa-2x text-gray-300"></i>
                                 </div>
                             </div>
                         </div>
                     </div>
                 </div>
-
                 <div class="col-xl-2 col-md-4 col-sm-6 mb-3">
                     <div class="card border-left-success shadow h-100 py-2">
                         <div class="card-body">
@@ -402,7 +446,6 @@ $gadPlans = $gadPlans ?? [];
                         </div>
                     </div>
                 </div>
-
                 <div class="col-xl-2 col-md-4 col-sm-6 mb-3">
                     <div class="card border-left-danger shadow h-100 py-2">
                         <div class="card-body">
@@ -434,7 +477,7 @@ $gadPlans = $gadPlans ?? [];
                                         <select class="form-select" id="statusFilter" onchange="filterByStatus(this.value)">
                                             <option value="">All Status</option>
                                             <option value="pending">Draft</option>
-                                            <option value="completed">Submitted</option>
+                                            <option value="completed">Completed</option>
                                             <option value="under review">Under Review</option>
                                             <option value="approved">Approved</option>
                                             <option value="returned">Returned</option>
@@ -459,6 +502,7 @@ $gadPlans = $gadPlans ?? [];
                                             <th>Status</th>
                                             <th>File</th>
                                             <th>Remarks</th>
+                                            <th>Reviewed By</th>
                                             <th>Actions</th>
                                         </tr>
                                     </thead>
@@ -476,16 +520,16 @@ $gadPlans = $gadPlans ?? [];
                                                         <?php
                                                         $status = strtolower($accomplishment['status']);
                                                         $badgeClass = match($status) {
-                                                            'pending' => 'bg-warning',
-                                                            'completed' => 'bg-info',
-                                                            'under review' => 'bg-warning',
+                                                            'pending' => 'bg-secondary',
+                                                            'completed' => 'bg-success',
+                                                            'under review' => 'bg-info',
                                                             'approved' => 'bg-success',
                                                             'returned' => 'bg-danger',
                                                             default => 'bg-secondary'
                                                         };
                                                         $statusText = match($status) {
                                                             'pending' => 'Draft',
-                                                            'completed' => 'Submitted',
+                                                            'completed' => 'Completed',
                                                             'under review' => 'Under Review',
                                                             'approved' => 'Approved',
                                                             'returned' => 'Returned',
@@ -507,6 +551,20 @@ $gadPlans = $gadPlans ?? [];
                                                         <?= esc($accomplishment['remarks'] ?? '-') ?>
                                                     </td>
                                                     <td>
+                                                        <?php
+                                                        $reviewedByName = '';
+                                                        if (!empty($accomplishment['reviewed_by_name']) && !empty($accomplishment['reviewed_by_lastname'])) {
+                                                            $reviewedByName = $accomplishment['reviewed_by_name'] . ' ' . $accomplishment['reviewed_by_lastname'];
+                                                            if (!empty($accomplishment['reviewed_by_division'])) {
+                                                                $reviewedByName .= '<br><small class="text-muted">(' . $accomplishment['reviewed_by_division'] . ')</small>';
+                                                            }
+                                                        } else {
+                                                            $reviewedByName = '<span class="text-muted">-</span>';
+                                                        }
+                                                        ?>
+                                                        <?= $reviewedByName ?>
+                                                    </td>
+                                                    <td>
                                                         <button class="btn btn-sm btn-outline-primary" onclick="viewAccomplishment('<?= $accomplishment['output_id'] ?>')">
                                                             <i class="bi bi-eye"></i> View Details
                                                         </button>
@@ -515,7 +573,7 @@ $gadPlans = $gadPlans ?? [];
                                             <?php endforeach; ?>
                                         <?php else: ?>
                                             <tr>
-                                                <td colspan="8" class="text-center text-muted py-4">
+                                                <td colspan="9" class="text-center text-muted py-4">
                                                     <i class="bi bi-inbox fs-1 d-block mb-2"></i>
                                                     No accomplishments found.
                                                 </td>
@@ -565,6 +623,14 @@ $gadPlans = $gadPlans ?? [];
                                 </div>
                             </div>
                             <div class="row mt-2">
+                                <div class="col-md-6">
+                                    <strong>Reviewed By:</strong> <span id="displayReviewedBy">-</span>
+                                </div>
+                                <div class="col-md-6">
+                                    <!-- Reserved for future use -->
+                                </div>
+                            </div>
+                            <div class="row mt-2">
                                 <div class="col-12">
                                     <strong>Accomplishment:</strong>
                                     <p class="mt-2 p-3 bg-light rounded" id="displayAccomplishmentText"></p>
@@ -608,45 +674,29 @@ $gadPlans = $gadPlans ?? [];
             updateStatistics();
         });
 
-        // Update statistics
+        // Update statistics cards
         function updateStatistics() {
             const rows = document.querySelectorAll('#accomplishmentTableBody tr[data-status]');
-            let counts = {
-                total: rows.length,
-                draft: 0,
-                submitted: 0,
-                underReview: 0,
-                approved: 0,
-                returned: 0
-            };
+            let total = 0, draft = 0, submitted = 0, reviewed = 0, approved = 0, returned = 0;
 
             rows.forEach(row => {
-                const status = row.dataset.status.toLowerCase();
+                const status = row.dataset.status;
+                total++;
                 switch(status) {
-                    case 'pending':
-                        counts.draft++;
-                        break;
-                    case 'completed':
-                        counts.submitted++;
-                        break;
-                    case 'under review':
-                        counts.underReview++;
-                        break;
-                    case 'approved':
-                        counts.approved++;
-                        break;
-                    case 'returned':
-                        counts.returned++;
-                        break;
+                    case 'pending': draft++; break;
+                    case 'completed': approved++; break;
+                    case 'under review': reviewed++; break;
+                    case 'approved': approved++; break;
+                    case 'returned': returned++; break;
                 }
             });
 
-            document.getElementById('totalCount').textContent = counts.total;
-            document.getElementById('draftCount').textContent = counts.draft;
-            document.getElementById('submittedCount').textContent = counts.submitted;
-            document.getElementById('underReviewCount').textContent = counts.underReview;
-            document.getElementById('approvedCount').textContent = counts.approved;
-            document.getElementById('returnedCount').textContent = counts.returned;
+            document.getElementById('totalCount').textContent = total;
+            document.getElementById('draftCount').textContent = draft;
+            document.getElementById('submittedCount').textContent = submitted;
+            document.getElementById('reviewedCount').textContent = reviewed;
+            document.getElementById('approvedCount').textContent = approved;
+            document.getElementById('returnedCount').textContent = returned;
         }
 
         // View accomplishment details
@@ -677,6 +727,20 @@ $gadPlans = $gadPlans ?? [];
                     document.getElementById('displayAccomplishmentText').textContent = accomplishmentText;
                     document.getElementById('displayRemarks').textContent = remarks || '-';
 
+                    // Set reviewed by information
+                    const reviewedByFirstName = accomplishment.reviewed_by_first_name || '';
+                    const reviewedByLastName = accomplishment.reviewed_by_last_name || '';
+                    const reviewedByDivision = accomplishment.reviewed_by_division || '';
+
+                    let reviewedByText = '-';
+                    if (reviewedByFirstName && reviewedByLastName) {
+                        reviewedByText = `${reviewedByFirstName} ${reviewedByLastName}`;
+                        if (reviewedByDivision) {
+                            reviewedByText += ` (${reviewedByDivision})`;
+                        }
+                    }
+                    document.getElementById('displayReviewedBy').textContent = reviewedByText;
+
                     // Set status badge
                     const statusLower = status.toLowerCase();
                     let statusBadge = '';
@@ -690,8 +754,8 @@ $gadPlans = $gadPlans ?? [];
                         case 'under review':
                             statusBadge = '<span class="badge bg-warning">Under Review</span>';
                             break;
-                        case 'approved':
-                            statusBadge = '<span class="badge bg-success">Approved</span>';
+                        case 'completed':
+                            statusBadge = '<span class="badge bg-success">Complete</span>';
                             break;
                         case 'returned':
                             statusBadge = '<span class="badge bg-danger">Returned</span>';

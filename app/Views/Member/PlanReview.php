@@ -254,6 +254,7 @@ $gadPlans = $gadPlans ?? [];
                                         </button>
                                     </div>
                                 </div>
+
                             </div>
                         </div>
  <div class="card-body">
@@ -261,13 +262,13 @@ $gadPlans = $gadPlans ?? [];
                             <table class="table table-hover table-striped">
                                 <thead class="table-dark">
                                     <tr>
-                                        <th>GAD Activity ID</th>
-                                        <th>Division</th>
-                                        <th>Status</th>
-                                        <th>Review Date</th>
-                                        <th>Reviewed By</th>
-                                        <th>Remarks</th>
-                                        <th>Actions</th>
+                                        <th style="width: 12%;">GAD Activity ID</th>
+                                        <th style="width: 20%;">Division</th>
+                                        <th style="width: 10%;" class="text-center">Status</th>
+                                        <th style="width: 12%;" class="text-center">Review Date</th>
+                                        <th style="width: 15%;" class="text-center">Reviewed By</th>
+                                        <th style="width: 20%;">Remarks</th>
+                                        <th style="width: 11%;" class="text-center">Actions</th>
                                     </tr>
                                 </thead>
                                 <tbody id="reviewTableBody">
@@ -278,11 +279,11 @@ $gadPlans = $gadPlans ?? [];
                                     <?php else: ?>
                                     <?php foreach ($gadPlans as $plan): ?>
                                     <tr data-status="<?php echo strtolower($plan['status'] ?? 'pending'); ?>" data-plan-id="<?php echo esc($plan['plan_id']); ?>">
-                                        <td><?php echo esc('GAD-' . str_pad($plan['plan_id'], 3, '0', STR_PAD_LEFT)); ?></td>
-                                        <td>
+                                        <td style="width: 12%;"><?php echo esc('GAD-' . str_pad($plan['plan_id'], 3, '0', STR_PAD_LEFT)); ?></td>
+                                        <td style="width: 20%;">
                                             <?php echo esc($plan['division'] ?? 'Unknown Division'); ?>
                                         </td>
-                                        <td>
+                                        <td style="width: 10%;" class="text-center">
                                             <?php
                                             $status = $plan['status'] ?? 'pending';
                                             $badgeClass = match(strtolower($status)) {
@@ -296,7 +297,7 @@ $gadPlans = $gadPlans ?? [];
                                             ?>
                                             <span class="badge <?php echo $badgeClass; ?>"><?php echo esc(ucfirst($status)); ?></span>
                                         </td>
-                                        <td class="text-center">
+                                        <td style="width: 12%;" class="text-center">
                                             <?php
                                             // Show the most recent review date
                                             $reviewDate = null;
@@ -310,7 +311,7 @@ $gadPlans = $gadPlans ?? [];
                                             echo $reviewDate ? date('Y-m-d', strtotime($reviewDate)) : '-';
                                             ?>
                                         </td>
-                                        <td class="text-center">
+                                        <td style="width: 15%;" class="text-center">
                                             <?php
                                             // Show who performed the most recent action
                                             $reviewerName = '';
@@ -324,10 +325,10 @@ $gadPlans = $gadPlans ?? [];
                                             echo $reviewerName ?: '-';
                                             ?>
                                         </td>
-                                        <td class="text-truncate" style="max-width: 200px;" title="<?php echo esc($plan['remarks'] ?? ''); ?>">
+                                        <td style="width: 20%;" class="text-truncate" title="<?php echo esc($plan['remarks'] ?? ''); ?>">
                                             <?php echo esc($plan['remarks'] ?? '-'); ?>
                                         </td>
-                                        <td>
+                                        <td style="width: 11%;" class="text-center">
                                             <div class="btn-group-vertical" role="group">
                                                 <button class="btn btn-sm btn-outline-primary mb-1" onclick="reviewPlan('<?php echo esc($plan['plan_id']); ?>')">
                                                     <i class="bi bi-clipboard-check"></i> Review
@@ -361,7 +362,7 @@ $gadPlans = $gadPlans ?? [];
         </div>
     </div>
 
-    <!-- Review Plan Modal -->
+    <!--    Review Plan Modal -->
     <div class="modal fade" id="reviewPlanModal" tabindex="-1" aria-labelledby="reviewPlanModalLabel" aria-hidden="true">
         <div class="modal-dialog modal-xl">
             <div class="modal-content">
@@ -530,6 +531,9 @@ $gadPlans = $gadPlans ?? [];
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 
     <script>
+        // Global function declarations first
+        var reviewPlan, updateStatus, handleFormSubmit, submitReview, updatePlanStatusInTable, getStatusBadgeClass, filterByStatus;
+
         // Bootstrap form validation
         (function() {
             'use strict';
@@ -551,7 +555,7 @@ $gadPlans = $gadPlans ?? [];
         })();
 
         // Handle form submission
-        function handleFormSubmit(form) {
+        handleFormSubmit = function(form) {
             const formData = new FormData(form);
             const planId = formData.get('reviewPlanId');
             const status = formData.get('reviewStatus');
@@ -623,7 +627,7 @@ $gadPlans = $gadPlans ?? [];
         }
 
         // Review plan function for Members
-        function reviewPlan(planId) {
+        reviewPlan = function(planId) {
             // Show loading state
             Swal.fire({
                 title: 'Loading Plan Details...',
@@ -641,7 +645,12 @@ $gadPlans = $gadPlans ?? [];
                     'X-Requested-With': 'XMLHttpRequest'
                 }
             })
-            .then(response => response.json())
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+                return response.json();
+            })
             .then(data => {
                 Swal.close();
 
@@ -649,11 +658,20 @@ $gadPlans = $gadPlans ?? [];
                     const plan = data.plan;
 
                     // Populate modal with plan details
-                    document.getElementById('reviewPlanId').value = planId;
-                    document.getElementById('reviewPlanIdForm').value = planId;
-                    document.getElementById('displayPlanId').textContent = `GAD-${String(planId).padStart(3, '0')}`;
-                    document.getElementById('displayPlanTitle').textContent = plan.issue_mandate || plan.activity || 'N/A';
-                    document.getElementById('displayDivision').textContent = plan.division_name || 'Unknown Division';
+                    const reviewPlanIdElement = document.getElementById('reviewPlanId');
+                    if (reviewPlanIdElement) reviewPlanIdElement.value = planId;
+
+                    const reviewPlanIdFormElement = document.getElementById('reviewPlanIdForm');
+                    if (reviewPlanIdFormElement) reviewPlanIdFormElement.value = planId;
+
+                    const displayPlanIdElement = document.getElementById('displayPlanId');
+                    if (displayPlanIdElement) displayPlanIdElement.textContent = `GAD-${String(planId).padStart(3, '0')}`;
+
+                    const displayPlanTitleElement = document.getElementById('displayPlanTitle');
+                    if (displayPlanTitleElement) displayPlanTitleElement.textContent = plan.activity || 'No activity description';
+
+                    const displayDivisionElement = document.getElementById('displayDivision');
+                    if (displayDivisionElement) displayDivisionElement.textContent = plan.division_name || 'Unknown Division';
 
                     // Budget and HGDG information
                     const budgetElement = document.getElementById('displayBudget');
@@ -669,7 +687,10 @@ $gadPlans = $gadPlans ?? [];
                     }
 
                     // Review information
-                    document.getElementById('displayCurrentStatus').innerHTML = `<span class="badge bg-${getStatusBadgeClass(plan.status)}">${plan.status || 'Pending'}</span>`;
+                    const statusElement = document.getElementById('displayCurrentStatus');
+                    if (statusElement) {
+                        statusElement.innerHTML = `<span class="badge bg-${getStatusBadgeClass(plan.status)}">${plan.status || 'Pending'}</span>`;
+                    }
 
                     // Review date - show the most recent action date
                     let reviewDate = 'Not reviewed yet';
@@ -686,7 +707,10 @@ $gadPlans = $gadPlans ?? [];
                         reviewAction = ' (Reviewed)';
                     }
 
-                    document.getElementById('displayReviewDate').textContent = reviewDate + reviewAction;
+                    const reviewDateElement = document.getElementById('displayReviewDate');
+                    if (reviewDateElement) {
+                        reviewDateElement.textContent = reviewDate + reviewAction;
+                    }
 
                     // Reviewed by - show the person who performed the most recent action
                     let reviewedBy = 'Not reviewed yet';
@@ -699,10 +723,16 @@ $gadPlans = $gadPlans ?? [];
                         reviewedBy = `${plan.reviewed_by_name} ${plan.reviewed_by_lastname} (Reviewed)`;
                     }
 
-                    document.getElementById('displayReviewedBy').textContent = reviewedBy;
+                    const reviewedByElement = document.getElementById('displayReviewedBy');
+                    if (reviewedByElement) {
+                        reviewedByElement.textContent = reviewedBy;
+                    }
 
                     // Remarks
-                    document.getElementById('displayRemarks').textContent = plan.remarks || 'No remarks available';
+                    const remarksElement = document.getElementById('displayRemarks');
+                    if (remarksElement) {
+                        remarksElement.textContent = plan.remarks || 'No remarks available';
+                    }
 
                     // Additional details
                     const issueElement = document.getElementById('displayIssueMandate');
@@ -721,16 +751,43 @@ $gadPlans = $gadPlans ?? [];
                     }
 
                     // Set today's date in the review form
-                    document.getElementById('reviewDate').value = new Date().toISOString().split('T')[0];
+                    const reviewFormDateElement = document.getElementById('reviewDate');
+                    if (reviewFormDateElement) {
+                        reviewFormDateElement.value = new Date().toISOString().split('T')[0];
+                    }
 
                     // Clear the review form
-                    document.getElementById('reviewStatus').value = '';
-                    document.getElementById('reviewRemarks').value = '';
-                    document.getElementById('reviewPlanForm').classList.remove('was-validated');
+                    const reviewStatusElement = document.getElementById('reviewStatus');
+                    if (reviewStatusElement) reviewStatusElement.value = '';
+
+                    const reviewRemarksElement = document.getElementById('reviewRemarks');
+                    if (reviewRemarksElement) reviewRemarksElement.value = '';
+
+                    const reviewPlanFormElement = document.getElementById('reviewPlanForm');
+                    if (reviewPlanFormElement) reviewPlanFormElement.classList.remove('was-validated');
 
                     // Show modal
                     const modal = new bootstrap.Modal(document.getElementById('reviewPlanModal'));
                     modal.show();
+
+                    // Ensure modal is fully rendered before populating additional details
+                    setTimeout(() => {
+                        // Additional details that might need the modal to be fully rendered
+                        const issueElement = document.getElementById('displayIssueMandate');
+                        if (issueElement) issueElement.textContent = plan.issue_mandate || 'N/A';
+
+                        const causeElement = document.getElementById('displayCause');
+                        if (causeElement) causeElement.textContent = plan.cause || 'N/A';
+
+                        const objectiveElement = document.getElementById('displayObjective');
+                        if (objectiveElement) {
+                            if (Array.isArray(plan.gad_objective)) {
+                                objectiveElement.textContent = plan.gad_objective.join(', ');
+                            } else {
+                                objectiveElement.textContent = plan.gad_objective || 'N/A';
+                            }
+                        }
+                    }, 100);
                 } else {
                     Swal.fire({
                         icon: 'error',
@@ -741,7 +798,7 @@ $gadPlans = $gadPlans ?? [];
             })
             .catch(error => {
                 Swal.close();
-                console.error('Error:', error);
+                console.error('Error loading plan details:', error);
                 Swal.fire({
                     icon: 'error',
                     title: 'Error!',
@@ -755,7 +812,7 @@ $gadPlans = $gadPlans ?? [];
 
 
         // Submit review function for Members
-        function submitReview() {
+        submitReview = function() {
             const form = document.getElementById('reviewPlanForm');
             if (!form.checkValidity()) {
                 form.classList.add('was-validated');
@@ -766,6 +823,19 @@ $gadPlans = $gadPlans ?? [];
             const planId = formData.get('reviewPlanId');
             const status = formData.get('reviewStatus');
             const remarks = formData.get('reviewRemarks');
+
+            // Debug logging
+            console.log('Form data:', { planId, status, remarks });
+
+            // Validate required fields
+            if (!planId || !status) {
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Validation Error!',
+                    text: 'Please fill in all required fields.'
+                });
+                return;
+            }
 
             // Show loading state
             Swal.fire({
@@ -785,14 +855,21 @@ $gadPlans = $gadPlans ?? [];
                     'X-Requested-With': 'XMLHttpRequest'
                 },
                 body: new URLSearchParams({
-                    planId: planId,
-                    status: status,
-                    remarks: remarks
+                    reviewPlanId: planId,
+                    reviewStatus: status,
+                    reviewRemarks: remarks
                 })
             })
-            .then(response => response.json())
+            .then(response => {
+                console.log('Response status:', response.status);
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+                return response.json();
+            })
             .then(data => {
                 Swal.close();
+                console.log('Response data:', data);
 
                 if (data.success) {
                     // Update the table row with new data
@@ -822,17 +899,17 @@ $gadPlans = $gadPlans ?? [];
             })
             .catch(error => {
                 Swal.close();
-                console.error('Error:', error);
+                console.error('Fetch error:', error);
                 Swal.fire({
                     icon: 'error',
                     title: 'Error!',
-                    text: 'An error occurred while updating the plan.'
+                    text: `An error occurred while updating the plan: ${error.message}`
                 });
             });
         }
 
         // Update status directly (for quick approve/return buttons)
-        function updateStatus(planId, newStatus) {
+        updateStatus = function(planId, newStatus) {
             let remarks = '';
 
             if (newStatus === 'returned') {
@@ -867,7 +944,12 @@ $gadPlans = $gadPlans ?? [];
                     remarks: remarks
                 })
             })
-            .then(response => response.json())
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+                return response.json();
+            })
             .then(data => {
                 Swal.close();
 
@@ -892,7 +974,7 @@ $gadPlans = $gadPlans ?? [];
             })
             .catch(error => {
                 Swal.close();
-                console.error('Error:', error);
+                console.error('Error updating plan status:', error);
                 Swal.fire({
                     icon: 'error',
                     title: 'Error!',
@@ -902,7 +984,7 @@ $gadPlans = $gadPlans ?? [];
         }
 
         // Update plan status in table
-        function updatePlanStatusInTable(planId, status, remarks) {
+        updatePlanStatusInTable = function(planId, status, remarks) {
             const rows = document.querySelectorAll('#reviewTableBody tr');
 
             rows.forEach(row => {
@@ -921,8 +1003,15 @@ $gadPlans = $gadPlans ?? [];
                         row.dataset.status = 'returned';
                     }
 
-                    row.cells[3].innerHTML = statusBadge;
-                    row.cells[6].textContent = remarks || '-';
+                    // Update status cell (column 2) if it exists
+                    if (row.cells[2]) {
+                        row.cells[2].innerHTML = statusBadge;
+                    }
+
+                    // Update remarks cell (column 5) if it exists
+                    if (row.cells[5]) {
+                        row.cells[5].textContent = remarks || '-';
+                    }
 
                     // Update action buttons based on status
                     let actionButtons = `
@@ -950,12 +1039,16 @@ $gadPlans = $gadPlans ?? [];
                     }
 
                     actionButtons += '</div>';
-                    row.cells[7].innerHTML = actionButtons;
+
+                    // Update action buttons cell (column 6) if it exists
+                    if (row.cells[6]) {
+                        row.cells[6].innerHTML = actionButtons;
+                    }
                 }
             });
         }
         // Helper function to get status badge class
-        function getStatusBadgeClass(status) {
+        getStatusBadgeClass = function(status) {
             const statusLower = (status || '').toLowerCase();
             switch(statusLower) {
                 case 'approved': return 'success';
@@ -968,7 +1061,7 @@ $gadPlans = $gadPlans ?? [];
         }
 
         // Filter by status
-        function filterByStatus(status) {
+        filterByStatus = function(status) {
             const rows = document.querySelectorAll('#reviewTableBody tr');
 
             rows.forEach(row => {
@@ -1000,6 +1093,41 @@ $gadPlans = $gadPlans ?? [];
                 }
             });
         });
+
+        // Ensure functions are available globally
+        window.reviewPlan = reviewPlan;
+        window.updateStatus = updateStatus;
+        window.handleFormSubmit = handleFormSubmit;
+        window.submitReview = submitReview;
+        window.updatePlanStatusInTable = updatePlanStatusInTable;
+        window.getStatusBadgeClass = getStatusBadgeClass;
+        window.filterByStatus = filterByStatus;
+
+        // Alternative event delegation approach for buttons
+        document.addEventListener('click', function(e) {
+            // Handle Review button clicks
+            if (e.target.closest('button[onclick*="reviewPlan"]')) {
+                e.preventDefault();
+                const button = e.target.closest('button');
+                const onclickAttr = button.getAttribute('onclick');
+                const planIdMatch = onclickAttr.match(/reviewPlan\('([^']+)'\)/);
+                if (planIdMatch) {
+                    reviewPlan(planIdMatch[1]);
+                }
+            }
+
+            // Handle Update Status button clicks (Approve/Return/Reopen)
+            if (e.target.closest('button[onclick*="updateStatus"]')) {
+                e.preventDefault();
+                const button = e.target.closest('button');
+                const onclickAttr = button.getAttribute('onclick');
+                const statusMatch = onclickAttr.match(/updateStatus\('([^']+)',\s*'([^']+)'\)/);
+                if (statusMatch) {
+                    updateStatus(statusMatch[1], statusMatch[2]);
+                }
+            }
+        });
+
     </script>
 </body>
 </html>

@@ -245,9 +245,9 @@ class MemberController extends BaseController
             return $this->response->setJSON(['success' => false, 'message' => 'Unauthorized access']);
         }
 
-        $planId = $this->request->getPost('planId');
-        $status = $this->request->getPost('status');
-        $remarks = $this->request->getPost('remarks');
+        $planId = $this->request->getPost('reviewPlanId') ?: $this->request->getPost('planId');
+        $status = $this->request->getPost('reviewStatus') ?: $this->request->getPost('status');
+        $remarks = $this->request->getPost('reviewRemarks') ?: $this->request->getPost('remarks');
 
         if (!$planId || !$status) {
             return $this->response->setJSON(['success' => false, 'message' => 'Missing required fields']);
@@ -266,19 +266,33 @@ class MemberController extends BaseController
             $currentDateTime = date('Y-m-d H:i:s');
             $userId = $this->session->get('user_id');
 
+            // Validate user exists in employees table
+            if ($userId) {
+                $userExists = $db->table('employees')->where('emp_id', $userId)->countAllResults();
+                if (!$userExists) {
+                    return $this->response->setJSON(['success' => false, 'message' => 'Invalid user session']);
+                }
+            }
+
             switch (strtolower($status)) {
                 case 'approved':
-                    $data['approved_by'] = $userId;
-                    $data['approved_at'] = $currentDateTime;
+                    if ($userId) {
+                        $data['approved_by'] = $userId;
+                        $data['approved_at'] = $currentDateTime;
+                    }
                     break;
                 case 'returned':
-                    $data['returned_by'] = $userId;
-                    $data['returned_at'] = $currentDateTime;
+                    if ($userId) {
+                        $data['returned_by'] = $userId;
+                        $data['returned_at'] = $currentDateTime;
+                    }
                     break;
                 case 'pending':
                 case 'in review':
-                    $data['reviewed_by'] = $userId;
-                    $data['reviewed_at'] = $currentDateTime;
+                    if ($userId) {
+                        $data['reviewed_by'] = $userId;
+                        $data['reviewed_at'] = $currentDateTime;
+                    }
                     break;
             }
 

@@ -23,6 +23,11 @@ class FocalModel extends Model
         'status',
         'remarks',
         'approved_by',
+        'approved_at',
+        'reviewed_by',
+        'reviewed_at',
+        'returned_by',
+        'returned_at',
         'mfo_id',
         'pap_id',
         'file_attachments',
@@ -87,7 +92,12 @@ class FocalModel extends Model
 
     public function getGadPlans()
     {
-        return $this->findAll();
+        return $this->select('plan_id, activity, gad_objective, status, authors_division, startDate, endDate')
+                    ->whereNotIn('status', ['deleted'])
+                    ->where('activity IS NOT NULL')
+                    ->where('activity !=', '')
+                    ->orderBy('plan_id', 'DESC')
+                    ->findAll();
     }
 
     public function getGadPlanById($id)

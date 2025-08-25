@@ -102,6 +102,7 @@
                                 <thead class="table-dark">
                                     <tr>
                                         <th>GAD Activity ID</th>
+                                        <th>GAD Activity</th>
                                         <th>Particulars/Items of Expense</th>
                                         <th>Object of Expenses</th>
                                         <th>Source of Budget</th>

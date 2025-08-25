@@ -132,10 +132,15 @@ class OutputModel extends Model
                     o.*,
                     p.activity as gad_activity,
                     p.authors_division,
-                    d.division as office_name
+                    d.division as office_name,
+                    e.first_name as reviewed_by_first_name,
+                    e.last_name as reviewed_by_last_name,
+                    dr.division as reviewed_by_division
                 FROM output o
                 LEFT JOIN plan p ON p.plan_id = o.plan_id
                 LEFT JOIN divisions d ON d.div_id = p.authors_division
+                LEFT JOIN employees e ON e.emp_id = o.accepted_by
+                LEFT JOIN divisions dr ON dr.div_id = e.div_id
                 WHERE o.output_id = ?
             ", [$id]);
 
@@ -154,7 +159,10 @@ class OutputModel extends Model
                     'timestamp' => $result['timestamp'],
                     'gad_activity' => $result['gad_activity'],
                     'authors_division' => $result['authors_division'],
-                    'office_name' => $result['office_name']
+                    'office_name' => $result['office_name'],
+                    'reviewed_by_first_name' => $result['reviewed_by_first_name'],
+                    'reviewed_by_last_name' => $result['reviewed_by_last_name'],
+                    'reviewed_by_division' => $result['reviewed_by_division']
                 ];
             }
 

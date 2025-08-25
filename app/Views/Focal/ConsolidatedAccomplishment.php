@@ -119,7 +119,7 @@
     <nav id="sidebar" class="sidebar">
         <div class="sidebar-header">
             <h4 class="text-white mb-0">
-                <i class="bi bi-shield-check"></i> GAD Management System
+                <i class="bi bi-gender-ambiguous" style="font-size: 2rem; color: rgb(255, 255, 255);"></i> GAD Monitoring System
             </h4>
         </div>
         <div class="sidebar-content">
@@ -127,8 +127,9 @@
                 <div class="text-white d-flex align-items-center">
                     <i class="bi bi-person-circle fs-4 me-2"></i>
                     <div>
-                        <div class="fw-bold"><?php echo esc($first_name . ' ' . $last_name); ?></div>
-                        <small class="text-light">Administrator</small>
+                        <div class="fw-bold"><?php echo esc(($first_name ?? 'Admin') . ' ' . ($last_name ?? 'User')); ?></div>
+                        <small class="text-light d-block"><?php echo esc($role_name ?? 'Focal Person'); ?></small>
+                        <small class="text-light opacity-75"><?php echo esc($division_name ?? 'GAD Office'); ?></small>
                     </div>
                 </div>
             </div>

@@ -132,7 +132,7 @@ $gadPlans = $gadPlans ?? [];
     <nav id="sidebar" class="sidebar">
         <div class="sidebar-header">
             <h4 class="text-white mb-0">
-                <i class="bi bi-shield-check"></i> GAD Management System
+                <i class="bi bi-gender-ambiguous" style="font-size: 2rem; color: rgb(255, 255, 255);"></i> GAD Monitoring System
             </h4>
         </div>
         <div class="sidebar-content">
@@ -141,7 +141,8 @@ $gadPlans = $gadPlans ?? [];
                     <i class="bi bi-person-circle fs-4 me-2"></i>
                     <div>
                         <div class="fw-bold"><?php echo esc(($first_name ?? 'Admin') . ' ' . ($last_name ?? 'User')); ?></div>
-                        <small class="text-light">Administrator</small>
+                        <small class="text-light d-block"><?php echo esc($role_name ?? 'Focal Person'); ?></small>
+                        <small class="text-light opacity-75"><?php echo esc($division_name ?? 'GAD Office'); ?></small>
                     </div>
                 </div>
             </div>
@@ -508,9 +509,9 @@ $gadPlans = $gadPlans ?? [];
                     'X-Requested-With': 'XMLHttpRequest'
                 },
                 body: new URLSearchParams({
-                    planId: planId,
-                    status: status,
-                    remarks: remarks
+                    reviewPlanId: planId,
+                    reviewStatus: status,
+                    reviewRemarks: remarks
                 })
             })
             .then(response => response.json())
@@ -584,7 +585,7 @@ $gadPlans = $gadPlans ?? [];
                     // Populate modal with plan details
                     document.getElementById('reviewPlanId').value = planId;
                     document.getElementById('displayPlanId').textContent = `GAD-${String(planId).padStart(3, '0')}`;
-                    document.getElementById('displayPlanTitle').textContent = plan.issue_mandate || plan.activity || 'N/A';
+                    document.getElementById('displayPlanTitle').textContent = plan.activity || 'No activity description';
                     document.getElementById('displayDivision').textContent = plan.division_name || 'Unknown Division';
 
                     // Budget and HGDG information
@@ -601,7 +602,10 @@ $gadPlans = $gadPlans ?? [];
                     }
 
                     // Review information
-                    document.getElementById('displayCurrentStatus').innerHTML = `<span class="badge bg-${getStatusBadgeClass(plan.status)}">${plan.status || 'Pending'}</span>`;
+                    const statusElement = document.getElementById('displayCurrentStatus');
+                    if (statusElement) {
+                        statusElement.innerHTML = `<span class="badge bg-${getStatusBadgeClass(plan.status)}">${plan.status || 'Pending'}</span>`;
+                    }
 
                     // Review date - show the most recent action date
                     let reviewDate = 'Not reviewed yet';
@@ -618,7 +622,10 @@ $gadPlans = $gadPlans ?? [];
                         reviewAction = ' (Reviewed)';
                     }
 
-                    document.getElementById('displayReviewDate').textContent = reviewDate + reviewAction;
+                    const reviewDateElement = document.getElementById('displayReviewDate');
+                    if (reviewDateElement) {
+                        reviewDateElement.textContent = reviewDate + reviewAction;
+                    }
 
                     // Reviewed by - show the division of who performed the most recent action
                     let reviewedBy = 'Not reviewed yet';
@@ -631,10 +638,16 @@ $gadPlans = $gadPlans ?? [];
                         reviewedBy = `${plan.reviewed_by_division} (Reviewed)`;
                     }
 
-                    document.getElementById('displayReviewedBy').textContent = reviewedBy;
+                    const reviewedByElement = document.getElementById('displayReviewedBy');
+                    if (reviewedByElement) {
+                        reviewedByElement.textContent = reviewedBy;
+                    }
 
                     // Remarks
-                    document.getElementById('displayRemarks').textContent = plan.remarks || 'No remarks available';
+                    const remarksElement = document.getElementById('displayRemarks');
+                    if (remarksElement) {
+                        remarksElement.textContent = plan.remarks || 'No remarks available';
+                    }
 
                     // Additional details
                     const issueElement = document.getElementById('displayIssueMandate');
@@ -655,6 +668,25 @@ $gadPlans = $gadPlans ?? [];
                     // Show modal
                     const modal = new bootstrap.Modal(document.getElementById('reviewPlanModal'));
                     modal.show();
+
+                    // Ensure modal is fully rendered before populating additional details
+                    setTimeout(() => {
+                        // Additional details that might need the modal to be fully rendered
+                        const issueElement = document.getElementById('displayIssueMandate');
+                        if (issueElement) issueElement.textContent = plan.issue_mandate || 'N/A';
+
+                        const causeElement = document.getElementById('displayCause');
+                        if (causeElement) causeElement.textContent = plan.cause || 'N/A';
+
+                        const objectiveElement = document.getElementById('displayObjective');
+                        if (objectiveElement) {
+                            if (Array.isArray(plan.gad_objective)) {
+                                objectiveElement.textContent = plan.gad_objective.join(', ');
+                            } else {
+                                objectiveElement.textContent = plan.gad_objective || 'N/A';
+                            }
+                        }
+                    }, 100);
                 } else {
                     Swal.fire({
                         icon: 'error',

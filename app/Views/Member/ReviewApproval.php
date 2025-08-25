@@ -373,7 +373,7 @@ $gadPlans = $gadPlans ?? [];
                                                         $status = strtolower($accomplishment['status']);
                                                         $badgeClass = match($status) {
                                                             'pending' => 'bg-secondary',
-                                                            'completed' => 'bg-warning',
+                                                            'completed' => 'bg-success',
                                                             'under review' => 'bg-info',
                                                             'approved' => 'bg-success',
                                                             'returned' => 'bg-danger',
@@ -382,7 +382,7 @@ $gadPlans = $gadPlans ?? [];
                                                         };
                                                         $statusText = match($status) {
                                                             'pending' => 'Draft',
-                                                            'completed' => 'Submitted',
+                                                            'completed' => 'Completed',
                                                             'under review' => 'Under Review',
                                                             'approved' => 'Approved',
                                                             'returned' => 'Returned',
@@ -419,22 +419,32 @@ $gadPlans = $gadPlans ?? [];
                                                     </td>
                                                     <td>
                                                         <div class="btn-group-vertical" role="group">
+                                                            <?php
+                                                            $status = strtolower($accomplishment['status'] ?? 'pending');
+                                                            if (in_array($status, ['completed', 'returned'])):
+                                                            ?>
+                                                            <!-- For completed/returned items: Show View and Reopen -->
+                                                            <button class="btn btn-sm btn-outline-info mb-1" onclick="reviewAccomplishment('<?php echo esc($accomplishment['output_id']); ?>')">
+                                                                <i class="bi bi-eye"></i> View
+                                                            </button>
+                                                            <button class="btn btn-sm btn-outline-warning" onclick="updateStatus('<?php echo esc($accomplishment['output_id']); ?>', 'under review')">
+                                                                <i class="bi bi-arrow-clockwise"></i> Reopen
+                                                            </button>
+                                                            <?php elseif (in_array($status, ['pending', 'under review'])): ?>
+                                                            <!-- For pending/under review items: Show Review, Complete, Return -->
                                                             <button class="btn btn-sm btn-outline-primary mb-1" onclick="reviewAccomplishment('<?php echo esc($accomplishment['output_id']); ?>')">
                                                                 <i class="bi bi-eye"></i> Review
                                                             </button>
-                                                            <?php
-                                                            $status = strtolower($accomplishment['status'] ?? 'pending');
-                                                            if (in_array($status, ['completed', 'under review', 'returned'])):
-                                                            ?>
-                                                            <button class="btn btn-sm btn-outline-success mb-1" onclick="updateStatus('<?php echo esc($accomplishment['output_id']); ?>', 'approved')">
-                                                                <i class="bi bi-check"></i> Approve
+                                                            <button class="btn btn-sm btn-outline-success mb-1" onclick="updateStatus('<?php echo esc($accomplishment['output_id']); ?>', 'completed')">
+                                                                <i class="bi bi-check"></i> Complete
                                                             </button>
                                                             <button class="btn btn-sm btn-outline-danger" onclick="updateStatus('<?php echo esc($accomplishment['output_id']); ?>', 'returned')">
                                                                 <i class="bi bi-x"></i> Return
                                                             </button>
                                                             <?php elseif ($status === 'approved'): ?>
-                                                            <button class="btn btn-sm btn-outline-warning" onclick="updateStatus('<?php echo esc($accomplishment['output_id']); ?>', 'under review')">
-                                                                <i class="bi bi-arrow-clockwise"></i> Reopen
+                                                            <!-- For approved items: Show View only -->
+                                                            <button class="btn btn-sm btn-outline-info" onclick="reviewAccomplishment('<?php echo esc($accomplishment['output_id']); ?>')">
+                                                                <i class="bi bi-eye"></i> View
                                                             </button>
                                                             <?php endif; ?>
                                                         </div>
@@ -522,9 +532,8 @@ $gadPlans = $gadPlans ?? [];
                                     <label for="reviewStatus" class="form-label">Status *</label>
                                     <select class="form-select" id="reviewStatus" name="reviewStatus" required>
                                         <option value="">Select Status</option>
-                                        <option value="approved">Approved</option>
+                                        <option value="completed">Complete</option>
                                         <option value="returned">Returned</option>
-                                        <option value="under review">Under Review</option>
                                     </select>
                                     <div class="invalid-feedback">
                                         Please select a status.
@@ -674,6 +683,10 @@ $gadPlans = $gadPlans ?? [];
             rows.forEach(row => {
                 const reviewButton = row.querySelector('button[onclick*="reviewAccomplishment(\'' + outputId + '\')"]');
                 if (reviewButton) {
+                    // Get current status from the row
+                    const currentStatus = row.dataset.status;
+                    const isReadOnly = ['completed', 'returned', 'approved'].includes(currentStatus);
+
                     document.getElementById('reviewAccomplishmentId').value = outputId;
                     document.getElementById('displayAccomplishmentId').textContent = row.cells[0].textContent;
                     document.getElementById('displaySubmittedBy').textContent = row.cells[1].textContent;
@@ -691,12 +704,53 @@ $gadPlans = $gadPlans ?? [];
                         document.getElementById('fileSection').style.display = 'none';
                     }
 
-                    // Set review date to today
-                    document.getElementById('reviewDate').value = new Date().toISOString().split('T')[0];
+                    // Configure modal based on status
+                    const modalTitle = document.getElementById('reviewAccomplishmentModalLabel');
+                    const reviewForm = document.querySelector('#reviewAccomplishmentModal .row:has(#reviewStatus)');
+                    const remarksSection = document.querySelector('#reviewAccomplishmentModal .mb-3:has(#reviewRemarks)');
+                    const reviewedBySection = document.querySelector('#reviewAccomplishmentModal .mb-3:has(#reviewedBy)');
+                    const saveButton = document.querySelector('#reviewAccomplishmentModal .btn-primary');
 
-                    // Clear form
-                    document.getElementById('reviewStatus').value = '';
-                    document.getElementById('reviewRemarks').value = '';
+                    if (isReadOnly) {
+                        // View-only mode
+                        modalTitle.innerHTML = '<i class="bi bi-eye"></i> View GAD Accomplishment';
+
+                        // Hide form fields
+                        reviewForm.style.display = 'none';
+                        saveButton.style.display = 'none';
+
+                        // Show existing remarks and reviewer info
+                        const remarksText = row.cells[7].textContent.trim();
+                        const reviewerText = row.cells[6].innerHTML;
+
+                        document.getElementById('reviewRemarks').value = remarksText !== '-' ? remarksText : 'No remarks provided';
+                        document.getElementById('reviewRemarks').readOnly = true;
+                        document.getElementById('reviewedBy').value = reviewerText.replace(/<[^>]*>/g, '').trim() || 'Not reviewed';
+
+                        // Show remarks and reviewer sections as read-only
+                        remarksSection.style.display = 'block';
+                        reviewedBySection.style.display = 'block';
+
+                    } else {
+                        // Edit mode
+                        modalTitle.innerHTML = '<i class="bi bi-eye"></i> Review GAD Accomplishment';
+
+                        // Show form fields
+                        reviewForm.style.display = 'block';
+                        saveButton.style.display = 'inline-block';
+
+                        // Set review date to today
+                        document.getElementById('reviewDate').value = new Date().toISOString().split('T')[0];
+
+                        // Clear form
+                        document.getElementById('reviewStatus').value = '';
+                        document.getElementById('reviewRemarks').value = '';
+                        document.getElementById('reviewRemarks').readOnly = false;
+
+                        // Show remarks and reviewer sections for editing
+                        remarksSection.style.display = 'block';
+                        reviewedBySection.style.display = 'block';
+                    }
                 }
             });
 
@@ -710,10 +764,10 @@ $gadPlans = $gadPlans ?? [];
             let confirmButtonText = '';
 
             switch(newStatus) {
-                case 'approved':
-                    title = 'Approve Accomplishment';
-                    text = 'Are you sure you want to approve this accomplishment?';
-                    confirmButtonText = 'Yes, Approve';
+                case 'completed':
+                    title = 'Complete Accomplishment';
+                    text = 'Are you sure you want to mark this accomplishment as completed?';
+                    confirmButtonText = 'Yes, Complete';
                     break;
                 case 'returned':
                     title = 'Return Accomplishment';
@@ -757,8 +811,8 @@ $gadPlans = $gadPlans ?? [];
                             }
                         });
                     } else {
-                        const defaultRemarks = newStatus === 'approved' ?
-                            'Accomplishment approved by GAD Member' :
+                        const defaultRemarks = newStatus === 'completed' ?
+                            'Accomplishment completed by GAD Member' :
                             'Accomplishment marked under review';
                         updateAccomplishmentStatus(outputId, newStatus, defaultRemarks);
                     }
@@ -843,8 +897,8 @@ $gadPlans = $gadPlans ?? [];
                     statusText = 'Draft';
                     break;
                 case 'completed':
-                    badgeClass = 'bg-warning';
-                    statusText = 'Submitted';
+                    badgeClass = 'bg-success';
+                    statusText = 'Completed';
                     break;
                 case 'under review':
                     badgeClass = 'bg-info';
