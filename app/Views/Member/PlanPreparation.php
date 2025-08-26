@@ -123,6 +123,7 @@
                                         <th>Gender Issue/GAD Mandate</th>
                                         <th>Cause of Gender Issue</th>
                                         <th>GAD Objective</th>
+                                        <th>GAD Activity</th>
                                         <th>Relevant MFO/PAP</th>
                                         <th>Performance Targets</th>
                                         <th>Timeline</th>
@@ -138,6 +139,7 @@
                                         <td>Gender disparities in leadership positions</td>
                                         <td>Limited opportunities for women in senior roles</td>
                                         <td>Increase women's representation in leadership by 25%</td>
+                                        <td>Conduct leadership development program for women employees</td>
                                         <td>MFO001 - Human Resource Development</td>
                                         <td>Train 50 women leaders, promote 10 to senior positions</td>
                                         <td>Jan 2025 - Dec 2025</td>
@@ -162,6 +164,7 @@
                                         <td>Workplace harassment and discrimination</td>
                                         <td>Lack of awareness and reporting mechanisms</td>
                                         <td>Establish zero-tolerance policy and reporting system</td>
+                                        <td>Develop and implement anti-harassment policy with reporting mechanisms</td>
                                         <td>MFO002 - Policy Development</td>
                                         <td>Implement policy, train 100 employees, reduce incidents by 80%</td>
                                         <td>Mar 2025 - Sep 2025</td>
@@ -186,6 +189,7 @@
                                         <td>Unequal access to professional development</td>
                                         <td>Gender bias in training selection and opportunities</td>
                                         <td>Ensure equal access to professional development programs</td>
+                                        <td>Implement gender-responsive training and development program</td>
                                         <td>MFO003 - Capacity Building</td>
                                         <td>Provide training to 200 employees (50% women), track participation</td>
                                         <td>Jun 2025 - Nov 2025</td>
@@ -268,7 +272,15 @@
                                 Please provide the GAD objective or result statement.
                             </div>
                         </div>
-                        
+
+                        <div class="mb-3">
+                            <label for="gadActivity" class="form-label">GAD Activity <span class="text-danger">*</span></label>
+                            <textarea class="form-control" id="gadActivity" name="gadActivity" rows="3" placeholder="Describe the specific GAD activity to be implemented..." required></textarea>
+                            <div class="invalid-feedback">
+                                Please provide the GAD activity description.
+                            </div>
+                        </div>
+
                         <div class="mb-3">
                             <label for="relevantMfoPap" class="form-label">Relevant Organization/MFO/PAP or PPA <span class="text-danger">*</span></label>
                             <select class="form-select" id="relevantMfoPap" name="relevantMfoPap" required>

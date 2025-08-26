@@ -148,7 +148,7 @@ if (!session()->get('isLoggedIn') || session()->get('role_id') != 1) {
     .table {
       margin-bottom: 0;
       font-size: 1.1rem;
-      min-width: 1700px;
+      min-width: 1900px;
     }
 
     .table th {
@@ -703,26 +703,27 @@ if (!session()->get('isLoggedIn') || session()->get('role_id') != 1) {
                       <table class="table table-hover">
                         <thead>
                           <tr>
-                            <th style="width: 6%;">Activity ID</th>
-                            <th style="width: 12%;">Gender Issue / GAD Mandate</th>
-                            <th style="width: 10%;">Cause of Gender Issue</th>
-                            <th style="width: 10%;">GAD Objective</th>
-                            <th style="width: 8%;">Relevant MFO/PAP</th>
-                            <th style="width: 22%;">Performance Targets</th>
+                            <th style="width: 5%;">Activity ID</th>
+                            <th style="width: 10%;">Gender Issue / GAD Mandate</th>
+                            <th style="width: 8%;">Cause of Gender Issue</th>
+                            <th style="width: 8%;">GAD Objective</th>
+                            <th style="width: 12%;">GAD Activity</th>
+                            <th style="width: 7%;">Relevant MFO/PAP</th>
+                            <th style="width: 20%;">Performance Targets</th>
                             <th style="width: 6%;">Timeline</th>
-                            <th style="width: 8%;">Responsible Units</th>
+                            <th style="width: 7%;">Responsible Units</th>
                             <th style="width: 5%;">Budget</th>
                             <th style="width: 4%;">HGDG Score</th>
-                            <th style="width: 5%;">Attachments</th>
-                            <th style="width: 6%;">Submitted by</th>
-                            <th style="width: 4%;">Status</th>
-                            <th style="width: 6%;">Actions</th>
+                            <th style="width: 4%;">Attachments</th>
+                            <th style="width: 5%;">Submitted by</th>
+                            <th style="width: 3%;">Status</th>
+                            <th style="width: 5%;">Actions</th>
                         </tr>
                       </thead>
                       <tbody id="gadPlanTableBody">
                         <?php if (!isset($gadPlans) || empty($gadPlans)): ?>
                         <tr>
-                          <td colspan="14" class="text-center">No GAD plans found.</td>
+                          <td colspan="15" class="text-center">No GAD plans found.</td>
                         </tr>
                         <?php else: ?>
                         <?php foreach ($gadPlans as $plan): ?>
@@ -757,6 +758,11 @@ if (!session()->get('isLoggedIn') || session()->get('role_id') != 1) {
                                 echo esc($plan['gad_objective'] ?? 'N/A');
                             }
                             ?>
+                          </td>
+                          <td class="text-content">
+                            <div style="max-width: 250px; word-wrap: break-word; line-height: 1.4;">
+                              <?php echo esc($plan['activity'] ?? 'N/A'); ?>
+                            </div>
                           </td>
                           <td class="text-content">
                             <?php
