@@ -9,9 +9,12 @@ use App\Models\MemberModel;
 use App\Models\AuditTrailModel;
 use App\Models\DivisionModel;
 use App\Models\OutputModel;
+use App\Traits\DivisionAccessTrait;
 
 class MemberController extends BaseController
 {
+    use DivisionAccessTrait;
+
     protected $memberModel;
     protected $divisionModel;
 
@@ -36,31 +39,39 @@ class MemberController extends BaseController
         // Get dashboard statistics
         $db = \Config\Database::connect();
         $userId = $this->session->get('user_id');
+        $userDivisionId = $this->getUserDivisionId();
 
-        // Total GAD Plans
-        $totalPlans = $db->table('plan')->where('status !=', 'Draft')->countAllResults();
+        // Total GAD Plans (filtered by division unless admin)
+        $totalPlansBuilder = $db->table('plan')->where('status !=', 'Draft');
+        $this->applyDivisionFilter($totalPlansBuilder, 'plan');
+        $totalPlans = $totalPlansBuilder->countAllResults();
 
-        // Plans pending review (not yet reviewed by this member)
-        $pendingPlans = $db->table('plan')
+        // Plans pending review (not yet reviewed by this member, filtered by division)
+        $pendingPlansBuilder = $db->table('plan')
             ->where('status', 'Pending')
-            ->orWhere('status', 'Submitted')
-            ->countAllResults();
+            ->orWhere('status', 'Submitted');
+        $this->applyDivisionFilter($pendingPlansBuilder, 'plan');
+        $pendingPlans = $pendingPlansBuilder->countAllResults();
 
-        // Plans approved by this member
-        $approvedPlans = $db->table('plan')
-            ->where('approved_by', $userId)
-            ->countAllResults();
+        // Plans approved by this member (filtered by division)
+        $approvedPlansBuilder = $db->table('plan')
+            ->where('approved_by', $userId);
+        $this->applyDivisionFilter($approvedPlansBuilder, 'plan');
+        $approvedPlans = $approvedPlansBuilder->countAllResults();
 
-        // Plans returned by this member
-        $returnedPlans = $db->table('plan')
-            ->where('returned_by', $userId)
-            ->countAllResults();
+        // Plans returned by this member (filtered by division)
+        $returnedPlansBuilder = $db->table('plan')
+            ->where('returned_by', $userId);
+        $this->applyDivisionFilter($returnedPlansBuilder, 'plan');
+        $returnedPlans = $returnedPlansBuilder->countAllResults();
 
-        // Recent plans for review (last 10)
-        $recentPlans = $db->table('plan p')
+        // Recent plans for review (last 10, filtered by division)
+        $recentPlansBuilder = $db->table('plan p')
             ->select('p.*, d.division')
             ->join('divisions d', 'p.authors_division = d.div_id', 'left')
-            ->where('p.status !=', 'Draft')
+            ->where('p.status !=', 'Draft');
+        $this->applyDivisionFilter($recentPlansBuilder, 'p');
+        $recentPlans = $recentPlansBuilder
             ->orderBy('p.created_at', 'DESC')
             ->limit(10)
             ->get()
@@ -120,7 +131,7 @@ class MemberController extends BaseController
 
         $focalModel = new \App\Models\MemberModel();
 
-        // Get all GAD plans with division and review information
+        // Get all GAD plans with division and review information (filtered by division)
         $db = \Config\Database::connect();
         $builder = $db->table('plan p');
         $builder->select('p.*, d.division,
@@ -132,6 +143,10 @@ class MemberController extends BaseController
         $builder->join('employees ea', 'p.approved_by = ea.emp_id', 'left');
         $builder->join('employees eret', 'p.returned_by = eret.emp_id', 'left');
         $builder->where('p.status !=', 'Draft'); // Only show non-draft plans
+
+        // Apply division filter unless user is admin
+        $this->applyDivisionFilter($builder, 'p');
+
         $builder->orderBy('p.plan_id', 'DESC');
 
         $gadPlans = $builder->get()->getResultArray();

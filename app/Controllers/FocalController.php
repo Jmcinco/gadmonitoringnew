@@ -4,9 +4,12 @@ namespace App\Controllers;
 use App\Models\ObjectOfExpenseModel;
 use App\Models\AuditTrailModel;
 use CodeIgniter\Controller;
+use App\Traits\DivisionAccessTrait;
 
 class FocalController extends Controller
 {
+    use DivisionAccessTrait;
+
     protected $session;
 
     public function __construct()
@@ -24,48 +27,67 @@ class FocalController extends Controller
         // Get dashboard statistics
         $db = \Config\Database::connect();
 
-        // Total GAD Plans
-        $totalPlans = $db->table('plan')->countAllResults();
+        // Total GAD Plans (filtered by division unless admin)
+        $totalPlansBuilder = $db->table('plan');
+        $this->applyDivisionFilter($totalPlansBuilder, 'plan');
+        $totalPlans = $totalPlansBuilder->countAllResults();
 
-        // Plans by status
-        $pendingPlans = $db->table('plan')->where('status', 'Pending')->countAllResults();
-        $approvedPlans = $db->table('plan')->where('status', 'Approved')->countAllResults();
-        $returnedPlans = $db->table('plan')->where('status', 'Returned')->countAllResults();
-        $draftPlans = $db->table('plan')->where('status', 'Draft')->countAllResults();
+        // Plans by status (filtered by division)
+        $pendingPlansBuilder = $db->table('plan')->where('status', 'Pending');
+        $this->applyDivisionFilter($pendingPlansBuilder, 'plan');
+        $pendingPlans = $pendingPlansBuilder->countAllResults();
 
-        // Budget calculations
-        $totalBudgetQuery = $db->table('budget b')
+        $approvedPlansBuilder = $db->table('plan')->where('status', 'Approved');
+        $this->applyDivisionFilter($approvedPlansBuilder, 'plan');
+        $approvedPlans = $approvedPlansBuilder->countAllResults();
+
+        $returnedPlansBuilder = $db->table('plan')->where('status', 'Returned');
+        $this->applyDivisionFilter($returnedPlansBuilder, 'plan');
+        $returnedPlans = $returnedPlansBuilder->countAllResults();
+
+        $draftPlansBuilder = $db->table('plan')->where('status', 'Draft');
+        $this->applyDivisionFilter($draftPlansBuilder, 'plan');
+        $draftPlans = $draftPlansBuilder->countAllResults();
+
+        // Budget calculations (filtered by division)
+        $totalBudgetBuilder = $db->table('budget b')
             ->select('COALESCE(SUM(b.amount), 0) as total')
-            ->join('plan p', 'p.plan_id = b.plan_id', 'inner')
-            ->get();
+            ->join('plan p', 'p.plan_id = b.plan_id', 'inner');
+        $this->applyDivisionFilter($totalBudgetBuilder, 'p');
+        $totalBudgetQuery = $totalBudgetBuilder->get();
         $totalBudget = $totalBudgetQuery->getRow()->total ?? 0;
 
-        $approvedBudgetQuery = $db->table('budget b')
+        $approvedBudgetBuilder = $db->table('budget b')
             ->select('COALESCE(SUM(b.amount), 0) as total')
             ->join('plan p', 'p.plan_id = b.plan_id', 'inner')
-            ->where('p.status', 'Approved')
-            ->get();
+            ->where('p.status', 'Approved');
+        $this->applyDivisionFilter($approvedBudgetBuilder, 'p');
+        $approvedBudgetQuery = $approvedBudgetBuilder->get();
         $approvedBudget = $approvedBudgetQuery->getRow()->total ?? 0;
 
-        $pendingBudgetQuery = $db->table('budget b')
+        $pendingBudgetBuilder = $db->table('budget b')
             ->select('COALESCE(SUM(b.amount), 0) as total')
             ->join('plan p', 'p.plan_id = b.plan_id', 'inner')
-            ->where('p.status', 'Pending')
-            ->get();
+            ->where('p.status', 'Pending');
+        $this->applyDivisionFilter($pendingBudgetBuilder, 'p');
+        $pendingBudgetQuery = $pendingBudgetBuilder->get();
         $pendingBudget = $pendingBudgetQuery->getRow()->total ?? 0;
 
-        $draftBudgetQuery = $db->table('budget b')
+        $draftBudgetBuilder = $db->table('budget b')
             ->select('COALESCE(SUM(b.amount), 0) as total')
             ->join('plan p', 'p.plan_id = b.plan_id', 'inner')
-            ->where('p.status', 'Draft')
-            ->get();
+            ->where('p.status', 'Draft');
+        $this->applyDivisionFilter($draftBudgetBuilder, 'p');
+        $draftBudgetQuery = $draftBudgetBuilder->get();
         $draftBudget = $draftBudgetQuery->getRow()->total ?? 0;
 
-        // Recent plans (last 10)
-        $recentPlans = $db->table('plan p')
+        // Recent plans (last 10, filtered by division)
+        $recentPlansBuilder = $db->table('plan p')
             ->select('p.*, d.division, COALESCE(SUM(b.amount), 0) as total_budget')
             ->join('divisions d', 'p.authors_division = d.div_id', 'left')
-            ->join('budget b', 'p.plan_id = b.plan_id', 'left')
+            ->join('budget b', 'p.plan_id = b.plan_id', 'left');
+        $this->applyDivisionFilter($recentPlansBuilder, 'p');
+        $recentPlans = $recentPlansBuilder
             ->groupBy('p.plan_id, d.division')
             ->orderBy('p.created_at', 'DESC')
             ->limit(10)
@@ -125,7 +147,8 @@ class FocalController extends Controller
     $paps = $papModel->getAllWithMfo();
 
     $focalModel = new \App\Models\FocalModel();
-    $gadPlans = $focalModel->getGadPlansWithAmount();
+    $userDivisionId = $this->getUserDivisionId();
+    $gadPlans = $focalModel->getGadPlansWithAmount($userDivisionId);
 
     // Create division lookup array for efficiency
     $divisionLookup = [];
@@ -190,6 +213,36 @@ class FocalController extends Controller
 }
 
 
+    public function debugSession()
+    {
+        // Simple debug endpoint to check session state
+        $sessionData = [
+            'isLoggedIn' => $this->session->get('isLoggedIn'),
+            'user_id' => $this->session->get('user_id'),
+            'role_id' => $this->session->get('role_id'),
+            'div_id' => $this->session->get('div_id'),
+            'first_name' => $this->session->get('first_name'),
+            'last_name' => $this->session->get('last_name')
+        ];
+
+        $userDivisionId = $this->getUserDivisionId();
+        $canViewAll = $this->canViewAllDivisions();
+
+        $focalModel = new \App\Models\FocalModel();
+        $allPlans = $focalModel->getGadPlans(null); // Get all plans
+        $filteredPlans = $focalModel->getGadPlans($userDivisionId); // Get filtered plans
+
+        return $this->response->setJSON([
+            'session' => $sessionData,
+            'userDivisionId' => $userDivisionId,
+            'canViewAllDivisions' => $canViewAll,
+            'allPlansCount' => count($allPlans),
+            'filteredPlansCount' => count($filteredPlans),
+            'firstPlan' => !empty($allPlans) ? $allPlans[0] : null,
+            'firstFilteredPlan' => !empty($filteredPlans) ? $filteredPlans[0] : null
+        ]);
+    }
+
 public function budgetCrafting()
     {
         if (!$this->session->get('isLoggedIn') || $this->session->get('role_id') != 1) {
@@ -222,11 +275,35 @@ public function budgetCrafting()
             case 4: $defaultRoleName = 'Administrator'; break;
         }
 
+        // Get user's division ID for filtering
+        $userDivisionId = $this->getUserDivisionId();
+
+
+
+        // Apply division filtering for non-admin users
+        $divisionFilter = null;
+        if (!$this->canViewAllDivisions()) {
+            $divisionFilter = $userDivisionId;
+        }
+
+
+
+        // Get plans with proper division filtering
+        $plans = $focalModel->getGadPlans($divisionFilter);
+
+        // ADDITIONAL SECURITY: For non-admin users, double-check division filtering
+        if (!$this->canViewAllDivisions() && $userDivisionId !== null) {
+            $plans = array_filter($plans, function($plan) use ($userDivisionId) {
+                return (int)$plan['authors_division'] === (int)$userDivisionId;
+            });
+        }
+
+
         $data = [
-            'budgetItems' => $budgetModel->getBudgetItems(),
+            'budgetItems' => $budgetModel->getBudgetItems($divisionFilter),
             'objectsOfExpense' => $objectOfExpenseModel->findAll(),
             'sourcesOfFund' => $sourceOfFundModel->findAll(),
-            'plans' => $focalModel->getGadPlans(),
+            'plans' => $plans,
             'first_name' => $userInfo['first_name'] ?? $this->session->get('first_name'),
             'last_name' => $userInfo['last_name'] ?? $this->session->get('last_name'),
             'role_name' => $userInfo['role_name'] ?? $defaultRoleName,
@@ -246,9 +323,25 @@ public function budgetCrafting()
         }
 
         $budgetModel = new \App\Models\BudgetModel();
+        $planId = $this->request->getPost('plan_id');
+
+        // Check if the plan belongs to user's division
+        $db = \Config\Database::connect();
+        $plan = $db->table('plan')
+                   ->select('authors_division')
+                   ->where('plan_id', $planId)
+                   ->get()
+                   ->getRowArray();
+
+        if (!$plan || !$this->canAccessPlan($plan['authors_division'])) {
+            return $this->response->setJSON([
+                'success' => false,
+                'message' => 'Access denied. You can only add budget items to plans from your division.'
+            ])->setStatusCode(403);
+        }
 
         $data = [
-            'plan_id' => $this->request->getPost('plan_id'),
+            'plan_id' => $planId,
             'obj_id' => $this->request->getPost('obj_id'),
             'src_id' => $this->request->getPost('src_id'),
             'particulars' => $this->request->getPost('particulars'),
@@ -307,9 +400,34 @@ public function budgetCrafting()
 
         $budgetModel = new \App\Models\BudgetModel();
         $act_id = $this->request->getPost('act_id');
+        $planId = $this->request->getPost('plan_id');
+
+        // Check if the budget item belongs to user's division
+        $userDivisionId = $this->getUserDivisionId();
+        if (!$this->canViewAllDivisions() && !$budgetModel->belongsToDivision($act_id, $userDivisionId)) {
+            return $this->response->setJSON([
+                'success' => false,
+                'message' => 'Access denied. You can only edit budget items from your division.'
+            ])->setStatusCode(403);
+        }
+
+        // Check if the plan belongs to user's division
+        $db = \Config\Database::connect();
+        $plan = $db->table('plan')
+                   ->select('authors_division')
+                   ->where('plan_id', $planId)
+                   ->get()
+                   ->getRowArray();
+
+        if (!$plan || !$this->canAccessPlan($plan['authors_division'])) {
+            return $this->response->setJSON([
+                'success' => false,
+                'message' => 'Access denied. You can only edit budget items for plans from your division.'
+            ])->setStatusCode(403);
+        }
 
         $data = [
-            'plan_id' => $this->request->getPost('plan_id'),
+            'plan_id' => $planId,
             'obj_id' => $this->request->getPost('obj_id'),
             'src_id' => $this->request->getPost('src_id'),
             'particulars' => $this->request->getPost('particulars'),
@@ -372,6 +490,15 @@ public function budgetCrafting()
         $budgetModel = new \App\Models\BudgetModel();
         $act_id = $this->request->getPost('act_id');
 
+        // Check if the budget item belongs to user's division
+        $userDivisionId = $this->getUserDivisionId();
+        if (!$this->canViewAllDivisions() && !$budgetModel->belongsToDivision($act_id, $userDivisionId)) {
+            return $this->response->setJSON([
+                'success' => false,
+                'message' => 'Access denied. You can only delete budget items from your division.'
+            ])->setStatusCode(403);
+        }
+
         $validation = \Config\Services::validation();
         $validation->setRules([
             'act_id' => 'required|is_natural_no_zero|is_not_unique[budget.act_id]'
@@ -431,6 +558,10 @@ public function budgetCrafting()
             $builder->join('employees er', 'p.reviewed_by = er.emp_id', 'left');
             $builder->join('employees ea', 'p.approved_by = ea.emp_id', 'left');
             $builder->join('employees eret', 'p.returned_by = eret.emp_id', 'left');
+
+            // Apply division filter unless user is admin
+            $this->applyDivisionFilter($builder, 'p');
+
             $builder->groupBy('p.plan_id, d.division, p.responsible_units, er.first_name, er.last_name, ea.first_name, ea.last_name, eret.first_name, eret.last_name');
             $builder->orderBy('p.created_at', 'DESC');
 
@@ -547,6 +678,10 @@ public function budgetCrafting()
         $builder->join('employees eret', 'p.returned_by = eret.emp_id', 'left');
         $builder->join('divisions dret', 'eret.div_id = dret.div_id', 'left');
         $builder->where('p.status !=', 'Draft'); // Only show non-draft plans
+
+        // Apply division filter unless user is admin
+        $this->applyDivisionFilter($builder, 'p');
+
         $builder->orderBy('p.created_at', 'DESC');
 
         $gadPlans = $builder->get()->getResultArray();
@@ -1242,6 +1377,9 @@ public function budgetCrafting()
         $builder->join('divisions dret', 'eret.div_id = dret.div_id', 'left');
         $builder->where('p.plan_id', $planId);
 
+        // Apply division filter unless user is admin
+        $this->applyDivisionFilter($builder, 'p');
+
         $plan = $builder->get()->getRowArray();
 
         if (!$plan) {
@@ -1345,11 +1483,15 @@ public function budgetCrafting()
 
         $db = \Config\Database::connect();
 
-        // Get file attachments for the specific plan
-        $query = $db->table('plan')
+        // Get file attachments for the specific plan (with division filter)
+        $builder = $db->table('plan')
                     ->select('file_attachments')
-                    ->where('plan_id', $planId)
-                    ->get();
+                    ->where('plan_id', $planId);
+
+        // Apply division filter unless user is admin
+        $this->applyDivisionFilter($builder, 'plan');
+
+        $query = $builder->get();
 
         $result = $query->getRowArray();
 

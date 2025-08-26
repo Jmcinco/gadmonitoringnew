@@ -126,20 +126,21 @@ class MemberModel extends Model
         }
         return $data;
     }
-     public function getGadPlansWithAmount()
+     public function getGadPlansWithAmount($divisionId = null)
     {
         $db = \Config\Database::connect();
-        $query = "
-            SELECT
-                plan.*,
-                COALESCE(SUM(budget.amount), 0) AS amount,
-                divisions.division AS submitted_by_division
-            FROM plan
-            LEFT JOIN budget ON budget.plan_id = plan.plan_id
-            LEFT JOIN divisions ON divisions.div_id = plan.authors_division
-            GROUP BY plan.plan_id, divisions.division
-            ORDER BY plan.plan_id DESC
-        ";
-        return $db->query($query)->getResultArray();
+        $builder = $db->table('plan')
+                     ->select('plan.*, COALESCE(SUM(budget.amount), 0) AS amount, divisions.division AS submitted_by_division')
+                     ->join('budget', 'budget.plan_id = plan.plan_id', 'left')
+                     ->join('divisions', 'divisions.div_id = plan.authors_division', 'left')
+                     ->groupBy('plan.plan_id, divisions.division')
+                     ->orderBy('plan.plan_id', 'DESC');
+
+        // Apply division filter if provided
+        if ($divisionId !== null) {
+            $builder->where('plan.authors_division', $divisionId);
+        }
+
+        return $builder->get()->getResultArray();
     }
 }

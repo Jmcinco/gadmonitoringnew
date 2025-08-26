@@ -151,6 +151,7 @@ $routes->post('GadMandateController/deleteMandate/(:num)', 'GadMandateController
 
 // Focal Controller Budget Crafting Routes
 $routes->get('FocalController/budgetCrafting', 'FocalController::budgetCrafting');
+$routes->get('FocalController/debugSession', 'FocalController::debugSession');
 $routes->post('FocalController/addBudgetItem', 'FocalController::addBudgetItem');
 $routes->post('FocalController/editBudgetItem', 'FocalController::editBudgetItem');
 $routes->post('FocalController/deleteBudgetItem', 'FocalController::deleteBudgetItem');

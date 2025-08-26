@@ -4,9 +4,12 @@ namespace App\Controllers;
 use App\Models\BudgetModel;
 use App\Models\AuditTrailModel;
 use CodeIgniter\Controller;
+use App\Traits\DivisionAccessTrait;
 
 class GadPlanController extends Controller
 {
+    use DivisionAccessTrait;
+
     protected $validation;
     protected $session;
     protected $model;
@@ -24,7 +27,12 @@ class GadPlanController extends Controller
     public function index()
     {
         helper('form');
-        $data['gadPlans']  = $this->model->getGadPlansWithAmount();
+
+        // Get user's division ID for filtering
+        $userDivisionId = $this->getUserDivisionId();
+
+        // Get GAD plans filtered by user's division
+        $data['gadPlans']  = $this->model->getGadPlansWithAmount($userDivisionId);
         $data['mandates'] = $this->mandateModel->findAll();
         $data['divisions'] = $this->getDivisions();
         $data['currentDivision'] = session()->get('division');
@@ -243,14 +251,18 @@ class GadPlanController extends Controller
                       ->select('plan.*, d.division, COALESCE(SUM(b.amount),0) AS total_budget')
                       ->join('budget b', 'b.plan_id = plan.plan_id', 'left')
                       ->join('divisions d', 'plan.authors_division = d.div_id', 'left')
-                      ->where('plan.plan_id', $id)
-                      ->groupBy('plan.plan_id, d.division');
+                      ->where('plan.plan_id', $id);
+
+        // Apply division filter unless user is admin
+        $this->applyDivisionFilter($builder, 'plan');
+
+        $builder->groupBy('plan.plan_id, d.division');
         $plan = $builder->get()->getRowArray();
 
         if (! $plan) {
             return $this->response
                         ->setStatusCode(404)
-                        ->setJSON(['success'=>false,'message'=>'GAD Plan not found']);
+                        ->setJSON(['success'=>false,'message'=>'GAD Plan not found or access denied.']);
         }
 
         $plan['gad_objective']    = json_decode($plan['gad_objective'], true)    ?: [];
