@@ -1481,11 +1481,6 @@ if (!session()->get('isLoggedIn') || session()->get('role_id') != 1) {
             console.error('Error in removeResponsibleUnitRow:', error);
           }
         }
-
-
-
-
-
         // Update MFO/PAP options based on type selection
         function updateMfoPapOptions(selectElement, index, preserveCustomDisplay = false) {
           const type = selectElement.value;
