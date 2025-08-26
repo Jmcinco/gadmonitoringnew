@@ -34,6 +34,15 @@ $routes->group('AuditTrail', function($routes) {
 $routes->get('MemberDashboard', 'MemberController::dashboard');
 $routes->group('Member', function($routes) {
     $routes->get('dashboard', 'MemberController::dashboard');
+
+    // Plan Preparation Routes (View Only)
+    $routes->get('PlanPreparation', 'MemberController::planPreparation');
+    $routes->get('planPreparation', 'MemberController::planPreparation'); // Alternative route
+    $routes->get('getGadPlans', 'MemberController::getGadPlans');
+    $routes->get('viewGadPlan/(:num)', 'MemberController::viewGadPlan/$1');
+    $routes->get('getAttachments/(:num)', 'MemberController::getAttachments/$1');
+
+    // Plan Review Routes
     $routes->get('planReview', 'MemberController::planReview');
     $routes->get('PlanReview', 'MemberController::planReview'); // Alternative route
     $routes->post('reviewPlan', 'MemberController::reviewPlan');
@@ -42,6 +51,30 @@ $routes->group('Member', function($routes) {
     $routes->get('getPlanDetails/(:num)', 'MemberController::getPlanDetails/$1');
     $routes->post('getPlanDetails/(:num)', 'MemberController::getPlanDetails/$1');
     $routes->get('reports', 'MemberController::reports');
+
+    // Budget Crafting Routes (View Only)
+    $routes->get('BudgetCrafting', 'MemberController::budgetCrafting');
+    $routes->get('budgetCrafting', 'MemberController::budgetCrafting'); // Alternative route
+    $routes->get('getBudgetItems/(:num)', 'MemberController::getBudgetItems/$1');
+    $routes->get('getBudgetItemDetails/(:num)', 'MemberController::getBudgetItemDetails/$1');
+
+    // Consolidated Plan Routes (View Only)
+    $routes->get('ConsolidatedPlan', 'MemberController::consolidatedPlan');
+    $routes->get('consolidatedPlan', 'MemberController::consolidatedPlan'); // Alternative route
+
+    // Accomplishment Submission Routes
+    $routes->get('AccomplishmentSubmission', 'MemberController::accomplishmentSubmission');
+    $routes->get('accomplishmentSubmission', 'MemberController::accomplishmentSubmission'); // Alternative route
+    $routes->post('saveAccomplishment', 'MemberController::saveAccomplishment');
+    $routes->post('updateAccomplishment', 'MemberController::updateAccomplishment');
+    $routes->delete('deleteAccomplishment/(:num)', 'MemberController::deleteAccomplishment/$1');
+    $routes->get('getAccomplishment/(:num)', 'MemberController::getAccomplishment/$1');
+
+    // Monitoring & Evaluation Routes
+    $routes->get('MonitoringEvaluation', 'MemberController::monitoringEvaluation');
+    $routes->get('monitoringEvaluation', 'MemberController::monitoringEvaluation'); // Alternative route
+    $routes->get('getMonitoringData', 'MemberController::getMonitoringData');
+
     // Accomplishment Review Routes
     $routes->get('ReviewApproval', 'MemberController::reviewApproval');
     $routes->get('reviewApproval', 'MemberController::reviewApproval');
@@ -50,6 +83,8 @@ $routes->group('Member', function($routes) {
     $routes->get('getAccomplishmentDetails/(:num)', 'MemberController::getAccomplishmentDetails/$1');
     $routes->post('reviewAccomplishment', 'MemberController::reviewAccomplishment');
     $routes->post('updateAccomplishmentStatus', 'MemberController::updateAccomplishmentStatus');
+
+    // Profile and Settings
     $routes->get('profile', 'MemberController::profile');
 });
 

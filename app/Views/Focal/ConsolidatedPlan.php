@@ -908,8 +908,21 @@
             document.getElementById('detailDivision').textContent = plan.division || 'Unknown Division';
             document.getElementById('detailBudget').textContent = `₱${parseFloat(plan.total_budget || plan.budget || 0).toLocaleString()}`;
 
-            const responsibleUnits = JSON.parse(plan.responsible_units || '[]');
-            document.getElementById('detailBeneficiaries').textContent = Array.isArray(responsibleUnits) ? responsibleUnits.join(', ') : 'N/A';
+            // Handle responsible units - it might be a JSON string or already parsed
+            let responsibleUnits;
+            try {
+                if (typeof plan.responsible_units === 'string') {
+                    responsibleUnits = JSON.parse(plan.responsible_units || '[]');
+                } else if (Array.isArray(plan.responsible_units)) {
+                    responsibleUnits = plan.responsible_units;
+                } else {
+                    responsibleUnits = [];
+                }
+            } catch (e) {
+                // If JSON parsing fails, treat as a single string
+                responsibleUnits = plan.responsible_units ? [plan.responsible_units] : [];
+            }
+            document.getElementById('detailBeneficiaries').textContent = Array.isArray(responsibleUnits) && responsibleUnits.length > 0 ? responsibleUnits.join(', ') : 'N/A';
 
             const startDate = plan.startDate ? new Date(plan.startDate).toLocaleDateString() : 'N/A';
             const endDate = plan.endDate ? new Date(plan.endDate).toLocaleDateString() : 'N/A';

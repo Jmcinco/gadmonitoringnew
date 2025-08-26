@@ -1647,11 +1647,6 @@ if (!session()->get('isLoggedIn') || session()->get('role_id') != 1) {
             selectElement.value = '';
           }
         }
-
-
-
-
-
         document.getElementById('startDate').addEventListener('change', e =>
           document.getElementById('endDate').min = e.target.value
         );

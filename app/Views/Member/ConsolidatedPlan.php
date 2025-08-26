@@ -1,3 +1,12 @@
+<?php
+// Check if user is logged in and has the correct role
+if (!session()->get('isLoggedIn') || session()->get('role_id') != 2) {
+    session()->setFlashdata('error', 'Unauthorized access.');
+    header('Location: ' . base_url('/login'));
+    exit;
+}
+?>
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -6,91 +15,352 @@
     <title>Consolidated GAD Plan & Budget - GAD Management System</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bs-primary-rgb: 36, 20, 68;
+            --sidebar-width: 280px;
+            --sidebar-bg: #2c3e50;
+            --sidebar-hover: #34495e;
+        }
+        body {
+            font-family: 'Poppins', Arial, sans-serif;
+            background-color: #f4f6f9;
+            margin: 0;
+            padding: 0;
+        }
+        .sidebar {
+            position: fixed;
+            top: 0;
+            left: 0;
+            height: 100vh;
+            width: var(--sidebar-width);
+            background: linear-gradient(180deg, var(--sidebar-bg) 0%, #1a252f 100%);
+            color: white;
+            z-index: 1000;
+            display: flex;
+            flex-direction: column;
+            box-shadow: 0 1rem 3rem rgba(0, 0, 0, 0.175);
+        }
+        .sidebar-header {
+            padding: 1.5rem 1rem;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+            text-align: center;
+        }
+        .sidebar-content {
+            flex: 1;
+            padding: 1rem;
+            overflow-y: auto;
+        }
+        .sidebar-footer {
+            padding: 1rem;
+            border-top: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        .user-info {
+            padding: 1rem;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 0.5rem;
+            margin-bottom: 1rem;
+            display: flex;
+            align-items: center;
+        }
+        .sidebar .nav-link {
+            color: rgba(255, 255, 255, 0.8);
+            padding: 0.75rem 1rem;
+            margin-bottom: 0.25rem;
+            border-radius: 0.5rem;
+            transition: all 0.2s ease;
+            text-decoration: none;
+            display: flex;
+            align-items: center;
+        }
+        .sidebar .nav-link:hover {
+            background-color: var(--sidebar-hover);
+            color: white;
+            transform: translateX(3px);
+        }
+        .sidebar .nav-link.active {
+            background-color: #3498db;
+            color: white;
+        }
+        .main-content {
+            margin-left: var(--sidebar-width);
+            min-height: 100vh;
+            padding: 2rem;
+            background-color: #fafbfe;
+        }
+        .card {
+            border: none;
+            border-radius: 0.5rem;
+            box-shadow: 0 0.15rem 1.75rem 0 rgba(58, 59, 69, 0.15);
+        }
+        .card-header {
+            background-color: #f8f9fc;
+            border-bottom: 1px solid #e3e6f0;
+        }
+        .table th, .table td {
+            vertical-align: middle;
+            padding: 0.75rem;
+        }
+
+        /* Print Styles */
+        @media print {
+            .sidebar, .no-print {
+                display: none !important;
+            }
+
+            .main-content {
+                margin-left: 0 !important;
+                padding: 0 !important;
+                width: 100% !important;
+            }
+
+            .card {
+                border: none !important;
+                box-shadow: none !important;
+                margin: 0 !important;
+                width: 100% !important;
+            }
+
+            .card-header {
+                background-color: #f8f9fc !important;
+                border-bottom: 2px solid #000 !important;
+                padding: 1rem !important;
+                page-break-inside: avoid !important;
+            }
+
+            .card-body {
+                padding: 0 !important;
+            }
+
+            .table-responsive {
+                overflow: visible !important;
+            }
+
+            .table {
+                font-size: 9px !important;
+                width: 100% !important;
+                table-layout: fixed !important;
+                margin: 0 !important;
+                page-break-inside: auto !important;
+                border-collapse: collapse !important;
+            }
+
+            .table th {
+                background-color: #343a40 !important;
+                color: white !important;
+                border: 1px solid #000 !important;
+                padding: 4px 2px !important;
+                word-wrap: break-word !important;
+                page-break-inside: avoid !important;
+                font-weight: bold !important;
+                text-align: center !important;
+            }
+
+            .table td {
+                border: 1px solid #000 !important;
+                padding: 3px 2px !important;
+                word-wrap: break-word !important;
+                vertical-align: top !important;
+                line-height: 1.1 !important;
+            }
+
+            .table tfoot th {
+                background-color: #f8f9fc !important;
+                color: #000 !important;
+                border: 2px solid #000 !important;
+                font-weight: bold !important;
+                page-break-inside: avoid !important;
+                padding: 6px 2px !important;
+                font-size: 10px !important;
+            }
+
+            /* Column width adjustments for better fit */
+            .table th:nth-child(1), .table td:nth-child(1) {
+                width: 10% !important;
+                text-align: center !important;
+            } /* GAD Activity ID */
+
+            .table th:nth-child(2), .table td:nth-child(2) {
+                width: 18% !important;
+            } /* Division/Office */
+
+            .table th:nth-child(3), .table td:nth-child(3) {
+                width: 30% !important;
+            } /* GAD Activity */
+
+            .table th:nth-child(4), .table td:nth-child(4) {
+                width: 15% !important;
+            } /* Responsible Unit/Offices */
+
+            .table th:nth-child(5), .table td:nth-child(5) {
+                width: 12% !important;
+                text-align: right !important;
+            } /* Budget Allocation */
+
+            .table th:nth-child(6), .table td:nth-child(6) {
+                width: 10% !important;
+                text-align: center !important;
+            } /* Source of Fund */
+
+            .table th:nth-child(7), .table td:nth-child(7) {
+                width: 5% !important;
+                text-align: center !important;
+                font-size: 8px !important;
+            } /* Date Approved */
+        }
+        .badge {
+            font-size: 0.9rem;
+        }
+        @media (max-width: 768px) {
+            .sidebar {
+                transform: translateX(-100%);
+                transition: transform 0.3s ease;
+            }
+            .sidebar.show {
+                transform: translateX(0);
+            }
+            .main-content {
+                margin-left: 0;
+                padding: 1rem;
+            }
+            .table-responsive {
+                font-size: 0.85rem;
+            }
+            .table th, .table td {
+                padding: 0.5rem;
+            }
+        }
+    </style>
 </head>
 <body>
-    <!-- Navigation -->
-    <nav class="navbar navbar-expand-lg navbar-dark bg-primary">
-        <div class="container-fluid">
-            <a class="navbar-brand" href="dashboard.html">
-                <i class="bi bi-shield-check"></i> GAD Management System
-            </a>
-            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
-                <span class="navbar-toggler-icon"></span>
-            </button>
-            <div class="collapse navbar-collapse" id="navbarNav">
-                <ul class="navbar-nav me-auto">
-                    <li class="nav-item">
-                        <a class="nav-link" href="dashboard.html">
-                            <i class="bi bi-house-door"></i> Dashboard
-                        </a>
-                    </li>
-                    <li class="nav-item dropdown">
-                        <a class="nav-link dropdown-toggle active" href="#" role="button" data-bs-toggle="dropdown">
-                            <i class="bi bi-gear"></i> GAD Workflow
-                        </a>
-                        <ul class="dropdown-menu">
-                            <li><a class="dropdown-item" href="gad_budget_preparation.html">Budget Preparation</a></li>
-                            <li><a class="dropdown-item" href="gad_budget_crafting.html">Budget Crafting</a></li>
-                            <li><a class="dropdown-item" href="gad_plan_review.html">Plan Review</a></li>
-                            <li><a class="dropdown-item active" href="consolidated_plan.html">Consolidated Plan</a></li>
-                        </ul>
-                    </li>
-                </ul>
-                <ul class="navbar-nav">
-                    <li class="nav-item dropdown">
-                        <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown">
-                            <i class="bi bi-person-circle"></i> Admin User
-                        </a>
-                        <ul class="dropdown-menu">
-                            <li><a class="dropdown-item" href="index.html"><i class="bi bi-box-arrow-right"></i> Logout</a></li>
-                        </ul>
-                    </li>
-                </ul>
-            </div>
+    <!-- Sidebar -->
+    <nav id="sidebar" class="sidebar">
+        <div class="sidebar-header">
+            <h4 class="text-white mb-0">
+                <i class="bi bi-gender-ambiguous" style="font-size: 2rem; color: rgb(255, 255, 255);"></i> GAD Monitoring System
+            </h4>
         </div>
-    </nav>
 
-    <!-- Breadcrumb -->
-    <nav aria-label="breadcrumb" class="bg-light">
-        <div class="container-fluid">
-            <ol class="breadcrumb py-2 mb-0">
-                <li class="breadcrumb-item"><a href="dashboard.html">Dashboard</a></li>
-                <li class="breadcrumb-item active">Consolidated GAD Plan & Budget</li>
-            </ol>
+        <div class="sidebar-content">
+            <!-- User Info -->
+            <div class="user-info mb-4">
+                <div class="text-white d-flex align-items-center">
+                    <i class="bi bi-person-circle fs-4 me-2"></i>
+                    <div>
+                        <div class="fw-bold"><?php echo esc(($first_name ?? 'Member') . ' ' . ($last_name ?? 'User')); ?></div>
+                        <small class="text-light d-block"><?php echo esc($role_name ?? 'Member'); ?></small>
+                        <small class="text-light opacity-75"><?php echo esc($division_name ?? 'Division'); ?></small>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Navigation Menu -->
+            <ul class="nav nav-pills flex-column">
+                <li class="nav-item">
+                    <a class="nav-link" href="<?= base_url('MemberDashboard') ?>">
+                        <i class="bi bi-house-door me-2"></i>Dashboard
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" href="<?= base_url('Member/PlanPreparation') ?>">
+                        <i class="bi bi-clipboard-plus me-2"></i>Preparation of GAD Plan
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" href="<?= base_url('Member/BudgetCrafting') ?>">
+                        <i class="bi bi-calculator me-2"></i>Budget Crafting
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" href="<?= base_url('Member/PlanReview') ?>">
+                        <i class="bi bi-check-circle me-2"></i>Review & Approval of GAD Plan
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link active" href="<?= base_url('Member/ConsolidatedPlan') ?>">
+                        <i class="bi bi-file-earmark-text me-2"></i>Consolidated Plan & Budget
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" href="<?= base_url('Member/AccomplishmentSubmission') ?>">
+                        <i class="bi bi-send me-2"></i>Submission of GAD Accomplishment
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" href="<?= base_url('Member/ReviewApproval') ?>">
+                        <i class="bi bi-clipboard-check me-2"></i>Review & Approval of Accomplishment
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" href="<?= base_url('Member/ConsolidatedAccomplishment') ?>">
+                        <i class="bi bi-collection me-2"></i>Consolidated GAD Accomplishment
+                    </a>
+                </li>
+            </ul>
+        </div>
+
+        <!-- Logout Button -->
+        <div class="sidebar-footer">
+            <a href="<?= site_url('login/logout') ?>" class="btn btn-outline-light w-100">
+                <i class="bi bi-box-arrow-right"></i> Logout
+            </a>
         </div>
     </nav>
 
     <!-- Main Content -->
-    <div class="container-fluid py-4">
-        <div class="row">
-            <div class="col-12">
-                <div class="d-flex justify-content-between align-items-center mb-4">
-                    <h1 class="h3 mb-0">
-                        <i class="bi bi-file-earmark-ruled text-primary"></i> Consolidated GAD Plan & Budget
-                    </h1>
-                    <div class="btn-group">
-                        <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#approveConsolidatedModal">
-                            <i class="bi bi-check-circle"></i> Approve Consolidated Plan
-                        </button>
-                        <button type="button" class="btn btn-success" onclick="printConsolidatedPlan()">
-                            <i class="bi bi-printer"></i> Print
-                        </button>
-                        <button type="button" class="btn btn-info" onclick="saveToPDF()">
-                            <i class="bi bi-file-earmark-pdf"></i> Save as PDF
-                        </button>
+    <div class="main-content">
+        <div class="container-fluid py-4">
+            <!-- Breadcrumb -->
+            <nav aria-label="breadcrumb" class="bg-light">
+                <div class="container-fluid">
+                    <ol class="breadcrumb py-2 mb-4">
+                        <li class="breadcrumb-item"><a href="<?php echo base_url('MemberDashboard'); ?>">Dashboard</a></li>
+                        <li class="breadcrumb-item active">Consolidated GAD Plan & Budget</li>
+                    </ol>
+                </div>
+            </nav>
+
+            <div class="row">
+                <div class="col-12">
+                    <!-- Print Header (only visible when printing) -->
+                    <div class="print-header" style="display: none;">
+                        <h1 style="font-size: 18px; margin-bottom: 5px; font-weight: bold;">Table of Approved GAD Plan and Budget</h1>
+                        <p style="font-size: 12px; margin-bottom: 20px; color: #666;">Fiscal Year 2025 | Generated on <span id="printDate"></span></p>
+                        <hr style="border: 1px solid #000; margin-bottom: 20px;">
+                    </div>
+
+                    <div class="d-flex justify-content-between align-items-center mb-4">
+                        <h1 class="h3 mb-0 main-title">
+                            <i class="bi bi-file-earmark-ruled text-primary"></i> Table of Approved GAD Plan and Budget
+                        </h1>
+                        <div class="btn-group no-print">
+                            <button type="button" class="btn btn-success" onclick="printConsolidatedPlan()">
+                                <i class="bi bi-printer"></i> Print
+                            </button>
+                            <button type="button" class="btn btn-info" onclick="saveToPDF()">
+                                <i class="bi bi-file-earmark-pdf"></i> Save as PDF
+                            </button>
+                            <!-- No Approve button for Members - View Only -->
+                        </div>
+                    </div>
+
+                    <div class="alert alert-info" role="alert">
+                        <i class="bi bi-info-circle"></i>
+                        <strong>Note:</strong> This is a view-only interface. You can view consolidated plans from your division but cannot approve or modify them.
+                        Contact your GAD Focal Person for plan modifications.
                     </div>
                 </div>
             </div>
-        </div>
 
         <!-- Summary Cards -->
-        <div class="row mb-4">
+        <div class="row mb-4 summary-section">
             <div class="col-md-3">
                 <div class="card bg-primary text-white">
                     <div class="card-body">
                         <div class="d-flex justify-content-between">
                             <div>
-                                <h4 class="card-title">12</h4>
+                                <h4 class="card-title" id="approvedPlansCount"><?php echo esc($approvedPlansCount ?? 0); ?></h4>
                                 <p class="card-text">Approved Plans</p>
                             </div>
                             <div class="align-self-center">
@@ -105,7 +375,7 @@
                     <div class="card-body">
                         <div class="d-flex justify-content-between">
                             <div>
-                                <h4 class="card-title">₱2,500,000</h4>
+                                <h4 class="card-title" id="totalBudget">₱<?php echo number_format($totalBudget ?? 0, 2); ?></h4>
                                 <p class="card-text">Total Budget</p>
                             </div>
                             <div class="align-self-center">
@@ -120,8 +390,8 @@
                     <div class="card-body">
                         <div class="d-flex justify-content-between">
                             <div>
-                                <h4 class="card-title">8</h4>
-                                <p class="card-text">Divisions</p>
+                                <h4 class="card-title" id="divisionsCount"><?php echo esc($divisionsCount ?? 1); ?></h4>
+                                <p class="card-text">Your Division</p>
                             </div>
                             <div class="align-self-center">
                                 <i class="bi bi-building fs-1"></i>
@@ -135,7 +405,7 @@
                     <div class="card-body">
                         <div class="d-flex justify-content-between">
                             <div>
-                                <h4 class="card-title">2024</h4>
+                                <h4 class="card-title"><?php echo date('Y'); ?></h4>
                                 <p class="card-text">Target Year</p>
                             </div>
                             <div class="align-self-center">
@@ -147,130 +417,102 @@
             </div>
         </div>
 
-        <!-- Consolidated Plan Table -->
+        <!-- Table of Approved GAD Plan and Budget -->
         <div class="row">
             <div class="col-12">
-                <div class="card shadow">
+                <div class="card shadow" id="printableArea">
                     <div class="card-header">
                         <div class="row align-items-center">
                             <div class="col">
-                                <h5 class="mb-0">Approved GAD Plans and Budget</h5>
+                                <h5 class="mb-0">Table of Approved GAD Plan and Budget</h5>
+                                <small class="text-muted">Fiscal Year <?= date('Y') ?> | Generated on: <?= date('F d, Y') ?></small>
                             </div>
-                            <div class="col-auto">
-                                <div class="form-check">
-                                    <input class="form-check-input" type="checkbox" value="" id="selectAll" onchange="toggleSelectAll()">
-                                    <label class="form-check-label" for="selectAll">
-                                        Select All
-                                    </label>
+                            <div class="col-auto no-print">
+                                <div class="d-flex gap-2 align-items-center">
+                                    <!-- Search -->
+                                    <div class="input-group" style="width: 250px;">
+                                        <input type="text" class="form-control form-control-sm" id="searchInput" placeholder="Search plans...">
+                                        <button class="btn btn-outline-secondary btn-sm" type="button" onclick="searchPlans()">
+                                            <i class="bi bi-search"></i>
+                                        </button>
+                                    </div>
+                                    <!-- Note: No division filter for Members - they only see their own division -->
                                 </div>
                             </div>
                         </div>
                     </div>
                     <div class="card-body">
+                        <!-- Print-only table header -->
+                        <div class="print-table-header" style="display: none;">
+                            <h3 style="font-size: 14px; margin-bottom: 10px; font-weight: bold; text-align: center;">Detailed Plan Information</h3>
+                        </div>
+
                         <div class="table-responsive">
-                            <table class="table table-hover table-striped">
+                            <table class="table table-hover table-striped" id="consolidatedPlanTable">
                                 <thead class="table-dark">
                                     <tr>
-                                        <th>
-                                            <input type="checkbox" class="form-check-input" onclick="toggleSelectAll()">
-                                        </th>
                                         <th>GAD Activity ID</th>
-                                        <th>Plan Title</th>
-                                        <th>Division</th>
+                                        <th>Division/Office</th>
+                                        <th>GAD Activity</th>
+                                        <th>Responsible Unit/Offices</th>
                                         <th>Budget Allocation</th>
-                                        <th>Target Beneficiaries</th>
-                                        <th>Timeline</th>
-                                        <th>Status</th>
-                                        <th>Actions</th>
+                                        <th>Source of Fund</th>
+                                        <th>Date Approved</th>
+                                        <th class="no-print">Actions</th>
                                     </tr>
                                 </thead>
                                 <tbody id="consolidatedTableBody">
-                                    <tr>
-                                        <td>
-                                            <input type="checkbox" class="form-check-input plan-checkbox" value="GAD001">
-                                        </td>
-                                        <td>GAD001</td>
-                                        <td>Gender Sensitivity Training Program</td>
-                                        <td>Human Resources</td>
-                                        <td>₱250,000</td>
-                                        <td>100 employees</td>
-                                        <td>Jan - Mar 2024</td>
-                                        <td><span class="badge bg-success">Approved</span></td>
-                                        <td>
-                                            <button class="btn btn-sm btn-outline-primary" onclick="viewPlanDetails('GAD001')">
-                                                <i class="bi bi-eye"></i>
-                                            </button>
-                                            <button class="btn btn-sm btn-outline-warning" onclick="editPlan('GAD001')">
-                                                <i class="bi bi-pencil"></i>
-                                            </button>
-                                        </td>
-                                    </tr>
-                                    <tr>
-                                        <td>
-                                            <input type="checkbox" class="form-check-input plan-checkbox" value="GAD002">
-                                        </td>
-                                        <td>GAD002</td>
-                                        <td>Women's Leadership Development Workshop</td>
-                                        <td>Training Division</td>
-                                        <td>₱180,000</td>
-                                        <td>50 women employees</td>
-                                        <td>Feb - Apr 2024</td>
-                                        <td><span class="badge bg-success">Approved</span></td>
-                                        <td>
-                                            <button class="btn btn-sm btn-outline-primary" onclick="viewPlanDetails('GAD002')">
-                                                <i class="bi bi-eye"></i>
-                                            </button>
-                                            <button class="btn btn-sm btn-outline-warning" onclick="editPlan('GAD002')">
-                                                <i class="bi bi-pencil"></i>
-                                            </button>
-                                        </td>
-                                    </tr>
-                                    <tr>
-                                        <td>
-                                            <input type="checkbox" class="form-check-input plan-checkbox" value="GAD003">
-                                        </td>
-                                        <td>GAD003</td>
-                                        <td>Anti-Sexual Harassment Campaign</td>
-                                        <td>Legal Affairs</td>
-                                        <td>₱150,000</td>
-                                        <td>All employees</td>
-                                        <td>Mar - May 2024</td>
-                                        <td><span class="badge bg-success">Approved</span></td>
-                                        <td>
-                                            <button class="btn btn-sm btn-outline-primary" onclick="viewPlanDetails('GAD003')">
-                                                <i class="bi bi-eye"></i>
-                                            </button>
-                                            <button class="btn btn-sm btn-outline-warning" onclick="editPlan('GAD003')">
-                                                <i class="bi bi-pencil"></i>
-                                            </button>
-                                        </td>
-                                    </tr>
-                                    <tr>
-                                        <td>
-                                            <input type="checkbox" class="form-check-input plan-checkbox" value="GAD004">
-                                        </td>
-                                        <td>GAD004</td>
-                                        <td>Work-Life Balance Policy Development</td>
-                                        <td>Policy Development</td>
-                                        <td>₱120,000</td>
-                                        <td>Policy framework</td>
-                                        <td>Apr - Jun 2024</td>
-                                        <td><span class="badge bg-success">Approved</span></td>
-                                        <td>
-                                            <button class="btn btn-sm btn-outline-primary" onclick="viewPlanDetails('GAD004')">
-                                                <i class="bi bi-eye"></i>
-                                            </button>
-                                            <button class="btn btn-sm btn-outline-warning" onclick="editPlan('GAD004')">
-                                                <i class="bi bi-pencil"></i>
-                                            </button>
-                                        </td>
-                                    </tr>
+                                    <?php if (isset($gadPlans) && !empty($gadPlans)): ?>
+                                        <?php
+                                        $approvedPlans = array_filter($gadPlans, fn($p) => strtolower($p['status']) === 'approved');
+                                        if (!empty($approvedPlans)): ?>
+                                            <?php foreach ($approvedPlans as $plan): ?>
+                                                <tr data-division="<?php echo esc($plan['office_name'] ?? ''); ?>">
+                                                    <td><?php echo esc('GAD-' . str_pad($plan['plan_id'], 3, '0', STR_PAD_LEFT)); ?></td>
+                                                    <td><?php echo esc($plan['office_name'] ?? 'Unknown Office'); ?></td>
+                                                    <td class="text-content"><?php echo esc($plan['activity'] ?? 'N/A'); ?></td>
+                                                    <td><?php echo esc($plan['target_beneficiaries'] ?? 'Not specified'); ?></td>
+                                                    <td class="text-end">₱<?php echo number_format($plan['budget_allocation'] ?? 0, 2); ?></td>
+                                                    <td><?php echo esc($plan['source_of_fund'] ?? 'Not specified'); ?></td>
+                                                    <td><?php echo isset($plan['approved_at']) ? date('M d, Y', strtotime($plan['approved_at'])) : 'N/A'; ?></td>
+                                                    <td class="no-print">
+                                                        <button class="btn btn-sm btn-outline-secondary" onclick="viewPlanDetails(<?php echo esc($plan['plan_id']); ?>)" title="View plan details">
+                                                            <i class="bi bi-eye"></i> View
+                                                        </button>
+                                                    </td>
+                                                </tr>
+                                            <?php endforeach; ?>
+                                        <?php else: ?>
+                                            <tr>
+                                                <td colspan="8" class="text-center text-muted py-4">
+                                                    <i class="bi bi-inbox fs-1 d-block mb-2"></i>
+                                                    No approved GAD plans found in your division.
+                                                </td>
+                                            </tr>
+                                        <?php endif; ?>
+                                    <?php else: ?>
+                                        <tr>
+                                            <td colspan="8" class="text-center text-muted py-4">
+                                                <i class="bi bi-inbox fs-1 d-block mb-2"></i>
+                                                No GAD plans available.
+                                            </td>
+                                        </tr>
+                                    <?php endif; ?>
                                 </tbody>
                                 <tfoot class="table-light">
-                                    <tr>
-                                        <th colspan="4" class="text-end">Total Approved Budget:</th>
-                                        <th>₱700,000</th>
-                                        <th colspan="4"></th>
+                                    <tr class="fw-bold">
+                                        <th colspan="4" class="text-end">TOTAL APPROVED BUDGET:</th>
+                                        <th class="text-end">
+                                            ₱<?php
+                                            if (isset($gadPlans) && !empty($gadPlans)) {
+                                                $approvedPlans = array_filter($gadPlans, fn($p) => strtolower($p['status']) === 'approved');
+                                                echo number_format(array_sum(array_map(fn($p) => $p['budget_allocation'] ?? 0, $approvedPlans)), 2);
+                                            } else {
+                                                echo '0.00';
+                                            }
+                                            ?>
+                                        </th>
+                                        <th colspan="3"></th>
                                     </tr>
                                 </tfoot>
                             </table>
@@ -281,71 +523,8 @@
         </div>
     </div>
 
-    <!-- Approve Consolidated Plan Modal -->
-    <div class="modal fade" id="approveConsolidatedModal" tabindex="-1" aria-labelledby="approveConsolidatedModalLabel" aria-hidden="true">
-        <div class="modal-dialog">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <h5 class="modal-title" id="approveConsolidatedModalLabel">
-                        <i class="bi bi-check-circle"></i> Approve Consolidated GAD Plan & Budget
-                    </h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-                </div>
-                <div class="modal-body">
-                    <form id="approveConsolidatedForm" class="needs-validation" novalidate>
-                        <div class="alert alert-info" role="alert">
-                            <i class="bi bi-info-circle"></i>
-                            <strong>Review Summary:</strong>
-                            <ul class="mb-0 mt-2">
-                                <li>Total Plans: 12</li>
-                                <li>Total Budget: ₱2,500,000</li>
-                                <li>Participating Divisions: 8</li>
-                                <li>Target Year: 2024</li>
-                            </ul>
-                        </div>
-                        
-                        <div class="mb-3">
-                            <label for="approvalDate" class="form-label">Approval Date *</label>
-                            <input type="date" class="form-control" id="approvalDate" name="approvalDate" required>
-                            <div class="invalid-feedback">
-                                Please provide an approval date.
-                            </div>
-                        </div>
-                        
-                        <div class="mb-3">
-                            <label for="approvalRemarks" class="form-label">Approval Remarks *</label>
-                            <textarea class="form-control" id="approvalRemarks" name="approvalRemarks" rows="3" required></textarea>
-                            <div class="invalid-feedback">
-                                Please provide approval remarks.
-                            </div>
-                        </div>
-                        
-                        <div class="mb-3">
-                            <label for="approvedBy" class="form-label">Approved By</label>
-                            <input type="text" class="form-control" id="approvedBy" name="approvedBy" value="Admin User" readonly>
-                        </div>
-                        
-                        <div class="form-check">
-                            <input class="form-check-input" type="checkbox" value="" id="confirmApproval" required>
-                            <label class="form-check-label" for="confirmApproval">
-                                I confirm that all plans and budgets have been reviewed and are approved for implementation.
-                            </label>
-                            <div class="invalid-feedback">
-                                Please confirm your approval.
-                            </div>
-                        </div>
-                    </form>
-                </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-                    <button type="submit" form="approveConsolidatedForm" class="btn btn-success">Approve Plan & Budget</button>
-                </div>
-            </div>
-        </div>
-    </div>
-
     <!-- Plan Details Modal -->
-    <div class="modal fade" id="planDetailsModal" tabindex="-1" aria-labelledby="planDetailsModalLabel" aria-hidden="true">
+    <div class="modal fade no-print" id="planDetailsModal" tabindex="-1" aria-labelledby="planDetailsModalLabel" aria-hidden="true">
         <div class="modal-dialog modal-lg">
             <div class="modal-content">
                 <div class="modal-header">
@@ -379,7 +558,7 @@
                     </div>
                     <div class="row">
                         <div class="col-12">
-                            <strong>Target Beneficiaries:</strong>
+                            <strong>Responsible Unit/Offices:</strong>
                             <p id="detailBeneficiaries"></p>
                         </div>
                     </div>
@@ -393,81 +572,140 @@
 
     <!-- Bootstrap JavaScript -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
-    
+    <!-- SweetAlert2 -->
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
     <script>
-        // Set current date
-        document.getElementById('approvalDate').value = new Date().toISOString().split('T')[0];
+        // Search functionality
+        function searchPlans() {
+            const searchTerm = document.getElementById('searchInput').value.toLowerCase();
+            const tableRows = document.querySelectorAll('#consolidatedTableBody tr[data-division]');
 
-        // Bootstrap form validation
-        (function() {
-            'use strict';
-            window.addEventListener('load', function() {
-                var forms = document.getElementsByClassName('needs-validation');
-                Array.prototype.filter.call(forms, function(form) {
-                    form.addEventListener('submit', function(event) {
-                        if (form.checkValidity() === false) {
-                            event.preventDefault();
-                            event.stopPropagation();
-                        } else {
-                            event.preventDefault();
-                            handleFormSubmit(form);
-                        }
-                        form.classList.add('was-validated');
-                    }, false);
-                });
-            }, false);
-        })();
-
-        // Handle form submission
-        function handleFormSubmit(form) {
-            if (form.id === 'approveConsolidatedForm') {
-                alert('Consolidated GAD Plan & Budget approved successfully!');
-                bootstrap.Modal.getInstance(document.getElementById('approveConsolidatedModal')).hide();
-            }
-        }
-
-        // Toggle select all
-        function toggleSelectAll() {
-            const selectAll = document.getElementById('selectAll');
-            const checkboxes = document.querySelectorAll('.plan-checkbox');
-            
-            checkboxes.forEach(checkbox => {
-                checkbox.checked = selectAll.checked;
-            });
-        }
-
-        // View plan details
-        function viewPlanDetails(planId) {
-            const modal = new bootstrap.Modal(document.getElementById('planDetailsModal'));
-            const rows = document.querySelectorAll('#consolidatedTableBody tr');
-            
-            rows.forEach(row => {
-                if (row.cells[1].textContent === planId) {
-                    document.getElementById('detailPlanId').textContent = row.cells[1].textContent;
-                    document.getElementById('detailPlanTitle').textContent = row.cells[2].textContent;
-                    document.getElementById('detailDivision').textContent = row.cells[3].textContent;
-                    document.getElementById('detailBudget').textContent = row.cells[4].textContent;
-                    document.getElementById('detailBeneficiaries').textContent = row.cells[5].textContent;
-                    document.getElementById('detailTimeline').textContent = row.cells[6].textContent;
+            tableRows.forEach(row => {
+                const text = row.textContent.toLowerCase();
+                if (text.includes(searchTerm)) {
+                    row.style.display = '';
+                } else {
+                    row.style.display = 'none';
                 }
             });
-            
-            modal.show();
         }
 
-        // Edit plan
-        function editPlan(planId) {
-            alert(`Edit functionality for plan ${planId} would be implemented here.`);
+        // Real-time search
+        document.addEventListener('DOMContentLoaded', function() {
+            const searchInput = document.getElementById('searchInput');
+            if (searchInput) {
+                searchInput.addEventListener('input', searchPlans);
+            }
+        });
+
+        // View plan details with AJAX (Member view-only)
+        function viewPlanDetails(planId) {
+            // Show loading state
+            Swal.fire({
+                title: 'Loading...',
+                text: 'Fetching plan details',
+                allowOutsideClick: false,
+                didOpen: () => {
+                    Swal.showLoading();
+                }
+            });
+
+            // Fetch plan details via AJAX
+            fetch(`<?= base_url("Member/getGadPlan/") ?>${planId}`, {
+                headers: {
+                    'X-Requested-With': 'XMLHttpRequest'
+                }
+            })
+            .then(response => response.json())
+            .then(data => {
+                Swal.close();
+                if (data.success) {
+                    showPlanDetailsModal(data.plan);
+                } else {
+                    Swal.fire('Error', 'Could not load plan details: ' + (data.message || 'Unknown error'), 'error');
+                }
+            })
+            .catch(error => {
+                Swal.close();
+                console.error('Error fetching plan details:', error);
+                Swal.fire('Error', 'Could not load plan details: Network error', 'error');
+            });
+        }
+
+        function showPlanDetailsModal(plan) {
+            document.getElementById('detailPlanId').textContent = `GAD-${String(plan.plan_id).padStart(3, '0')}`;
+            document.getElementById('detailPlanTitle').textContent = plan.activity || 'N/A';
+            document.getElementById('detailDivision').textContent = plan.office_name || 'Unknown Division';
+            document.getElementById('detailBudget').textContent = `₱${parseFloat(plan.budget_allocation || 0).toLocaleString()}`;
+
+            // Use the pre-processed responsible_units_display field
+            document.getElementById('detailBeneficiaries').textContent = plan.responsible_units_display || 'N/A';
+
+            const startDate = plan.start_date ? new Date(plan.start_date).toLocaleDateString() : 'N/A';
+            const endDate = plan.end_date ? new Date(plan.end_date).toLocaleDateString() : 'N/A';
+            document.getElementById('detailTimeline').textContent = `${startDate} - ${endDate}`;
+
+            const modal = new bootstrap.Modal(document.getElementById('planDetailsModal'));
+            modal.show();
         }
 
         // Print consolidated plan
         function printConsolidatedPlan() {
+            // Set current date for print header
+            const now = new Date();
+            const printDate = now.toLocaleDateString('en-US', {
+                year: 'numeric',
+                month: 'long',
+                day: 'numeric',
+                hour: '2-digit',
+                minute: '2-digit'
+            });
+            document.getElementById('printDate').textContent = printDate;
+
+            // Hide elements that shouldn't be printed
+            const noPrintElements = document.querySelectorAll('.no-print');
+            noPrintElements.forEach(el => el.style.display = 'none');
+
+            // Show print header and table header
+            const printHeader = document.querySelector('.print-header');
+            const printTableHeader = document.querySelector('.print-table-header');
+            if (printHeader) {
+                printHeader.style.display = 'block';
+            }
+            if (printTableHeader) {
+                printTableHeader.style.display = 'block';
+            }
+
+            // Print the page
             window.print();
+
+            // Restore hidden elements after printing
+            setTimeout(() => {
+                noPrintElements.forEach(el => el.style.display = '');
+                if (printHeader) {
+                    printHeader.style.display = 'none';
+                }
+                if (printTableHeader) {
+                    printTableHeader.style.display = 'none';
+                }
+            }, 1000);
         }
 
-        // Save to PDF
+        // Save to PDF using browser's print to PDF
         function saveToPDF() {
-            alert('PDF generation functionality would be implemented here.');
+            Swal.fire({
+                title: 'Save as PDF',
+                text: 'Use your browser\'s print function and select "Save as PDF" as the destination.',
+                icon: 'info',
+                showCancelButton: true,
+                confirmButtonText: 'Open Print Dialog',
+                cancelButtonText: 'Cancel'
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    printConsolidatedPlan();
+                }
+            });
         }
     </script>
 </body>

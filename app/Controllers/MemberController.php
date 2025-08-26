@@ -359,18 +359,58 @@ class MemberController extends BaseController
             ])->setStatusCode(403);
         }
 
-        $plan = $this->memberModel->find($id);
-        if (!$plan) {
+        try {
+            // Get user division ID for filtering
+            $userDivisionId = $this->session->get('div_id');
+
+            $db = \Config\Database::connect();
+            $builder = $db->table('plan p');
+            $builder->select('p.*, d.division as office_name,
+                             COALESCE(SUM(b.amount), 0) as budget_allocation,
+                             GROUP_CONCAT(DISTINCT sf.source_name SEPARATOR ", ") as source_of_fund');
+            $builder->join('divisions d', 'p.authors_division = d.div_id', 'left');
+            $builder->join('budget b', 'p.plan_id = b.plan_id', 'left');
+            $builder->join('source_of_fund sf', 'b.src_id = sf.src_id', 'left');
+            $builder->where('p.plan_id', $id);
+
+            // Filter by user's division only
+            $builder->where('p.authors_division', $userDivisionId);
+
+            $builder->groupBy('p.plan_id');
+
+            $plan = $builder->get()->getRowArray();
+
+            if (!$plan) {
+                return $this->response->setJSON([
+                    'success' => false,
+                    'message' => 'GAD Plan not found or access denied.'
+                ])->setStatusCode(404);
+            }
+
+            // Process the responsible_units JSON field for display
+            if (!empty($plan['responsible_units'])) {
+                $responsibleUnits = json_decode($plan['responsible_units'], true);
+                if (is_array($responsibleUnits)) {
+                    $plan['responsible_units_display'] = implode(', ', $responsibleUnits);
+                } else {
+                    $plan['responsible_units_display'] = $plan['responsible_units'];
+                }
+            } else {
+                $plan['responsible_units_display'] = 'Not specified';
+            }
+
+            return $this->response->setJSON([
+                'success' => true,
+                'plan' => $plan
+            ]);
+
+        } catch (\Exception $e) {
+            log_message('error', 'Exception in Member getGadPlan: ' . $e->getMessage());
             return $this->response->setJSON([
                 'success' => false,
-                'message' => 'GAD Plan not found.'
-            ])->setStatusCode(404);
+                'message' => 'Database error'
+            ])->setStatusCode(500);
         }
-
-        return $this->response->setJSON([
-            'success' => true,
-            'plan' => $plan
-        ]);
     }
 
     /**
@@ -790,6 +830,463 @@ class MemberController extends BaseController
         } catch (\Exception $e) {
             log_message('error', 'Exception in Member getAccomplishmentDetails: ' . $e->getMessage());
             return $this->response->setJSON(['success' => false, 'message' => 'Database error: ' . $e->getMessage()]);
+        }
+    }
+
+    /**
+     * Plan Preparation - View Only for Members
+     * Members can view all GAD plans but cannot create or edit them
+     */
+    public function planPreparation()
+    {
+        if (!$this->session->get('isLoggedIn') || $this->session->get('role_id') != 2) {
+            $this->session->setFlashdata('error', 'Unauthorized access.');
+            return redirect()->to('/login');
+        }
+
+        try {
+            // Get user division ID for filtering (same as Focal)
+            $userDivisionId = $this->session->get('div_id');
+
+            // Get user information for the view
+            $data = [
+                'first_name' => $this->session->get('first_name'),
+                'last_name' => $this->session->get('last_name'),
+                'role_name' => $this->session->get('role_name'),
+                'division_name' => $this->session->get('division_name'),
+                'gadPlans' => []
+            ];
+
+            // Get GAD plans filtered by user's division (same as Focal)
+            $focalModel = new \App\Models\FocalModel();
+            $gadPlans = $focalModel->getGadPlansWithAmount($userDivisionId);
+
+            if ($gadPlans) {
+                $data['gadPlans'] = $gadPlans;
+            }
+
+            return view('Member/PlanPreparation', $data);
+
+        } catch (\Exception $e) {
+            log_message('error', 'Exception in Member planPreparation: ' . $e->getMessage());
+            $this->session->setFlashdata('error', 'An error occurred while loading GAD plans.');
+            return redirect()->to('/MemberDashboard');
+        }
+    }
+
+    /**
+     * Get GAD Plans for AJAX requests
+     */
+    public function getGadPlans()
+    {
+        if (!$this->session->get('isLoggedIn') || $this->session->get('role_id') != 2) {
+            return $this->response->setJSON(['success' => false, 'message' => 'Unauthorized access']);
+        }
+
+        try {
+            // Get user division ID for filtering (same as Focal)
+            $userDivisionId = $this->session->get('div_id');
+
+            $focalModel = new \App\Models\FocalModel();
+            $gadPlans = $focalModel->getGadPlansWithAmount($userDivisionId);
+
+            return $this->response->setJSON([
+                'success' => true,
+                'data' => $gadPlans
+            ]);
+
+        } catch (\Exception $e) {
+            log_message('error', 'Exception in Member getGadPlans: ' . $e->getMessage());
+            return $this->response->setJSON(['success' => false, 'message' => 'Database error']);
+        }
+    }
+
+    /**
+     * View GAD Plan Details (Read-only)
+     */
+    public function viewGadPlan($planId)
+    {
+        if (!$this->session->get('isLoggedIn') || $this->session->get('role_id') != 2) {
+            return $this->response->setJSON(['success' => false, 'message' => 'Unauthorized access']);
+        }
+
+        try {
+            // Get user division ID for filtering (same as Focal)
+            $userDivisionId = $this->session->get('div_id');
+
+            $focalModel = new \App\Models\FocalModel();
+            $divisionPlans = $focalModel->getGadPlansWithAmount($userDivisionId);
+
+            // Find the specific plan within user's division
+            $plan = null;
+            foreach ($divisionPlans as $p) {
+                if ($p['plan_id'] == $planId) {
+                    $plan = $p;
+                    break;
+                }
+            }
+
+            if (!$plan) {
+                return $this->response->setJSON(['success' => false, 'message' => 'Plan not found or access denied']);
+            }
+
+            return $this->response->setJSON([
+                'success' => true,
+                'data' => $plan
+            ]);
+
+        } catch (\Exception $e) {
+            log_message('error', 'Exception in Member viewGadPlan: ' . $e->getMessage());
+            return $this->response->setJSON(['success' => false, 'message' => 'Database error']);
+        }
+    }
+
+    /**
+     * Get Attachments for a GAD Plan
+     */
+    public function getAttachments($planId)
+    {
+        if (!$this->session->get('isLoggedIn') || $this->session->get('role_id') != 2) {
+            return $this->response->setJSON(['success' => false, 'message' => 'Unauthorized access']);
+        }
+
+        try {
+            // Get user division ID for filtering (same as Focal)
+            $userDivisionId = $this->session->get('div_id');
+
+            $focalModel = new \App\Models\FocalModel();
+            $divisionPlans = $focalModel->getGadPlansWithAmount($userDivisionId);
+
+            // Find the specific plan within user's division
+            $plan = null;
+            foreach ($divisionPlans as $p) {
+                if ($p['plan_id'] == $planId) {
+                    $plan = $p;
+                    break;
+                }
+            }
+
+            if (!$plan) {
+                return $this->response->setJSON(['success' => false, 'message' => 'Plan not found or access denied']);
+            }
+
+            $attachments = [];
+            if (!empty($plan['file_attachments'])) {
+                $fileAttachments = json_decode($plan['file_attachments'], true);
+                if (is_array($fileAttachments)) {
+                    foreach ($fileAttachments as $file) {
+                        $attachments[] = [
+                            'filename' => basename($file),
+                            'url' => base_url('Uploads/' . basename($file))
+                        ];
+                    }
+                }
+            }
+
+            return $this->response->setJSON([
+                'success' => true,
+                'data' => $attachments
+            ]);
+
+        } catch (\Exception $e) {
+            log_message('error', 'Exception in Member getAttachments: ' . $e->getMessage());
+            return $this->response->setJSON(['success' => false, 'message' => 'Database error']);
+        }
+    }
+
+    /**
+     * Budget Crafting - View Only for Members
+     */
+    public function budgetCrafting()
+    {
+        if (!$this->session->get('isLoggedIn') || $this->session->get('role_id') != 2) {
+            $this->session->setFlashdata('error', 'Unauthorized access.');
+            return redirect()->to('/login');
+        }
+
+        try {
+            // Get user division ID for filtering (same as Focal)
+            $userDivisionId = $this->session->get('div_id');
+
+            $data = [
+                'first_name' => $this->session->get('first_name'),
+                'last_name' => $this->session->get('last_name'),
+                'role_name' => $this->session->get('role_name'),
+                'division_name' => $this->session->get('division_name'),
+                'budgetItems' => []
+            ];
+
+            // Get budget items filtered by user's division
+            $budgetModel = new \App\Models\BudgetModel();
+            $budgetItems = $budgetModel->getBudgetItems($userDivisionId);
+
+            if ($budgetItems && is_array($budgetItems) && count($budgetItems) > 0) {
+                $data['budgetItems'] = $budgetItems;
+            }
+
+            return view('Member/BudgetCrafting', $data);
+
+        } catch (\Exception $e) {
+            log_message('error', 'Exception in Member budgetCrafting: ' . $e->getMessage());
+            $this->session->setFlashdata('error', 'An error occurred while loading budget crafting.');
+            return redirect()->to('/MemberDashboard');
+        }
+    }
+
+    /**
+     * Get Budget Items for a GAD Plan (View Only)
+     */
+    public function getBudgetItems($planId)
+    {
+        if (!$this->session->get('isLoggedIn') || $this->session->get('role_id') != 2) {
+            return $this->response->setJSON(['success' => false, 'message' => 'Unauthorized access']);
+        }
+
+        try {
+            // Get user division ID for filtering (same as Focal)
+            $userDivisionId = $this->session->get('div_id');
+
+            $budgetModel = new \App\Models\BudgetModel();
+
+            // First check if the plan belongs to user's division
+            $focalModel = new \App\Models\FocalModel();
+            $divisionPlans = $focalModel->getGadPlansWithAmount($userDivisionId);
+
+            $planExists = false;
+            foreach ($divisionPlans as $plan) {
+                if ($plan['plan_id'] == $planId) {
+                    $planExists = true;
+                    break;
+                }
+            }
+
+            if (!$planExists) {
+                return $this->response->setJSON(['success' => false, 'message' => 'Plan not found or access denied']);
+            }
+
+            // Get budget items for the plan (filtered by division)
+            $allBudgetItems = $budgetModel->getBudgetItems($userDivisionId);
+
+            // Filter to only items for this specific plan
+            $budgetItems = array_filter($allBudgetItems, function($item) use ($planId) {
+                return $item['plan_id'] == $planId;
+            });
+
+            return $this->response->setJSON([
+                'success' => true,
+                'data' => $budgetItems
+            ]);
+
+        } catch (\Exception $e) {
+            log_message('error', 'Exception in Member getBudgetItems: ' . $e->getMessage());
+            return $this->response->setJSON(['success' => false, 'message' => 'Database error']);
+        }
+    }
+
+    /**
+     * Get Budget Item Details (View Only)
+     */
+    public function getBudgetItemDetails($actId)
+    {
+        if (!$this->session->get('isLoggedIn') || $this->session->get('role_id') != 2) {
+            return $this->response->setJSON(['success' => false, 'message' => 'Unauthorized access']);
+        }
+
+        try {
+            // Get user division ID for filtering
+            $userDivisionId = $this->session->get('div_id');
+
+            $budgetModel = new \App\Models\BudgetModel();
+
+            // Get all budget items for user's division
+            $budgetItems = $budgetModel->getBudgetItems($userDivisionId);
+
+            // Find the specific budget item
+            $budgetItem = null;
+            foreach ($budgetItems as $item) {
+                if ($item['act_id'] == $actId) {
+                    $budgetItem = $item;
+                    break;
+                }
+            }
+
+            if (!$budgetItem) {
+                return $this->response->setJSON(['success' => false, 'message' => 'Budget item not found or access denied']);
+            }
+
+            return $this->response->setJSON([
+                'success' => true,
+                'data' => $budgetItem
+            ]);
+
+        } catch (\Exception $e) {
+            log_message('error', 'Exception in Member getBudgetItemDetails: ' . $e->getMessage());
+            return $this->response->setJSON(['success' => false, 'message' => 'Database error']);
+        }
+    }
+
+    /**
+     * Consolidated Plan - View Only for Members
+     */
+    public function consolidatedPlan()
+    {
+        if (!$this->session->get('isLoggedIn') || $this->session->get('role_id') != 2) {
+            $this->session->setFlashdata('error', 'Unauthorized access.');
+            return redirect()->to('/login');
+        }
+
+        try {
+            // Get user division ID for filtering
+            $userDivisionId = $this->session->get('div_id');
+
+            $data = [
+                'first_name' => $this->session->get('first_name'),
+                'last_name' => $this->session->get('last_name'),
+                'role_name' => $this->session->get('role_name'),
+                'division_name' => $this->session->get('division_name'),
+                'gadPlans' => [],
+                'approvedPlansCount' => 0,
+                'totalBudget' => 0,
+                'divisionsCount' => 1 // Member only sees their own division
+            ];
+
+            // Get GAD plans with budget information filtered by user's division
+            $db = \Config\Database::connect();
+            $builder = $db->table('plan p');
+            $builder->select('p.*, d.division as office_name,
+                             COALESCE(SUM(b.amount), 0) as budget_allocation,
+                             GROUP_CONCAT(DISTINCT sf.source_name SEPARATOR ", ") as source_of_fund,
+                             p.responsible_units as target_beneficiaries,
+                             er.first_name as reviewed_by_name, er.last_name as reviewed_by_lastname,
+                             ea.first_name as approved_by_name, ea.last_name as approved_by_lastname');
+            $builder->join('divisions d', 'p.authors_division = d.div_id', 'left');
+            $builder->join('budget b', 'p.plan_id = b.plan_id', 'left');
+            $builder->join('source_of_fund sf', 'b.src_id = sf.src_id', 'left');
+            $builder->join('employees er', 'p.reviewed_by = er.emp_id', 'left');
+            $builder->join('employees ea', 'p.approved_by = ea.emp_id', 'left');
+
+            // Filter by user's division only
+            $builder->where('p.authors_division', $userDivisionId);
+
+            $builder->groupBy('p.plan_id');
+            $builder->orderBy('p.plan_id', 'DESC');
+
+            $gadPlans = $builder->get()->getResultArray();
+
+            // Process the responsible_units JSON field for display
+            foreach ($gadPlans as &$plan) {
+                if (!empty($plan['target_beneficiaries'])) {
+                    $responsibleUnits = json_decode($plan['target_beneficiaries'], true);
+                    if (is_array($responsibleUnits)) {
+                        $plan['target_beneficiaries'] = implode(', ', $responsibleUnits);
+                    }
+                } else {
+                    $plan['target_beneficiaries'] = 'Not specified';
+                }
+
+                // Ensure source_of_fund has a default value
+                if (empty($plan['source_of_fund'])) {
+                    $plan['source_of_fund'] = 'Not specified';
+                }
+            }
+
+            if ($gadPlans) {
+                // Filter only approved plans
+                $approvedPlans = array_filter($gadPlans, function($plan) {
+                    return strtolower($plan['status']) === 'approved';
+                });
+
+                $data['gadPlans'] = $gadPlans;
+                $data['approvedPlansCount'] = count($approvedPlans);
+                $data['totalBudget'] = array_sum(array_map(function($plan) {
+                    return $plan['budget_allocation'] ?? 0;
+                }, $approvedPlans));
+            }
+
+            return view('Member/ConsolidatedPlan', $data);
+
+        } catch (\Exception $e) {
+            log_message('error', 'Exception in Member consolidatedPlan: ' . $e->getMessage());
+            $this->session->setFlashdata('error', 'An error occurred while loading consolidated plan.');
+            return redirect()->to('/MemberDashboard');
+        }
+    }
+
+    /**
+     * Accomplishment Submission for Members
+     */
+    public function accomplishmentSubmission()
+    {
+        if (!$this->session->get('isLoggedIn') || $this->session->get('role_id') != 2) {
+            $this->session->setFlashdata('error', 'Unauthorized access.');
+            return redirect()->to('/login');
+        }
+
+        try {
+            $data = [
+                'first_name' => $this->session->get('first_name'),
+                'last_name' => $this->session->get('last_name'),
+                'role_name' => $this->session->get('role_name'),
+                'division_name' => $this->session->get('division_name')
+            ];
+
+            return view('Member/AccomplishmentSubmission', $data);
+
+        } catch (\Exception $e) {
+            log_message('error', 'Exception in Member accomplishmentSubmission: ' . $e->getMessage());
+            $this->session->setFlashdata('error', 'An error occurred while loading accomplishment submission.');
+            return redirect()->to('/MemberDashboard');
+        }
+    }
+
+    /**
+     * Monitoring & Evaluation for Members
+     */
+    public function monitoringEvaluation()
+    {
+        if (!$this->session->get('isLoggedIn') || $this->session->get('role_id') != 2) {
+            $this->session->setFlashdata('error', 'Unauthorized access.');
+            return redirect()->to('/login');
+        }
+
+        try {
+            $data = [
+                'first_name' => $this->session->get('first_name'),
+                'last_name' => $this->session->get('last_name'),
+                'role_name' => $this->session->get('role_name'),
+                'division_name' => $this->session->get('division_name')
+            ];
+
+            return view('Member/MonitoringEvaluation', $data);
+
+        } catch (\Exception $e) {
+            log_message('error', 'Exception in Member monitoringEvaluation: ' . $e->getMessage());
+            $this->session->setFlashdata('error', 'An error occurred while loading monitoring & evaluation.');
+            return redirect()->to('/MemberDashboard');
+        }
+    }
+
+    /**
+     * Get Monitoring Data for AJAX requests
+     */
+    public function getMonitoringData()
+    {
+        if (!$this->session->get('isLoggedIn') || $this->session->get('role_id') != 2) {
+            return $this->response->setJSON(['success' => false, 'message' => 'Unauthorized access']);
+        }
+
+        try {
+            // This would fetch monitoring data
+            // Implementation depends on your monitoring model structure
+            return $this->response->setJSON([
+                'success' => true,
+                'data' => [],
+                'message' => 'Monitoring data functionality to be implemented'
+            ]);
+
+        } catch (\Exception $e) {
+            log_message('error', 'Exception in Member getMonitoringData: ' . $e->getMessage());
+            return $this->response->setJSON(['success' => false, 'message' => 'Database error']);
         }
     }
 }
