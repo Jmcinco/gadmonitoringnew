@@ -119,7 +119,7 @@
     <nav id="sidebar" class="sidebar">
         <div class="sidebar-header">
             <h4 class="text-white mb-0">
-                <i class="bi bi-shield-check"></i> GAD Monitoring System
+                <i class="bi bi-gender-ambiguous" style="font-size: 2rem; color: rgb(255, 255, 255);"> </i> GAD Monitoring System
             </h4>
         </div>
         <div class="sidebar-content">

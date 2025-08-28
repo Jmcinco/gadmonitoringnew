@@ -29,7 +29,7 @@
             left: 0;
             height: 100vh;
             width: var(--sidebar-width);
-            background: linear-gradient(180deg, var(--sidebar-bg) 0%, #1a252f 100%);
+            background: linear-gradient(90deg, #4B0082, #8A2BE2);
             color: white;
             z-index: 1000;
             display: flex;
@@ -127,7 +127,7 @@
     <nav id="sidebar" class="sidebar">
         <div class="sidebar-header">
             <h4 class="text-white mb-0">
-                <i class="bi bi-clipboard-data"></i> GAD Monitoring System
+                <i class="bi bi-gender-ambiguous" style="font-size: 2rem; color: rgb(255, 255, 255);"></i>GAD Monitoring System
             </h4>
         </div>
 
@@ -238,7 +238,7 @@
                 <!-- Statistics Cards -->
                 <div class="row mb-4">
                     <div class="col-md-3">
-                        <div class="card text-white bg-primary clickable-card" onclick="filterPlans('all')" style="cursor: pointer;">
+                        <div class="card text-white clickable-card" onclick="filterPlans('all')" style="cursor: pointer; background: linear-gradient(to bottom, #800080, #2a2788b0);">
                             <div class="card-body">
                                 <div class="d-flex justify-content-between">
                                     <div>
@@ -254,7 +254,7 @@
                         </div>
                     </div>
                     <div class="col-md-3">
-                        <div class="card text-white bg-success clickable-card" onclick="filterPlans('approved')" style="cursor: pointer;">
+                        <div class="card text-white clickable-card" onclick="filterPlans('approved')" style="cursor: pointer; background: linear-gradient(to bottom, #4B0082, #8A2BE2);">
                             <div class="card-body">
                                 <div class="d-flex justify-content-between">
                                     <div>
@@ -270,7 +270,7 @@
                         </div>
                     </div>
                     <div class="col-md-3">
-                        <div class="card text-white bg-warning clickable-card" onclick="filterPlans('pending')" style="cursor: pointer;">
+                        <div class="card text-white clickable-card" onclick="filterPlans('pending')" style="cursor: pointer; background: linear-gradient(to bottom, #4B0082, #8A2BE2);">
                             <div class="card-body">
                                 <div class="d-flex justify-content-between">
                                     <div>
@@ -286,7 +286,7 @@
                         </div>
                     </div>
                     <div class="col-md-3">
-                        <div class="card text-white bg-info clickable-card" onclick="showBudgetBreakdown()" style="cursor: pointer;">
+                        <div class="card text-white clickable-card" onclick="showBudgetBreakdown()" style="cursor: pointer; background: linear-gradient(to bottom, #4B0082, #8A2BE2);">
                             <div class="card-body">
                                 <div class="d-flex justify-content-between">
                                     <div>
@@ -306,7 +306,7 @@
                 <!-- Additional Status Cards -->
                 <div class="row mb-4">
                     <div class="col-md-3">
-                        <div class="card text-white bg-danger clickable-card" onclick="filterPlans('returned')" style="cursor: pointer;">
+                       <div class="card text-white clickable-card" onclick="filterPlans('returned')" style="cursor: pointer; background: linear-gradient(to bottom, #4B0082, #8A2BE2);">
                             <div class="card-body">
                                 <div class="d-flex justify-content-between">
                                     <div>
@@ -322,7 +322,7 @@
                         </div>
                     </div>
                     <div class="col-md-3">
-                        <div class="card text-white bg-secondary clickable-card" onclick="filterPlans('draft')" style="cursor: pointer;">
+                        <div class="card text-white  clickable-card" onclick="filterPlans('draft')" style="cursor: pointer; background: linear-gradient(to bottom, #4B0082, #8A2BE2);">
                             <div class="card-body">
                                 <div class="d-flex justify-content-between">
                                     <div>
@@ -338,7 +338,7 @@
                         </div>
                     </div>
                     <div class="col-md-3">
-                        <div class="card text-white bg-dark clickable-card" onclick="showAccomplishments()" style="cursor: pointer;">
+                        <div class="card text-white clickable-card" onclick="showAccomplishments()" style="cursor: pointer; background: linear-gradient(to bottom, #4B0082, #8A2BE2);">
                             <div class="card-body">
                                 <div class="d-flex justify-content-between">
                                     <div>
@@ -354,7 +354,7 @@
                         </div>
                     </div>
                     <div class="col-md-3">
-                        <div class="card text-white bg-purple clickable-card" onclick="showProgress()" style="cursor: pointer; background: linear-gradient(45deg, #6f42c1, #8e44ad);">
+                        <div class="card text-white clickable-card" onclick="showProgress()" style="cursor: pointer; background: linear-gradient(to bottom, #4B0082, #8A2BE2);">
                             <div class="card-body">
                                 <div class="d-flex justify-content-between">
                                     <div>

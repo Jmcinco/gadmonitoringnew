@@ -38,7 +38,7 @@ if (!session()->get('isLoggedIn') || session()->get('role_id') != 2) {
             left: 0;
             height: 100vh;
             width: var(--sidebar-width);
-            background: linear-gradient(180deg, var(--sidebar-bg) 0%, #1a252f 100%);
+            background: linear-gradient(90deg, #4B0082, #8A2BE2);
             color: white;
             z-index: 1000;
             display: flex;
@@ -136,7 +136,7 @@ if (!session()->get('isLoggedIn') || session()->get('role_id') != 2) {
     <nav id="sidebar" class="sidebar">
         <div class="sidebar-header">
             <h4 class="text-white mb-0">
-                <i class="bi bi-clipboard-data"></i> GAD Monitoring System
+                <i class="bi bi-gender-ambiguous" style="font-size: 2rem; color: rgb(255, 255, 255);"> </i> GAD Monitoring System
             </h4>
         </div>
 

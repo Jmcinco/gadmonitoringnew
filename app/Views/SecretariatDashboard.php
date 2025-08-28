@@ -35,7 +35,7 @@
             left: 0;
             height: 100vh;
             width: var(--sidebar-width);
-            background: var(--sidebar-bg);
+            background: linear-gradient(90deg, #4B0082, #8A2BE2);
             color: var(--sidebar-text);
             z-index: 1000;
             display: flex;
@@ -270,7 +270,7 @@
         <!-- Sidebar Header -->
         <div class="sidebar-header">
             <h4 class="text-white mb-0">
-                <i class="bi bi-clipboard-data"></i> GAD System
+                <i class="bi bi-gender-ambiguous" style="font-size: 2rem; color: rgb(255, 255, 255);"> </i> GAD Monitoring System
             </h4>
         </div>
 

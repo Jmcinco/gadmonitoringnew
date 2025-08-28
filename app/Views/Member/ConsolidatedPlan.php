@@ -1,12 +1,3 @@
-<?php
-// Check if user is logged in and has the correct role
-if (!session()->get('isLoggedIn') || session()->get('role_id') != 2) {
-    session()->setFlashdata('error', 'Unauthorized access.');
-    header('Location: ' . base_url('/login'));
-    exit;
-}
-?>
-
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -35,7 +26,7 @@ if (!session()->get('isLoggedIn') || session()->get('role_id') != 2) {
             left: 0;
             height: 100vh;
             width: var(--sidebar-width);
-            background: linear-gradient(180deg, var(--sidebar-bg) 0%, #1a252f 100%);
+            background: linear-gradient(90deg, #4B0082, #8A2BE2);
             color: white;
             z-index: 1000;
             display: flex;
