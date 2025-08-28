@@ -39,7 +39,7 @@ $gadPlans = $gadPlans ?? [];
             left: 0;
             height: 100vh;
             width: var(--sidebar-width);
-            background: linear-gradient(180deg, var(--sidebar-bg) 0%, #1a252f 100%);
+            background: linear-gradient(90deg, #4B0082, #8A2BE2);
             color: white;
             z-index: 1000;
             display: flex;
