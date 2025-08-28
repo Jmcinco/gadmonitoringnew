@@ -1310,7 +1310,6 @@
             </div>
             <div class="modal-body">
               <div id="viewPlanContent">
-                <!-- Plan details will be populated here -->
               </div>
             </div>
             <div class="modal-footer">
@@ -2836,6 +2835,18 @@ function editGadPlan(button, planId) {
               responsibleUnitsDisplay = plan.responsible_units;
             }
           }
+
+          let budgetDisplay = 'No Budget Specified';
+          if (plan.budget){
+            try {
+              const budget = typeof plan.amount=== 'decimal';
+              if (decimal.isDecimal(amount)){
+                budgetDisplay = plan.amount;
+              } 
+            } catch (e) {
+              budgetDisplay = "Invalid Budget Data"
+            }
+          } 
 
           // Format file attachments
           let attachmentsDisplay = 'No attachments';

@@ -1,12 +1,3 @@
-<?php
-// Check if user is logged in and has the correct role
-if (!session()->get('isLoggedIn') || session()->get('role_id') != 1) {
-    session()->setFlashdata('error', 'Unauthorized access.');
-    header('Location: ' . base_url('/login'));
-    exit;
-}
-?>
-
 <!DOCTYPE html>
 <html lang="en">
 
